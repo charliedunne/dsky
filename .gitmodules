@@ -1,3 +1,0 @@
-[submodule "sw/src/tools/BSlogger"]
-	path = sw/src/tools/BSlogger
-	url = git@github.com:bschiffthaler/BSlogger.git
