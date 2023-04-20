@@ -1,6 +1,6 @@
 [submodule "sw/3rdparty/BSlogger"]
 	path = sw/3rdparty/BSlogger
-	url = git@github.com:bschiffthaler/BSlogger.git
+	url = git@github.com:charliedunne/BSlogger.git
 [submodule "sw/3rdparty/SDL"]
 	path = sw/3rdparty/SDL
 	url = git@github.com:libsdl-org/SDL.git
