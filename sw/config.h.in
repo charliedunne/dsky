@@ -1,0 +1,7 @@
+// Configuration document
+
+// DSKY Versioning
+#define DSKY_VERSION_MAJOR @dsky_VERSION_MAJOR@
+#define DSKY_VERSION_MINOR @dsky_VERSION_MINOR@
+
+#cmakedefine LOG_LEVEL @LOG_LEVEL@

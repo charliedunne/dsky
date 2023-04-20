@@ -21,4 +21,4 @@ class Frame {
 
   virtual void render() = 0; 
 
-}
+};

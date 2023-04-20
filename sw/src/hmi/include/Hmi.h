@@ -1,6 +1,8 @@
 #include <vector>
 #include "Frame.h"
 
+#include "SDL2/SDL.h"
+
 class Hmi {
 
  private:
@@ -8,8 +10,13 @@ class Hmi {
   // Frames
   std::vector<Frame> frames_;
 
+  // Window
+  SDL_Window * window_ = NULL;
 
- public:
+  //The surface contained by the window
+  SDL_Surface* screenSurface_ = NULL;
+
+public:
 
   // Default constructor
   Hmi();
@@ -27,4 +34,4 @@ class Hmi {
   void Render();
 
   // @TODO Set functions for update values
-}
+};
