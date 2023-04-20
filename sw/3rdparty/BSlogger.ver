@@ -1,5 +1,0 @@
-commit 9b0e8e33819e518a847a55bf8fba6a0b6820f903
-Author: Bastian Schiffthaler <b.schiffthaler@gmail.com>
-Date:   Thu May 27 13:52:32 2021 +0200
-
-    Don't display times in fancy progbar if they are 0
