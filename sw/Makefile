@@ -9,7 +9,10 @@ SRC_DIRS := ./src
 SRCS := $(shell find $(SRC_DIRS) -name '*.cpp' -or -name '*.c' -or -name '*.s')
 
 # Exclude files
-SRCS := $(filter-out ./src/tools/BSlogger/src/bslogger_examples.cpp, $(SRCS))
+#SRCS := $(filter-out ./src/tools/BSlogger/src/bslogger_examples.cpp, $(SRCS))
+#SRCS := $(filter-out ./src/tools/DSL/, $(wilcard *))
+
+$(info "Compiling DSKY...")
 
 
 # Prepends BUILD_DIR and appends .o to every src file
