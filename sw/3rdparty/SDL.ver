@@ -1,0 +1,7 @@
+commit 120bc77e91da50a72d6dec4050c2f87deb84b1ca
+Author: Sam Lantinga <slouken@libsdl.org>
+Date:   Wed Apr 19 13:10:39 2023 -0700
+
+    Report PS3 accelerometer values in m/s2 instead of Gs
+    
+    (cherry picked from commit 0467301baf57389d96fafbe169fb07f4c10169bc)
