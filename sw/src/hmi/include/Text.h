@@ -1,3 +1,6 @@
+#ifndef TEXT_H
+#define TEXT_H
+
 #include <string>
 
 class Text {
@@ -15,4 +18,6 @@ class Text {
   // Destructor
   ~Text();
 
-}
+};
+
+#endif /* TEXT_H */

@@ -7,7 +7,7 @@ project (dsky VERSION 0.1)
 set(LOG_LEVEL LOG_DEBUG)
 
 # Add executable
-add_executable(dsky src/main.cpp src/hmi/src/Hmi.cpp src/hmi/src/Frame.cpp)
+add_executable(dsky src/main.cpp src/hmi/src/Hmi.cpp src/hmi/src/Frame.cpp src/common/Color.cpp src/hmi/src/FrameRightLcd.cpp)
 
 # CFLAGS
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_REENTRANT")
@@ -20,6 +20,7 @@ configure_file(config.h.in config.h)
 include_directories(./build)
 include_directories(./build/include)
 include_directories(./src/hmi/include)
+include_directories(src/common)
 include_directories(3rdparty/simple-cpp-logger/include)
 
 # Logger definitions

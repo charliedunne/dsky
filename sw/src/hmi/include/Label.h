@@ -1,3 +1,7 @@
+#ifndef LABEL_H
+#define LABEL_H
+
+
 #include <string>
 
 
@@ -32,3 +36,5 @@ class Label {
   void Blink(unsigned int freq);
 
 }
+
+#endif /* LABEL_H */

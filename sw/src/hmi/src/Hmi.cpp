@@ -31,10 +31,13 @@ Hmi::Hmi(int w, int h) {
   ren_ = SDL_CreateRenderer(win_, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
   if (ren_ == NULL) {
     LogError << "SDL_CreateRenderer()" << std::endl;
-  } 
+  }
 
   // Disable cursor
   SDL_ShowCursor(SDL_DISABLE);
+
+  // Create the frames
+  rightLcd = new FrameRightLcd(ren_, w_-330, 0, 330, h_, Color(255, 255, 0));
 
 }
 
@@ -47,38 +50,40 @@ Hmi::~Hmi() {
 void Hmi::wait() {
 
   //Hack to get window to stay up
-  SDL_Event e; 
-  bool quit = false; 
-  while( quit == false ){ 
-    while( SDL_PollEvent( &e ) ) { 
-      if( e.type == SDL_QUIT ) 
-        quit = true; 
-    } 
+  SDL_Event e;
+  bool quit = false;
+  while( quit == false ){
+    while( SDL_PollEvent( &e ) ) {
+      if( e.type == SDL_QUIT )
+        quit = true;
+    }
   }
 }
 
 
 void Hmi::render() {
 
-  SDL_Rect lcdLeft = {0, 0, 330, h_};
-  SDL_Rect lcdRight = {w_-330, 0, 330, h_};
+  // SDL_Rect lcdLeft = {0, 0, 330, h_};
+  // SDL_Rect lcdRight = {w_-330, 0, 330, h_};
 
 
-  if (SDL_RenderClear(ren_) != 0) {
-    LogError << "SDL_RenderClear" << std::endl;
-  }
+  // if (SDL_RenderClear(ren_) != 0) {
+  //   LogError << "SDL_RenderClear" << std::endl;
+  // }
 
-  if (SDL_SetRenderDrawColor(ren_, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0) {
-    LogError << "SDL_SetRenderDrawColor" << std::endl;
-  }
+  // if (SDL_SetRenderDrawColor(ren_, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0) {
+  //   LogError << "SDL_SetRenderDrawColor" << std::endl;
+  // }
 
-  SDL_RenderDrawRect(ren_, &lcdLeft);
+  // SDL_RenderDrawRect(ren_, &lcdLeft);
 
-  if (SDL_SetRenderDrawColor(ren_, 0, 255, 255, SDL_ALPHA_OPAQUE) != 0) {
-    LogError << "SDL_SetRenderDrawColor" << std::endl;
-  }
+  // if (SDL_SetRenderDrawColor(ren_, 0, 255, 255, SDL_ALPHA_OPAQUE) != 0) {
+  //   LogError << "SDL_SetRenderDrawColor" << std::endl;
+  // }
 
-  SDL_RenderDrawRect(ren_, &lcdRight);
+  // SDL_RenderDrawRect(ren_, &lcdRight);
+
+  rightLcd->render();
 
 
   SDL_RenderPresent(ren_);

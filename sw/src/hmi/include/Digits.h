@@ -1,3 +1,6 @@
+#ifndef DIGITS_H
+#define DIGITS_H
+
 #include <string>
 
 class Digits {
@@ -27,4 +30,6 @@ class Digits {
   // Blink Label
   void Blink(unsigned int freq);
 
-}
+};
+
+#endif /* DIGITS_H */

@@ -1,5 +1,9 @@
+#ifndef HMI_H
+#define HMI_H
+
 #include <vector>
 #include "Frame.h"
+#include "FrameRightLcd.h"
 
 #include "SDL2/SDL.h"
 
@@ -8,7 +12,9 @@ class Hmi {
  private:
 
   // Frames
-  std::vector<Frame> frames_;
+  FrameRightLcd * rightLcd  = NULL;
+  FrameRightLcd * centerLcd  = NULL;
+  FrameRightLcd * leftLcd  = NULL;
 
   // Window properties
   int w_ = 0;
@@ -42,3 +48,6 @@ public:
 
   // @TODO Set functions for update values
 };
+
+
+#endif /* HMI_H */

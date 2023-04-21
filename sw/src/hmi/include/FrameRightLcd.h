@@ -1,30 +1,36 @@
+#ifndef FRAMERIGHTLCD_H
+#define FRAMERIGHTLCD_H
+
+
+#include "SDL2/SDL.h"
 #include "Frame.h"
-#include "Digits.h"
-#include "Label.h"
+#include "Color.h"
+//#include "Digits.h"
+//#include "Label.h"
 
 class FrameRightLcd : public Frame {
 
  private:
   
   // Frame elements
-  Label lActComp_;
-  Label lProg_;
-  Label lVerb_;
-  Label lNoun_;
+  // Label lActComp_;
+  // Label lProg_;
+  // Label lVerb_;
+  // Label lNoun_;
 
-  Digit dProg_;
-  Digit dVerb_;
-  Digit dNoun_;
+  // Digit dProg_;
+  // Digit dVerb_;
+  // Digit dNoun_;
 
-  Digit dTop_;
-  Digit dMid_;
-  Digit dLow_;
+  // Digit dTop_;
+  // Digit dMid_;
+  // Digit dLow_;
 
  public:
 
   // Constructor
-  FrameRightLcd(xPos, yPos, xSize, ySize)
-    :Frame(xPos, yPos, xSize, ySize);
+  FrameRightLcd(SDL_Renderer *r, int xPos, int yPos, int xSize, int ySize, Color bg)
+    :Frame(r, xPos, yPos, xSize, ySize, bg) {};
 
   // Local implementation of Render
   void render();
@@ -57,4 +63,6 @@ class FrameRightLcd : public Frame {
   void setDigitTop(unsigned int value);
   void setDigitMid(unsigned int value);
   void setDigitLow(unsigned int value);
-}
+};
+
+#endif /* FRAMERIGHTLCD_H */
