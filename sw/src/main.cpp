@@ -24,6 +24,10 @@ int main( int argc, char * argv[], char *envp[] ) {
   
   Hmi hmi;
 
+  hmi.render();
+
+  hmi.wait();
+
   
   // Main loop
   //  while (running) {

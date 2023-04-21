@@ -11,10 +11,10 @@ class Hmi {
   std::vector<Frame> frames_;
 
   // Window
-  SDL_Window * window_ = NULL;
+  SDL_Window * win_ = NULL;
 
-  //The surface contained by the window
-  SDL_Surface* screenSurface_ = NULL;
+  // Renderer
+  SDL_Renderer* ren_ = NULL;
 
 public:
 
@@ -25,13 +25,16 @@ public:
   ~Hmi();
 
   // Function for the display of the HMI
-  void SwitchOn();
+  void switchOn();
 
   // Function to switch off the display of the HMI 
-  void SwitchOff();
+  void switchOff();
 
   // Function to draw the HMI (it must be called every time it needs to be update)
-  void Render();
+  void render();
+
+  // Wait for event
+  void wait();
 
   // @TODO Set functions for update values
 };
