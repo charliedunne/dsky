@@ -25,7 +25,7 @@ include_directories(src/common)
 include_directories(3rdparty/simple-cpp-logger/include)
 
 # Logger definitions
-add_definitions( -D LOGGER_MAX_LOG_LEVEL_PRINTED=1 )
+add_definitions( -D LOGGER_MAX_LOG_LEVEL_PRINTED=7 )
 add_definitions( -D LOGGER_PREFIX_LEVEL=2 )
 add_definitions( -D LOGGER_ENABLE_COLORS=1 )
 add_definitions( -D LOGGER_ENABLE_COLORS_ON_USER_HEADER=0 )

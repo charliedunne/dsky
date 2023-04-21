@@ -70,6 +70,7 @@ private:
   void frameBoundaries(Color c);
   void compActy(Color c);
   void background();
+  void progDigits();
 
 };
 
