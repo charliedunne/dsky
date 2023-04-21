@@ -10,7 +10,11 @@
 #include <Logger.h>
 
 
-Hmi::Hmi() {
+Hmi::Hmi(int w, int h) {
+
+  // Save window properties from constructor
+  w_ = w;
+  h_ = h;
 
   // Initialize SDL
   if (SDL_Init(SDL_INIT_VIDEO) !=0) {
@@ -18,7 +22,7 @@ Hmi::Hmi() {
   }
 
   // Create the window
-  win_ = SDL_CreateWindow("DSKY", 100, 100, 800, 480, SDL_WINDOW_SHOWN);
+  win_ = SDL_CreateWindow("DSKY", 100, 100, w_, h_, SDL_WINDOW_SHOWN);
   if (win_ == NULL) {
     LogError << "SDL_CreateWindow()" << std::endl;
   }
@@ -56,13 +60,8 @@ void Hmi::wait() {
 
 void Hmi::render() {
 
-  SDL_Rect lcdLeft;
-  lcdLeft.x = 0;
-  lcdLeft.y = 0;
-  lcdLeft.w = 350;
-  lcdLeft.h = 480;
-
-  SDL_Rect lcdRight = {450, 0, 350, 480};
+  SDL_Rect lcdLeft = {0, 0, 330, h_};
+  SDL_Rect lcdRight = {w_-330, 0, 330, h_};
 
 
   if (SDL_RenderClear(ren_) != 0) {
@@ -73,13 +72,13 @@ void Hmi::render() {
     LogError << "SDL_SetRenderDrawColor" << std::endl;
   }
 
-  SDL_RenderFillRect(ren_, &lcdLeft);
+  SDL_RenderDrawRect(ren_, &lcdLeft);
 
   if (SDL_SetRenderDrawColor(ren_, 0, 255, 255, SDL_ALPHA_OPAQUE) != 0) {
     LogError << "SDL_SetRenderDrawColor" << std::endl;
   }
 
-  SDL_RenderFillRect(ren_, &lcdRight);
+  SDL_RenderDrawRect(ren_, &lcdRight);
 
 
   SDL_RenderPresent(ren_);

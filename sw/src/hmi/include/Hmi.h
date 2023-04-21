@@ -10,6 +10,10 @@ class Hmi {
   // Frames
   std::vector<Frame> frames_;
 
+  // Window properties
+  int w_ = 0;
+  int h_ = 0;
+
   // Window
   SDL_Window * win_ = NULL;
 
@@ -19,7 +23,7 @@ class Hmi {
 public:
 
   // Default constructor
-  Hmi();
+  Hmi(int w, int h);
 
   // Destructor
   ~Hmi();

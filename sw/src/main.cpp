@@ -22,7 +22,7 @@ int main( int argc, char * argv[], char *envp[] ) {
   // Initialize HMI
 
   
-  Hmi hmi;
+  Hmi hmi = Hmi(800, 480);
 
   hmi.render();
 
