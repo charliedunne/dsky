@@ -63,28 +63,15 @@ void Hmi::wait() {
 
 void Hmi::render() {
 
-  // SDL_Rect lcdLeft = {0, 0, 330, h_};
-  // SDL_Rect lcdRight = {w_-330, 0, 330, h_};
+  // Clear the screen
+  if (SDL_RenderClear(ren_) != 0) {
+    LogError << "SDL_RenderClear" << std::endl;
+  }
 
-
-  // if (SDL_RenderClear(ren_) != 0) {
-  //   LogError << "SDL_RenderClear" << std::endl;
-  // }
-
-  // if (SDL_SetRenderDrawColor(ren_, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0) {
-  //   LogError << "SDL_SetRenderDrawColor" << std::endl;
-  // }
-
-  // SDL_RenderDrawRect(ren_, &lcdLeft);
-
-  // if (SDL_SetRenderDrawColor(ren_, 0, 255, 255, SDL_ALPHA_OPAQUE) != 0) {
-  //   LogError << "SDL_SetRenderDrawColor" << std::endl;
-  // }
-
-  // SDL_RenderDrawRect(ren_, &lcdRight);
-
+  // Save all the Frames draw into buffer
   rightLcd->render();
 
 
+  // Render the window
   SDL_RenderPresent(ren_);
 }

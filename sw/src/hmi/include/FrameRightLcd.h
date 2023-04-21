@@ -63,6 +63,14 @@ class FrameRightLcd : public Frame {
   void setDigitTop(unsigned int value);
   void setDigitMid(unsigned int value);
   void setDigitLow(unsigned int value);
+
+private:
+
+  // Drawing primitives
+  void frameBoundaries(Color c);
+  void compActy(Color c);
+  void background();
+
 };
 
 #endif /* FRAMERIGHTLCD_H */

@@ -17,10 +17,10 @@ protected:
   unsigned int frameId_= 0;
 
   // Frame size and position
-  unsigned int xPos_ = 0;
-  unsigned int yPos_ = 0;
-  unsigned int xSize_ = 0;
-  unsigned int ySize_ = 0;
+  int x_ = 0;
+  int y_ = 0;
+  int w_ = 0;
+  int h_ = 0;
 
   // Background color
   Color bg_;
