@@ -5,7 +5,7 @@ ARCH=$(uname -m)
 
 if [ $# -ne 1 ]
 then
-    echo "Usage: ./build.sh ALL|SDL|GFX"
+    echo "Usage: ./build.sh ALL|SDL|SDL_ttf|GFX"
     exit
 fi
 
@@ -15,6 +15,21 @@ function build_sdl() {
     echo "SDL Building..."
 
     cd SDL
+    cmake -S . -B ./build -DCMAKE_INSTALL_PREFIX:PATH=${ROOT}/../build
+    cd build
+    cmake --build  ./
+    cmake --install .
+    cd ..
+    cd ..
+}
+
+# BUILD SDL_ttf
+function build_sdl_ttf() {
+
+    echo "SDL_ttf Building..."
+    echo "libfreetype-dev must be installed"
+
+    cd SDL_ttf
     cmake -S . -B ./build -DCMAKE_INSTALL_PREFIX:PATH=${ROOT}/../build
     cd build
     cmake --build  ./
