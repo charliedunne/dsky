@@ -12,6 +12,17 @@ add_executable(dsky src/main.cpp src/hmi/src/Hmi.cpp src/hmi/src/Frame.cpp src/c
 # CFLAGS
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_REENTRANT")
 
+# Set-up System
+execute_process(COMMAND bash -c "uname -m" OUTPUT_VARIABLE HOST_SYSTEM)
+
+if (HOST_SYSTEM MATCHES "^x86_64")
+  set(SDL_WINDOW_FLAGS SDL_WINDOW_SHOWN)
+  message("Using x86_64")
+else()
+  set(SDL_WINDOW_FLAGS SDL_WINDOW_FULLSCREEN)
+  message("Ussing arm")
+endif()
+
 # Configuration file
 configure_file(config.h.in config.h)
 
