@@ -74,6 +74,9 @@ elif [ $1 == "GFX" ]
 then
      build_gfx
 
+elif [ $1 == "SDL_ttf" ]
+then
+    build_sdl_ttf
 fi
 
 exit
