@@ -7,3 +7,5 @@
 #cmakedefine LOG_LEVEL @LOG_LEVEL@
 
 #define SDL_WINDOW_FLAGS @SDL_WINDOW_FLAGS@
+
+#define ZERLINA_FONT "/home/cav/dsky/sw/resources/fonts/Zerlina.ttf"

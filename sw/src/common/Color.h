@@ -1,6 +1,8 @@
 #ifndef COLOR_H
 #define COLOR_H
 
+#include "SDL2/SDL.h"
+
 class Color {
 
  private:
@@ -28,6 +30,7 @@ class Color {
 
   // Cast overload
   operator int() const;
+  operator SDL_Color() const;
 
 };
 

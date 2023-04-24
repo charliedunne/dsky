@@ -67,3 +67,10 @@ Color::operator int() const {
 
   return output;
 }
+
+Color::operator SDL_Color() const {
+
+  SDL_Color output = {(Uint8)red_, (Uint8)green_, (Uint8)blue_, (Uint8)alpha_};
+
+  return output;
+}
