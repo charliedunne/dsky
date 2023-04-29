@@ -44,8 +44,6 @@ Digits::Digits() {
 
   // Increase instance counter
   instanceCounter_++;
-
-
 }
 
 

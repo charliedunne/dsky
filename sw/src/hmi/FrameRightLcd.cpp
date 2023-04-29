@@ -54,6 +54,24 @@ void drawDigitsBackground(SDL_Renderer *r, int x, int w, int h) {
 
 }
 
+void drawLinesBackground(SDL_Renderer *r, int x, int w, int h) {
+
+  int xLeft = x + FRAME_MARGIN*1.5;
+  int xRight = x + w - FRAME_MARGIN*1.5;
+
+  // Set-up dot Radious
+  const int dotsRadius = 4;
+
+  const Color lineColor = Color(0x40, 0x20, 0x20, 0xFF);
+
+
+  // Draw middle line
+  boxColor(r, 
+           xLeft + FRAME_MARGIN, 200 + dotsRadius/2,
+           xRight - FRAME_MARGIN, 200 + dotsRadius*1.5,
+           lineColor);
+
+}
 
 
 void FrameRightLcd::frameBoundaries(Color c) {
@@ -95,8 +113,8 @@ void FrameRightLcd::background() {
 
     // 3 top dots
     filledCircleColor(r_, xCenter, yPosTop + FRAME_MARGIN, dotsRadius, dotsColor);
-
-    int yPosDown = i * (h_*0.5)/3 + h_*0.48;
+ 
+   int yPosDown = i * (h_*0.5)/3 + h_*0.48;
 
     // 6 Side dots
     filledCircleColor(r_, xLeft, yPosDown, dotsRadius, dotsColor);
@@ -111,6 +129,9 @@ void FrameRightLcd::background() {
 
   // Draw digits
   drawDigitsBackground(r_, x_, w_, h_);
+
+  // Draw lines
+  drawLinesBackground(r_, x_, w_, h_);
 
 }
 
