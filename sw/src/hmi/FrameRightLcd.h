@@ -7,6 +7,7 @@
 #include "Color.h"
 //#include "Digits.h"
 //#include "Label.h"
+#include "Digit.h"
 
 class FrameRightLcd : public Frame {
 
@@ -26,11 +27,14 @@ class FrameRightLcd : public Frame {
   // Digit dMid_;
   // Digit dLow_;
 
+  Digit a_;
+
  public:
 
   // Constructor
-  FrameRightLcd(SDL_Renderer *r, int xPos, int yPos, int xSize, int ySize, Color bg)
-    :Frame(r, xPos, yPos, xSize, ySize, bg) {};
+  FrameRightLcd(SDL_Renderer *r, int xPos, int yPos, int xSize, int ySize, Color bg); 
+    
+
 
   // Local implementation of Render
   void render();

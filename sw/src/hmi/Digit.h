@@ -1,8 +1,12 @@
 #ifndef DIGIT_H
 #define DIGIT_H
 
+#include <vector>
+
 #include "Color.h"
 #include "SDL2/SDL.h"
+
+#define N_SEGMENTS (7)
 
 typedef enum {
 
@@ -44,10 +48,11 @@ class Digit {
  private:
 
   // Renderer
-  SDL_Renderer r_ = NULL;
+  SDL_Renderer * r_ = NULL;
   
   // Texture with the gliphs
   SDL_Texture *digitTx_ = NULL;
+  SDL_Texture *digitGlowTx_ = NULL;
 
   // Position and size
   int x_;
@@ -59,19 +64,20 @@ class Digit {
   Color color_;
 
   // Internal signal for every segment
-  bool segments_[7];
+  std::vector<bool> segments_ = {0, 0, 0, 0, 0, 0, 0};
 
  public:
 
-  Digit(SDL_Renderer r);
+  Digit();
   ~Digit();
 
+  void initialize(SDL_Renderer *r);
   void setColor(const Color color);
   void setPosition(const int x, const int y);
   void setSize(const int w, const int h);
 
-  void draw(const DigitChar_e d) const;
+  void draw(std::vector<bool> seg);
 
-}
+};
 
 #endif /* DIGIT_H */

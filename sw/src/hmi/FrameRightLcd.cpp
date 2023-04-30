@@ -15,6 +15,7 @@
 #include "SDL2/SDL_ttf.h"
 
 #include "Digits.h"
+#include "Digit.h"
 
 #ifndef FRAME_MARGIN
 #define FRAME_MARGIN 20
@@ -144,10 +145,28 @@ void FrameRightLcd::progDigits() {
 
 void FrameRightLcd::render() {
 
+  boxColor(r_, 
+           0, 0,
+           330, 480,
+           bg_);
+
   frameBoundaries(Color(255, 255, 0));
   background();
   compActy(Color(20, 20, 20));
   progDigits();
 
+  a_.setPosition(710, 40);
+
+
+  std::vector<bool> value = {1, 1, 1, 1, 1, 1, 1};
+  a_.draw(value);
+
+
+}
+
+FrameRightLcd::FrameRightLcd(SDL_Renderer *r, int xPos, int yPos, int xSize, int ySize, Color bg) : Frame(r, xPos, yPos, xSize, ySize, bg) {
+
+  // Initialize Object digit with the renderer
+  a_.initialize(r);
 }
 

@@ -5,7 +5,7 @@ ARCH=$(uname -m)
 
 if [ $# -ne 1 ]
 then
-    echo "Usage: ./build.sh ALL|SDL|SDL_ttf|GFX"
+    echo "Usage: ./build.sh ALL|SDL|SDL_ttf|GFX|SDL_image"
     exit
 fi
 
@@ -15,6 +15,20 @@ function build_sdl() {
     echo "SDL Building..."
 
     cd SDL
+    cmake -S . -B ./build -DCMAKE_INSTALL_PREFIX:PATH=${ROOT}/../build
+    cd build
+    cmake --build  ./
+    cmake --install .
+    cd ..
+    cd ..
+}
+
+# BUILD SDL_image
+function build_sdl_image() {
+
+    echo "SDL_image Building..."
+
+    cd SDL_image
     cmake -S . -B ./build -DCMAKE_INSTALL_PREFIX:PATH=${ROOT}/../build
     cd build
     cmake --build  ./
@@ -65,6 +79,7 @@ if [ $1 == "ALL" ]
 then
     build_sdl
     build_gfx
+    build_sdl_image
 
 elif [ $1 == "SDL" ]
 then
@@ -77,6 +92,11 @@ then
 elif [ $1 == "SDL_ttf" ]
 then
     build_sdl_ttf
+
+elif [ $1 == "SDL_image" ]
+then
+    build_sdl_image
+
 fi
 
 exit

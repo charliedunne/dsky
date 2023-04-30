@@ -37,7 +37,7 @@ Hmi::Hmi(int w, int h) {
   SDL_ShowCursor(SDL_DISABLE);
 
   // Create the frames
-  rightLcd = new FrameRightLcd(ren_, w_-330, 0, 330, h_, Color(255, 255, 0));
+  rightLcd = new FrameRightLcd(ren_, w_-330, 0, 330, h_, Color(255, 0, 255));
 
 }
 
