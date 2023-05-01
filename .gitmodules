@@ -8,3 +8,7 @@
 [submodule "sw/3rdparty/simple-cpp-logger"]
 	path = sw/3rdparty/simple-cpp-logger
 	url = git@github.com:nadrino/simple-cpp-logger.git
+[submodule "sw/3rdparty/SDL_image"]
+	path = sw/3rdparty/SDL_image
+	url = git@github.com:libsdl-org/SDL_image.git
+	branch = SDL2
