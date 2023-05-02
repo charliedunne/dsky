@@ -2,12 +2,162 @@
 #include "SDL2/SDL_image.h"
 #include <Logger.h>
 
-#define DIGIT_TXT_FILE "/home/pi/dsky/sw/resources/images/DigitsSpriteTemplate.png"
-#define DIGIT_GLOW_TXT_FILE "/home/pi/dsky/sw/resources/images/DigitsSpriteTemplate_glow.png"
-#define S_WIDTH 140
-#define S_HEIGHT 160
+#define DIGIT_TXT_FILE "../../resources/images/DigitsSpriteTemplate.png"
+#define DIGIT_GLOW_TXT_FILE "../../resources/images/DigitsSpriteTemplate_glow.png"
+#define S_WIDTH 280
+#define S_HEIGHT 200
 
 #include <iostream>
+
+std::vector<bool> getSegmentsFromChar(const char c) {
+
+  std::vector<bool> segments = {0, 0, 0, 0, 0, 0, 0};
+
+  switch (c) {
+
+  case '0':
+    segments[0] = 1;
+    segments[1] = 1;
+    segments[2] = 1;
+    segments[3] = 1;
+    segments[4] = 1;
+    segments[5] = 1;
+    break;
+
+  case '1':
+    segments[1] = 1;
+    segments[2] = 1;
+    break;
+
+  case '2':
+    segments[0] = 1;
+    segments[1] = 1;
+    segments[3] = 1;
+    segments[4] = 1;
+    segments[6] = 1;
+    break;
+
+  case '3':
+    segments[0] = 1;
+    segments[1] = 1;
+    segments[2] = 1;
+    segments[3] = 1;
+    segments[6] = 1;
+    break;
+
+  case '4':
+    segments[1] = 1;
+    segments[2] = 1;
+    segments[5] = 1;
+    segments[6] = 1;
+    break;
+
+  case '5':
+    segments[0] = 1;
+    segments[2] = 1;
+    segments[3] = 1;
+    segments[5] = 1;
+    segments[6] = 1;
+    break;
+
+  case '6':
+    segments[0] = 1;
+    segments[2] = 1;
+    segments[3] = 1;
+    segments[4] = 1;
+    segments[5] = 1;
+    segments[6] = 1;
+    break;
+
+  case '7':
+    segments[0] = 1;
+    segments[1] = 1;
+    segments[2] = 1;
+    break;
+
+  case '8':
+    segments[0] = 1;
+    segments[1] = 1;
+    segments[2] = 1;
+    segments[3] = 1;
+    segments[4] = 1;
+    segments[5] = 1;
+    segments[6] = 1;
+    break;
+
+  case '9':
+    segments[0] = 1;
+    segments[1] = 1;
+    segments[2] = 1;
+    segments[3] = 1;
+    segments[5] = 1;
+    segments[6] = 1;
+    break;
+
+  case 'a':
+  case 'A':
+    segments[0] = 1;
+    segments[1] = 1;
+    segments[2] = 1;
+    segments[4] = 1;
+    segments[5] = 1;
+    segments[6] = 1;
+    break;
+
+  case 'b':
+  case 'B':
+    segments[2] = 1;
+    segments[3] = 1;
+    segments[4] = 1;
+    segments[5] = 1;
+    segments[6] = 1;
+    break;
+
+  case 'c':
+  case 'C':
+    segments[0] = 1;
+    segments[3] = 1;
+    segments[4] = 1;
+    segments[5] = 1;
+    break;
+
+  case 'd':
+  case 'D':
+    segments[1] = 1;
+    segments[2] = 1;
+    segments[3] = 1;
+    segments[4] = 1;
+    segments[6] = 1;
+    break;
+
+  case 'e':
+  case 'E':
+    segments[0] = 1;
+    segments[3] = 1;
+    segments[4] = 1;
+    segments[5] = 1;
+    segments[6] = 1;
+    break;
+
+  case 'f':
+  case 'F':
+    segments[0] = 1;
+    segments[4] = 1;
+    segments[5] = 1;
+    segments[6] = 1;
+    break;
+
+
+  default:
+    segments[2] = 1;
+    segments[3] = 1;
+    segments[4] = 1;
+    segments[6] = 1;
+    break;
+  }
+
+  return segments;
+}
 
 Digit::Digit() {
 
@@ -17,8 +167,8 @@ Digit::Digit() {
   // Initialize internal private members
   x_ = 0;
   y_ = 0;
-  w_ = S_WIDTH * 0.4;
-  h_ = S_HEIGHT * 0.4;
+  w_ = S_WIDTH * 0.38;
+  h_ = S_HEIGHT * 0.38;
   color_ = Color(0, 255, 0, 255);
 
 }
@@ -127,3 +277,7 @@ void Digit::draw(std::vector<bool> seg) {
   }
 }
 
+void Digit::draw(const char c) {
+
+  Digit::draw(getSegmentsFromChar(c));
+}

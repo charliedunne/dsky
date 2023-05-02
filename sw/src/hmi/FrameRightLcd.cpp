@@ -156,7 +156,7 @@ void FrameRightLcd::render() {
 
 
   std::vector<bool> value = {1, 1, 1, 1, 1, 1, 1};
-  a_.draw(value);
+  a_.draw('g');
 
 
 }
