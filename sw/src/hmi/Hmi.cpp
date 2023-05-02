@@ -22,7 +22,7 @@ Hmi::Hmi(int w, int h) {
   }
 
   // Create the window
-  win_ = SDL_CreateWindow("DSKY", 100, 100, w_, h_, SDL_WINDOW_SHOWN);
+  win_ = SDL_CreateWindow("DSKY", 100, 100, w_, h_, SDL_WINDOW_FLAGS);
   if (win_ == NULL) {
     LogError << "SDL_CreateWindow()" << std::endl;
   }
