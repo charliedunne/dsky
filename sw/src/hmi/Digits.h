@@ -1,6 +1,8 @@
 #ifndef DIGITS_H
 #define DIGITS_H
 
+#ifdef USE_TTF
+
 #include <string>
 
 #include "Color.h"
@@ -73,5 +75,7 @@ class Digits {
   void draw(SDL_Renderer *ren);
 
 };
+
+#endif /* USE_TTF */
 
 #endif /* DIGITS_H */

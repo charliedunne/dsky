@@ -2,8 +2,8 @@
 #include "SDL2/SDL_image.h"
 #include <Logger.h>
 
-#define DIGIT_TXT_FILE "/home/cav/dsky/sw/resources/images/DigitsSpriteTemplate.png"
-#define DIGIT_GLOW_TXT_FILE "/home/cav/dsky/sw/resources/images/DigitsSpriteTemplate_glow.png"
+#define DIGIT_TXT_FILE "/home/pi/dsky/sw/resources/images/DigitsSpriteTemplate.png"
+#define DIGIT_GLOW_TXT_FILE "/home/pi/dsky/sw/resources/images/DigitsSpriteTemplate_glow.png"
 #define S_WIDTH 140
 #define S_HEIGHT 160
 

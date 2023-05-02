@@ -11,10 +11,7 @@
 // GFX
 #include "GFX/SDL2_gfxPrimitives.h"
 
-// SDL_ttf
-#include "SDL2/SDL_ttf.h"
-
-#include "Digits.h"
+//#include "Digits.h"
 #include "Digit.h"
 
 #ifndef FRAME_MARGIN
@@ -25,35 +22,35 @@
 #define INTERBLOCK_MARGIN 10
 #endif /* INTERBLOCK_MARGIN */
 
-void drawDigitsBackground(SDL_Renderer *r, int x, int w, int h) {
+// void drawDigitsBackground(SDL_Renderer *r, int x, int w, int h) {
 
-  Digits dProg;
-  Digits dVerb;
-  Digits dNoun;
-  Digits dOne;
-  Digits dTwo;
-  Digits dThree;
+//   Digits dProg;
+//   Digits dVerb;
+//   Digits dNoun;
+//   Digits dOne;
+//   Digits dTwo;
+//   Digits dThree;
 
-  dProg.setPosition(x+w -115-FRAME_MARGIN, 40);
-  dVerb.setPosition(x+FRAME_MARGIN*2, 155);
-  dNoun.setPosition(x+w -115-FRAME_MARGIN, 155);
+//   dProg.setPosition(x+w -115-FRAME_MARGIN, 40);
+//   dVerb.setPosition(x+FRAME_MARGIN*2, 155);
+//   dNoun.setPosition(x+w -115-FRAME_MARGIN, 155);
   
-  int iPos = (h *0.5)/3;
-  dOne.setPosition(x+FRAME_MARGIN*1.8, h*.48 + 12);
-  dOne.setValue("-88888");
-  dTwo.setPosition(x+FRAME_MARGIN*1.8, iPos + h*.48 + 12);
-  dTwo.setLongValue(88888);
-  dThree.setPosition(x+FRAME_MARGIN*1.8, iPos*2 + h*.48 + 12);
-  dThree.setLongValue(88888);
+//   int iPos = (h *0.5)/3;
+//   dOne.setPosition(x+FRAME_MARGIN*1.8, h*.48 + 12);
+//   dOne.setValue("-88888");
+//   dTwo.setPosition(x+FRAME_MARGIN*1.8, iPos + h*.48 + 12);
+//   dTwo.setLongValue(88888);
+//   dThree.setPosition(x+FRAME_MARGIN*1.8, iPos*2 + h*.48 + 12);
+//   dThree.setLongValue(88888);
 
-  dProg.draw(r);
-  dVerb.draw(r);
-  dNoun.draw(r);
-  dOne.draw(r);
-  dTwo.draw(r);
-  dThree.draw(r);
+//   dProg.draw(r);
+//   dVerb.draw(r);
+//   dNoun.draw(r);
+//   dOne.draw(r);
+//   dTwo.draw(r);
+//   dThree.draw(r);
 
-}
+// }
 
 void drawLinesBackground(SDL_Renderer *r, int x, int w, int h) {
 
@@ -129,7 +126,7 @@ void FrameRightLcd::background() {
            lineColor);
 
   // Draw digits
-  drawDigitsBackground(r_, x_, w_, h_);
+  //  drawDigitsBackground(r_, x_, w_, h_);
 
   // Draw lines
   drawLinesBackground(r_, x_, w_, h_);
