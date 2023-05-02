@@ -7,6 +7,8 @@
 #include "SDL2/SDL.h"
 
 #define N_SEGMENTS (7)
+#define S_WIDTH 280
+#define S_HEIGHT 200
 
 class Digit {
 
@@ -34,6 +36,7 @@ class Digit {
  public:
 
   Digit();
+  Digit(SDL_Renderer *r);
   ~Digit();
 
   void initialize(SDL_Renderer *r);

@@ -7,10 +7,11 @@ project (dsky VERSION 0.1)
 set(LOG_LEVEL LOG_DEBUG)
 
 # Add executable
-add_executable(dsky src/main.cpp src/hmi/Hmi.cpp src/hmi/Frame.cpp src/common/Color.cpp src/hmi/FrameRightLcd.cpp src/hmi/Digit.cpp)
+add_executable(dsky src/main.cpp src/hmi/Hmi.cpp src/hmi/Frame.cpp src/common/Color.cpp src/hmi/FrameRightLcd.cpp src/hmi/Digit.cpp src/hmi/Number.cpp)
 
 # CFLAGS
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_REENTRANT")
+set(CMAKE_BUILD_TYPE Debug)
 
 # Set-up System
 execute_process(COMMAND bash -c "uname -m" OUTPUT_VARIABLE HOST_SYSTEM)

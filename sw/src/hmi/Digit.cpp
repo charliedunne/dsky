@@ -1,11 +1,7 @@
 #include "Digit.h"
+#include "config.h"
 #include "SDL2/SDL_image.h"
 #include <Logger.h>
-
-#define DIGIT_TXT_FILE "../../resources/images/DigitsSpriteTemplate.png"
-#define DIGIT_GLOW_TXT_FILE "../../resources/images/DigitsSpriteTemplate_glow.png"
-#define S_WIDTH 280
-#define S_HEIGHT 200
 
 #include <iostream>
 
@@ -173,8 +169,13 @@ Digit::Digit() {
 
 }
 
-void Digit::initialize(SDL_Renderer *r) {
+Digit::Digit(SDL_Renderer *r) : Digit() {
 
+  Digit::initialize(r);
+}
+
+
+void Digit::initialize(SDL_Renderer *r) {
   // Control flag
   bool ctrlFlag = true;
 
