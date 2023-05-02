@@ -163,8 +163,8 @@ Digit::Digit() {
   // Initialize internal private members
   x_ = 0;
   y_ = 0;
-  w_ = S_WIDTH * 0.38;
-  h_ = S_HEIGHT * 0.38;
+  w_ = S_WIDTH/2 * S_FACTOR;
+  h_ = S_HEIGHT * S_FACTOR;
   color_ = Color(0, 255, 0, 255);
 
 }
@@ -189,6 +189,10 @@ void Digit::initialize(SDL_Renderer *r) {
     LogError << "Fail loading the Segment texture (" << DIGIT_TXT_FILE << "): " << SDL_GetError() << std::endl;
     ctrlFlag = false;
 
+  }
+  else
+  {
+    LogInfo << "Image " << DIGIT_TXT_FILE << " loaded successfully" << std::endl;
   }
 
   SDL_Surface * surfaceGlow = IMG_Load(DIGIT_GLOW_TXT_FILE);
@@ -256,7 +260,9 @@ void Digit::draw(std::vector<bool> seg) {
   SDL_Rect dest = {x_, y_, w_, h_};
 
   // Create source from the Sprite
-  SDL_Rect src = {0, 0, S_WIDTH, S_HEIGHT};
+  SDL_Rect src = {0, 0, S_WIDTH/2, S_HEIGHT};
+
+  LogTrace << "Position: (" << x_ << ", " << y_ << "). Size: (" << w_ << ", " << h_ << ")." << std::endl;
 
   segments_ = seg;
 
@@ -268,8 +274,8 @@ void Digit::draw(std::vector<bool> seg) {
       src.x = i* S_WIDTH;
 
       // Set the color
-      SDL_SetTextureColorMod(digitTx_, 0, 255, 0);
-      SDL_SetTextureColorMod(digitGlowTx_, 0, 255, 0);
+      SDL_SetTextureColorMod(digitTx_, color_.r(), color_.g(), color_.b());
+      SDL_SetTextureColorMod(digitGlowTx_, color_.r(), color_.g(), color_.b());
 
       // Draw it
       SDL_RenderCopy(r_, digitGlowTx_, &src, &dest);
@@ -279,6 +285,8 @@ void Digit::draw(std::vector<bool> seg) {
 }
 
 void Digit::draw(const char c) {
+
+  LogTrace << "Printing (" << c << ")" << std::endl;
 
   Digit::draw(getSegmentsFromChar(c));
 }

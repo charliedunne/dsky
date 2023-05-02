@@ -8,6 +8,7 @@
 //#include "Digits.h"
 //#include "Label.h"
 #include "Digit.h"
+#include "Number.h"
 
 class FrameRightLcd : public Frame {
 
@@ -27,14 +28,20 @@ class FrameRightLcd : public Frame {
   // Digit dMid_;
   // Digit dLow_;
 
-  Digit a_;
+  Number * nProg_ = NULL;
+  Number * nVerb_ = NULL;
+  Number * nNoun_ = NULL;
+  Number * nR1_ = NULL;
+  Number * nR2_ = NULL;
+  Number * nR3_ = NULL;
 
  public:
 
   // Constructor
   FrameRightLcd(SDL_Renderer *r, int xPos, int yPos, int xSize, int ySize, Color bg); 
-    
 
+  // Destructor
+  ~FrameRightLcd();
 
   // Local implementation of Render
   void render();

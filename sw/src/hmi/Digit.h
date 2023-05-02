@@ -10,6 +10,8 @@
 #define S_WIDTH 280
 #define S_HEIGHT 200
 
+#define S_FACTOR (0.38)
+
 class Digit {
 
  private:

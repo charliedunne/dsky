@@ -14,6 +14,7 @@
 //#include "Digits.h"
 #include "Digit.h"
 
+
 #ifndef FRAME_MARGIN
 #define FRAME_MARGIN 20
 #endif /* FRAME_MARGIN */
@@ -142,28 +143,50 @@ void FrameRightLcd::progDigits() {
 
 void FrameRightLcd::render() {
 
-  boxColor(r_, 
-           0, 0,
-           330, 480,
-           bg_);
 
   frameBoundaries(Color(255, 255, 0));
   background();
   compActy(Color(20, 20, 20));
   progDigits();
 
-  a_.setPosition(710, 40);
-
-
   std::vector<bool> value = {1, 1, 1, 1, 1, 1, 1};
-  a_.draw('g');
+  nProg_->setValue("88");
+  nProg_->draw();
 
+  nVerb_->setValue("23");
+  nVerb_->draw();
+
+  nNoun_->setValue("01");
+  nNoun_->draw();
+
+  nR1_->setValue("08761");
+  nR1_->draw();
+
+  nR2_->setValue("81357");
+  nR2_->draw();
+
+  nR3_->setValue("15879");
+  nR3_->draw();
 
 }
 
-FrameRightLcd::FrameRightLcd(SDL_Renderer *r, int xPos, int yPos, int xSize, int ySize, Color bg) : Frame(r, xPos, yPos, xSize, ySize, bg) {
+FrameRightLcd::FrameRightLcd(SDL_Renderer *r, int xPos, int yPos, int xSize, int ySize, Color bg) 
+  : Frame(r, xPos, yPos, xSize, ySize, bg) {
 
-  // Initialize Object digit with the renderer
-  a_.initialize(r);
+    Color nColor = Color(0, 230, 100);
+
+  // Create the number
+  nProg_ = new Number(r, 2, 675, 40, nColor);
+  nVerb_ = new Number(r, 2, 500, 150, nColor);
+  nNoun_ = new Number(r, 2, 675, 150, nColor);
+
+  nR1_ = new Number(r, 5, 675-(3*S_WIDTH/2*S_FACTOR*N_SPACE_FACTOR), 240, nColor);
+  nR2_ = new Number(r, 5, 675-(3*S_WIDTH/2*S_FACTOR*N_SPACE_FACTOR), 240+80, nColor);
+  nR3_ = new Number(r, 5, 675-(3*S_WIDTH/2*S_FACTOR*N_SPACE_FACTOR), 240+80+80, nColor);
+
 }
 
+FrameRightLcd::~FrameRightLcd() {
+
+ free(nProg_);
+}
