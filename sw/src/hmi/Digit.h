@@ -32,6 +32,9 @@ class Digit {
   // Color
   Color color_;
 
+  // Glow flag
+  bool glow_;
+
   // Internal signal for every segment
   std::vector<bool> segments_ = {0, 0, 0, 0, 0, 0, 0};
 
@@ -45,6 +48,7 @@ class Digit {
   void setColor(const Color color);
   void setPosition(const int x, const int y);
   void setSize(const int w, const int h);
+  void setGlow(const bool glow);
 
   void draw(std::vector<bool> seg);
   void draw(const char c);

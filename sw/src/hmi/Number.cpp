@@ -1,7 +1,7 @@
 #include "Number.h"
 #include <Logger.h>
 
-Number::Number(SDL_Renderer *r, const int digits, const int x, const int y, const Color c) {
+Number::Number(SDL_Renderer *r, const int digits, const int x, const int y, const Color c, const bool glow) {
 
   // Maximum number of digits
   if (digits <= 5) {
@@ -22,6 +22,8 @@ Number::Number(SDL_Renderer *r, const int digits, const int x, const int y, cons
       }
 
       d->setColor(c);
+
+      d->setGlow(glow);
 
       digits_.push_back(d);
     }

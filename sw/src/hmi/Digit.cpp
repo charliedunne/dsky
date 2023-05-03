@@ -166,6 +166,7 @@ Digit::Digit() {
   w_ = S_WIDTH/2 * S_FACTOR;
   h_ = S_HEIGHT * S_FACTOR;
   color_ = Color(0, 255, 0, 255);
+  glow_ = false;
 
 }
 
@@ -254,6 +255,10 @@ void Digit::setSize(const int w, const int h) {
   h_ = h;
 }
 
+void Digit::setGlow(const bool glow) {
+  glow_ = glow;
+} 
+
 void Digit::draw(std::vector<bool> seg) {
 
   // Create output rectange for drawing
@@ -278,7 +283,7 @@ void Digit::draw(std::vector<bool> seg) {
       SDL_SetTextureColorMod(digitGlowTx_, color_.r(), color_.g(), color_.b());
 
       // Draw it
-      SDL_RenderCopy(r_, digitGlowTx_, &src, &dest);
+      if (glow_) { SDL_RenderCopy(r_, digitGlowTx_, &src, &dest); }
       SDL_RenderCopy(r_, digitTx_, &src, &dest);
     }
   }

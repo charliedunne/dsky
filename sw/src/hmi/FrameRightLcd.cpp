@@ -23,35 +23,15 @@
 #define INTERBLOCK_MARGIN 10
 #endif /* INTERBLOCK_MARGIN */
 
-// void drawDigitsBackground(SDL_Renderer *r, int x, int w, int h) {
+#define BG_COLOR_R 0x15
+#define BG_COLOR_G 0x0B
+#define BG_COLOR_B 0x0C
+#define BG_COLOR_A 0xFF
 
-//   Digits dProg;
-//   Digits dVerb;
-//   Digits dNoun;
-//   Digits dOne;
-//   Digits dTwo;
-//   Digits dThree;
-
-//   dProg.setPosition(x+w -115-FRAME_MARGIN, 40);
-//   dVerb.setPosition(x+FRAME_MARGIN*2, 155);
-//   dNoun.setPosition(x+w -115-FRAME_MARGIN, 155);
-  
-//   int iPos = (h *0.5)/3;
-//   dOne.setPosition(x+FRAME_MARGIN*1.8, h*.48 + 12);
-//   dOne.setValue("-88888");
-//   dTwo.setPosition(x+FRAME_MARGIN*1.8, iPos + h*.48 + 12);
-//   dTwo.setLongValue(88888);
-//   dThree.setPosition(x+FRAME_MARGIN*1.8, iPos*2 + h*.48 + 12);
-//   dThree.setLongValue(88888);
-
-//   dProg.draw(r);
-//   dVerb.draw(r);
-//   dNoun.draw(r);
-//   dOne.draw(r);
-//   dTwo.draw(r);
-//   dThree.draw(r);
-
-// }
+#define FG_COLOR_R 0x00
+#define FG_COLOR_G 0xCC
+#define FG_COLOR_B 0x44
+#define FG_COLOR_A 0xFF
 
 void drawLinesBackground(SDL_Renderer *r, int x, int w, int h) {
 
@@ -61,14 +41,26 @@ void drawLinesBackground(SDL_Renderer *r, int x, int w, int h) {
   // Set-up dot Radious
   const int dotsRadius = 4;
 
-  const Color lineColor = Color(0x40, 0x20, 0x20, 0xFF);
+  const Color lineColor = Color(0xff, BG_COLOR_G, BG_COLOR_B, BG_COLOR_A);
 
 
-  // Draw middle line
+  // Draw R1 line
   boxColor(r, 
-           xLeft + FRAME_MARGIN, 200 + dotsRadius/2,
-           xRight - FRAME_MARGIN, 200 + dotsRadius*1.5,
+           xLeft + FRAME_MARGIN, 222 + dotsRadius/2,
+           xRight - FRAME_MARGIN, 222 + dotsRadius*1.5,
            lineColor);
+
+  // Draw R2 line
+  boxColor(r, 
+           xLeft + FRAME_MARGIN, 222 + 85 + dotsRadius/2,
+           xRight - FRAME_MARGIN, 222 + 85 + dotsRadius*1.5,
+           lineColor);   
+
+  // Draw R3 line
+  boxColor(r, 
+           xLeft + FRAME_MARGIN, 222 + 170 + dotsRadius/2,
+           xRight - FRAME_MARGIN, 222 + 170 + dotsRadius*1.5,
+           lineColor);                   
 
 }
 
@@ -113,7 +105,7 @@ void FrameRightLcd::background() {
     // 3 top dots
     filledCircleColor(r_, xCenter, yPosTop + FRAME_MARGIN, dotsRadius, dotsColor);
  
-   int yPosDown = i * (h_*0.5)/3 + h_*0.48;
+   int yPosDown = i * (h_*0.5)/2.8 + h_*0.48;
 
     // 6 Side dots
     filledCircleColor(r_, xLeft, yPosDown, dotsRadius, dotsColor);
@@ -127,7 +119,23 @@ void FrameRightLcd::background() {
            lineColor);
 
   // Draw digits
-  //  drawDigitsBackground(r_, x_, w_, h_);
+  nProgBg_->setValue("88");
+  nProgBg_->draw();
+
+  nVerbBg_->setValue("88");
+  nVerbBg_->draw();
+
+  nNounBg_->setValue("88");
+  nNounBg_->draw();
+
+  nR1Bg_->setValue("88888");
+  nR1Bg_->draw();
+
+  nR2Bg_->setValue("88888");
+  nR2Bg_->draw();
+
+  nR3Bg_->setValue("88888");
+  nR3Bg_->draw();
 
   // Draw lines
   drawLinesBackground(r_, x_, w_, h_);
@@ -150,43 +158,52 @@ void FrameRightLcd::render() {
   progDigits();
 
   std::vector<bool> value = {1, 1, 1, 1, 1, 1, 1};
-  nProg_->setValue("88");
+
+  nProg_->setValue("03");
   nProg_->draw();
-
-  nVerb_->setValue("23");
-  nVerb_->draw();
-
-  nNoun_->setValue("01");
-  nNoun_->draw();
-
-  nR1_->setValue("08761");
-  nR1_->draw();
-
-  nR2_->setValue("81357");
-  nR2_->draw();
-
-  nR3_->setValue("15879");
-  nR3_->draw();
 
 }
 
 FrameRightLcd::FrameRightLcd(SDL_Renderer *r, int xPos, int yPos, int xSize, int ySize, Color bg) 
   : Frame(r, xPos, yPos, xSize, ySize, bg) {
 
-    Color nColor = Color(0, 230, 100);
+  Color bgColor = Color(BG_COLOR_R, BG_COLOR_G, BG_COLOR_B, BG_COLOR_A);
+  Color fgColor = Color(FG_COLOR_R, FG_COLOR_G, FG_COLOR_B, FG_COLOR_A);
 
-  // Create the number
-  nProg_ = new Number(r, 2, 675, 40, nColor);
-  nVerb_ = new Number(r, 2, 500, 150, nColor);
-  nNoun_ = new Number(r, 2, 675, 150, nColor);
+  // Create the numbers for background
+  nProgBg_ = new Number(r, 2, 675, 40, bgColor, false);
+  nVerbBg_ = new Number(r, 2, 500, 150, bgColor, false);
+  nNounBg_ = new Number(r, 2, 675, 150, bgColor, false);
 
-  nR1_ = new Number(r, 5, 675-(3*S_WIDTH/2*S_FACTOR*N_SPACE_FACTOR), 240, nColor);
-  nR2_ = new Number(r, 5, 675-(3*S_WIDTH/2*S_FACTOR*N_SPACE_FACTOR), 240+80, nColor);
-  nR3_ = new Number(r, 5, 675-(3*S_WIDTH/2*S_FACTOR*N_SPACE_FACTOR), 240+80+80, nColor);
+  nR1Bg_ = new Number(r, 5, 675-(3*S_WIDTH/2*S_FACTOR*N_SPACE_FACTOR), 240, bgColor, false);
+  nR2Bg_ = new Number(r, 5, 675-(3*S_WIDTH/2*S_FACTOR*N_SPACE_FACTOR), 240+80, bgColor, false);
+  nR3Bg_ = new Number(r, 5, 675-(3*S_WIDTH/2*S_FACTOR*N_SPACE_FACTOR), 240+80+80, bgColor, false);
+
+  // Create the numbers for background
+  nProg_ = new Number(r, 2, 675, 40, fgColor, true);
+  nVerb_ = new Number(r, 2, 500, 150, fgColor, true);
+  nNoun_ = new Number(r, 2, 675, 150, fgColor, true);
+
+  nR1_ = new Number(r, 5, 675-(3*S_WIDTH/2*S_FACTOR*N_SPACE_FACTOR), 240, fgColor, true);
+  nR2_ = new Number(r, 5, 675-(3*S_WIDTH/2*S_FACTOR*N_SPACE_FACTOR), 240+80, fgColor, true);
+  nR3_ = new Number(r, 5, 675-(3*S_WIDTH/2*S_FACTOR*N_SPACE_FACTOR), 240+80+80, fgColor, true);
 
 }
 
 FrameRightLcd::~FrameRightLcd() {
 
+ free(nProgBg_);
+ free(nVerbBg_);
+ free(nNounBg_);
+ free(nR1Bg_);
+ free(nR2Bg_);
+ free(nR3Bg_);
+
  free(nProg_);
+ free(nVerb_);
+ free(nNoun_);
+ free(nR1_);
+ free(nR2_);
+ free(nR3_);
+ 
 }

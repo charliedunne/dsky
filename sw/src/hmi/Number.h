@@ -24,7 +24,7 @@ class Number {
 
  public:
 
-  Number(SDL_Renderer * r, const int digits, const int x, const int y, const Color c);
+  Number(SDL_Renderer * r, const int digits, const int x, const int y, const Color c, const bool glow);
   
   void setValue(const std::string s);
   void draw();

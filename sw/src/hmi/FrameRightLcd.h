@@ -28,6 +28,13 @@ class FrameRightLcd : public Frame {
   // Digit dMid_;
   // Digit dLow_;
 
+  Number * nProgBg_ = NULL;
+  Number * nVerbBg_ = NULL;
+  Number * nNounBg_ = NULL;
+  Number * nR1Bg_ = NULL;
+  Number * nR2Bg_ = NULL;
+  Number * nR3Bg_ = NULL;
+
   Number * nProg_ = NULL;
   Number * nVerb_ = NULL;
   Number * nNoun_ = NULL;
