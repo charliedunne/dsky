@@ -43,6 +43,8 @@ public:
   // Function to draw the HMI (it must be called every time it needs to be update)
   void render();
 
+  void update(const char *);
+
   // Wait for event
   void wait();
 

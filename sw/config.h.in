@@ -8,7 +8,8 @@
 
 #define SDL_WINDOW_FLAGS @SDL_WINDOW_FLAGS@
 
-#define ZERLINA_FONT "/home/cav/dsky/sw/resources/fonts/Zerlina.ttf"
+#define ZERLINA_FONT "@CMAKE_SOURCE_DIR@/resources/fonts/Zerlina.ttf"
 
 #define DIGIT_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/DigitsSpriteTemplate.png"
 #define DIGIT_GLOW_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/DigitsSpriteTemplate_glow.png"
+

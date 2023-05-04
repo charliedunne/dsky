@@ -1,6 +1,7 @@
 
 // Standard lib
 #include <iostream>
+#include <string>
 
 // Configuration
 #include "config.h"
@@ -11,34 +12,42 @@
 // Logging
 #include <Logger.h>
 
+#include <signal.h>
+
 bool running = true;
+
+void handler(int s) {
+  LogInfo << "SIGINT detected" << std::endl;
+  running = false;
+}
 
 int main( int argc, char * argv[], char *envp[] ) {
 
   // Initialize core
   LogInfo << "Initializing core...\n";
 
-
   // Initialize HMI
+  std::srand(std::time(0));
+
+  // Capture signals
+  signal(SIGINT, handler);
 
 
   Hmi hmi = Hmi(800, 480);
 
-  hmi.render();
+  std::string num;
 
-  hmi.wait();
+  while (running) {
 
-  
-  // Main loop
-  //  while (running) {
+    int num = std::rand() % 100;
+    std::string n = std::to_string(num);
+    //auto str = std::string(2 - std::min(2, ))
 
-    // Capture events
+    hmi.update(n.c_str());
 
-    // Update status
+    hmi.render();
 
-    // Render
-
-    // Wait for next cycle
-  //  }
+    SDL_Delay(500);
+  }
 
 }
