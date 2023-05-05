@@ -6,7 +6,7 @@
 #include "Frame.h"
 #include "Color.h"
 //#include "Digits.h"
-//#include "Label.h"
+#include "Label.h"
 #include "Digit.h"
 #include "Number.h"
 
@@ -27,6 +27,11 @@ class FrameRightLcd : public Frame {
   Number * nR1_ = NULL;
   Number * nR2_ = NULL;
   Number * nR3_ = NULL;
+
+  Label * lProg_ = NULL;
+  Label * lVerb_ = NULL;
+  Label * lNoun_ = NULL;
+  Label * lCompActy_ = NULL;
 
   Color ghostColor_;
   Color liveColor_;
@@ -83,7 +88,7 @@ class FrameRightLcd : public Frame {
   void setDigitMid(unsigned int value);
   void setDigitLow(unsigned int value);
 
-  void setProg(const char * );
+  void setProg(int);
 private:
 
   // Drawing primitives

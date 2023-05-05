@@ -7,6 +7,15 @@
 
 #include "SDL2/SDL.h"
 
+typedef struct {
+  int prog;
+  int verb;
+  int noun;
+  int r1;
+  int r2;
+  int r3;
+} HmiData;
+
 class Hmi {
 
  private:
@@ -43,7 +52,7 @@ public:
   // Function to draw the HMI (it must be called every time it needs to be update)
   void render();
 
-  void update(const char *);
+  void update(HmiData&);
 
   // Wait for event
   void wait();

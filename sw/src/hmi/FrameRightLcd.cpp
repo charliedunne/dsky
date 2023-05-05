@@ -22,16 +22,6 @@
 #define INTERBLOCK_MARGIN 10
 #endif /* INTERBLOCK_MARGIN */
 
-#define GHOST_COLOR_R 0x15
-#define GHOST_COLOR_G 0x0B
-#define GHOST_COLOR_B 0x0C
-#define GHOST_COLOR_A 0xFF
-
-#define LIVE_COLOR_R 0x00
-#define LIVE_COLOR_G 0xCC
-#define LIVE_COLOR_B 0x44
-#define LIVE_COLOR_A 0xFF
-
 void FrameRightLcd::drawFixedElements()
 {
 
@@ -153,7 +143,26 @@ void FrameRightLcd::render()
 
   std::vector<bool> value = {1, 1, 1, 1, 1, 1, 1};
 
+  lCompActy_->SwitchOn();
+  lCompActy_->draw();
+
+  lProg_->SwitchOn();
+  lProg_->draw();
+
+  lVerb_->SwitchOn();
+  lVerb_->draw();
+
+  lNoun_->SwitchOn();
+  lNoun_->draw();
+      
+
   nProg_->draw();
+  nVerb_->draw();
+  nNoun_->draw();
+  nR1_->draw();
+  nR2_->draw();
+  nR3_->draw();
+
 }
 
 /**
@@ -210,6 +219,17 @@ FrameRightLcd::FrameRightLcd(SDL_Renderer *r, int x, int y, int w, int h, Color 
   nR1_ = new Number(r, 5, nR1_x, nR1_y, liveColor_, false);
   nR2_ = new Number(r, 5, nR1_x, nR1_y + nRxSep, liveColor_, false);
   nR3_ = new Number(r, 5, nR1_x, nR1_y + 2 * nRxSep, liveColor_, false);
+
+  // Create Labels
+  const int lProg_y = 5;
+  const int lProg_h = 30;
+  const int lCompActy_y =  h_* .40 /2 - INTERBLOCK_MARGIN;
+
+  lProg_ = new Label(r, nProg_x, nProg_y - lProg_h , 115, lProg_h, LABEL_PROG); 
+  lVerb_ = new Label(r, nVerb_x, nVerb_y - lProg_h , 115, lProg_h, LABEL_VERB); 
+  lNoun_ = new Label(r, nProg_x, nVerb_y - lProg_h , 115, lProg_h, LABEL_NOUN); 
+
+  lCompActy_ = new Label(r, nVerb_x, nProg_y - lProg_h, 115, h_* .40 /2 - INTERBLOCK_MARGIN, LABEL_COMPACTY);
 }
 
 /**
@@ -231,9 +251,18 @@ FrameRightLcd::~FrameRightLcd()
   free(nR1_);
   free(nR2_);
   free(nR3_);
+
+  free(lProg_);
+  free(lVerb_);
+  free(lNoun_);
+  free(lCompActy_);
 }
 
-void FrameRightLcd::setProg(const char *value)
+void FrameRightLcd::setProg(int value)
 {
-  nProg_->setValue(value);
+
+  // Convert Integer into a string
+  std::string str = std::to_string(value);
+
+  nProg_->setValue(str.c_str());
 }

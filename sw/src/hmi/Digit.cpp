@@ -274,7 +274,9 @@ void Digit::draw(std::vector<bool> seg) {
 
       // Set the color
       SDL_SetTextureColorMod(digitTx_, color_.r(), color_.g(), color_.b());
+      SDL_SetTextureAlphaMod(digitTx_, color_.a());
       SDL_SetTextureColorMod(digitGlowTx_, color_.r(), color_.g(), color_.b());
+      SDL_SetTextureAlphaMod(digitGlowTx_, color_.a());
 
       // Draw it
       if (glow_) { SDL_RenderCopy(r_, digitGlowTx_, &src, &dest); }

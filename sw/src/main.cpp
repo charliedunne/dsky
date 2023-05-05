@@ -37,17 +37,23 @@ int main( int argc, char * argv[], char *envp[] ) {
 
   std::string num;
 
+  HmiData data;
+
   while (running) {
 
-    int num = std::rand() % 100;
-    std::string n = std::to_string(num);
-    //auto str = std::string(2 - std::min(2, ))
-
-    hmi.update(n.c_str());
+    data.prog = rand() % 100;
+    data.verb = rand() % 100;
+    data.noun = rand() % 100;
+    data.r1 = rand() % 100000;
+    data.r2 = rand() % 100000;
+    data.r3 = rand() % 100000;
+    
+    hmi.update(data);
 
     hmi.render();
 
-    SDL_Delay(500);
+    SDL_Delay(5000);
+
   }
 
 }

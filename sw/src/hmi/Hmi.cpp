@@ -76,6 +76,6 @@ void Hmi::render() {
   SDL_RenderPresent(ren_);
 }
 
-void Hmi::update(const char * str) {
-  rightLcd->setProg(str);
+void Hmi::update(HmiData &data) {
+  rightLcd->setProg(data.prog);
 }
