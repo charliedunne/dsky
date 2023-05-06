@@ -78,4 +78,9 @@ void Hmi::render() {
 
 void Hmi::update(HmiData &data) {
   rightLcd->setProg(data.prog);
+  rightLcd->setVerb(data.verb);
+  rightLcd->setNoun(data.noun);
+  rightLcd->setR1(data.r1);
+  rightLcd->setR2(data.r2);
+  rightLcd->setR3(data.r3);
 }

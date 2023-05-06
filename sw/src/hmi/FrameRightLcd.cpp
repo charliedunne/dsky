@@ -224,9 +224,30 @@ FrameRightLcd::~FrameRightLcd()
 
 void FrameRightLcd::setProg(int value)
 {
+  nProg_->setValue(std::to_string(value).c_str());
+}
 
-  // Convert Integer into a string
-  std::string str = std::to_string(value);
+void FrameRightLcd::setVerb(int value)
+{
+  nVerb_->setValue(std::to_string(value).c_str());
+}
 
-  nProg_->setValue(str.c_str());
+void FrameRightLcd::setNoun(int value)
+{
+  nNoun_->setValue(std::to_string(value).c_str());
+}
+
+void FrameRightLcd::setR1(int value)
+{
+  nR1_->setValue(std::to_string(value).c_str());
+}
+
+void FrameRightLcd::setR2(int value)
+{
+  nR2_->setValue(std::to_string(value).c_str());
+}
+
+void FrameRightLcd::setR3(int value)
+{
+  nR3_->setValue(std::to_string(value).c_str());
 }

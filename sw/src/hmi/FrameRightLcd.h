@@ -74,14 +74,13 @@ class FrameRightLcd : public Frame {
   void enableDigitLow();
   void disableDigitLow();
 
-  void setDigitProg(unsigned int value);
-  void setDigitVerb(unsigned int value);
-  void setDigitNoun(unsigned int value);
-  void setDigitTop(unsigned int value);
-  void setDigitMid(unsigned int value);
-  void setDigitLow(unsigned int value);
-
   void setProg(int);
+  void setVerb(int);
+  void setNoun(int);
+  void setR1(int);
+  void setR2(int);
+  void setR3(int);
+
 private:
 
   // Drawing primitives
