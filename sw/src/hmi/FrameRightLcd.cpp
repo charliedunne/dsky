@@ -30,8 +30,8 @@ void FrameRightLcd::drawFixedElements()
 
   // Draw dots
   int xCenter = x_ + (w_ / 2);
-  int xLeft = x_ + FRAME_MARGIN * 1.5;
-  int xRight = x_ + w_ - FRAME_MARGIN * 1.5;
+  int xLeft = x_ + FRAME_MARGIN;
+  int xRight = x_ + w_ - FRAME_MARGIN;
 
   for (int i = 0; i < 3; ++i)
   {
@@ -54,16 +54,16 @@ void FrameRightLcd::drawFixedElements()
            xRight - FRAME_MARGIN, (h_ * 0.48) + dotsRadius * 1.5,
            lineColor_);
 
-  // Draw ghost Lines
-  for (int i = 0; i < 3; ++i)
-  {
-    int yPosDown = (i * (h_ * 0.5) / 3 + h_ * 0.48) -5;
+  // // Draw ghost Lines
+  // for (int i = 0; i < 3; ++i)
+  // {
+  //   int yPosDown = (i * (h_ * 0.5) / 3 + h_ * 0.48) -5;
 
-    boxColor(r_,
-             xLeft + FRAME_MARGIN, yPosDown + dotsRadius / 2,
-             xRight - FRAME_MARGIN, yPosDown + dotsRadius * 1.5,
-             ghostColor_);
-  }
+  //   boxColor(r_,
+  //            xLeft + FRAME_MARGIN, yPosDown + dotsRadius / 2,
+  //            xRight - FRAME_MARGIN, yPosDown + dotsRadius * 1.5,
+  //            ghostColor_);
+  // }
 }
 
 void FrameRightLcd::compActy(Color c)
@@ -119,26 +119,20 @@ void FrameRightLcd::render()
 
   // Draw Fixed elements
   drawFixedElements();
-  // background();
-  // compActy(Color(20, 20, 20));
-
-  std::vector<bool> value = {1, 1, 1, 1, 1, 1, 1};
 
   lCompActy_->draw();
-
   lProg_->draw();
-
   lVerb_->draw();
-
   lNoun_->draw();
-     
-
   nProg_->draw();
   nVerb_->draw();
   nNoun_->draw();
   nR1_->draw();
   nR2_->draw();
   nR3_->draw();
+  lR1_->draw();
+  lR2_->draw();
+  lR3_->draw();
 
 }
 
@@ -165,8 +159,8 @@ FrameRightLcd::FrameRightLcd(SDL_Renderer *r, int x, int y, int w, int h, Color 
 
   // Colors
   liveColor_ = Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A);
-  dotsColor_ = Color(0xF0, 0xF0, 0xF0, 0xFF);
-  lineColor_ = Color(0xC0, 0xC0, 0xC0, 0xFF);
+  dotsColor_ = Color(0xF0, 0xF0, 0xF0, 0x55);
+  lineColor_ = Color(0xC0, 0xC0, 0xC0, 0x22);
 
   // Create constants for positions
   const int nProg_x = 675;
@@ -197,10 +191,23 @@ FrameRightLcd::FrameRightLcd(SDL_Renderer *r, int x, int y, int w, int h, Color 
   lNoun_ = new Label(r, nProg_x, nVerb_y - lProg_h , 115, lProg_h, LABEL_NOUN); 
   lCompActy_ = new Label(r, nVerb_x - 10, nProg_y - lProg_h, 115, h_* .40 /2 - INTERBLOCK_MARGIN, LABEL_COMPACTY);
 
+  int yPosDownR1 = (0 * (h_ * 0.5) / 3 + h_ * 0.48) -5;
+  int yPosDownR2 = (1 * (h_ * 0.5) / 3 + h_ * 0.48) -5;
+  int yPosDownR3 = (2 * (h_ * 0.5) / 3 + h_ * 0.48) -5;
+  int xLeft = x_ + FRAME_MARGIN * 1.5;
+  int xSize = w_ - FRAME_MARGIN * 1.5 * 2;
+  lR1_ = new Label(r, xLeft, yPosDownR1, xSize, 4, LABEL_LINE);
+  lR2_ = new Label(r, xLeft, yPosDownR2, xSize, 4, LABEL_LINE);
+  lR3_ = new Label(r, xLeft, yPosDownR3, xSize, 4, LABEL_LINE);
+
+
   lCompActy_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
   lProg_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
   lNoun_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
   lVerb_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
+  lR1_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
+  lR2_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
+  lR3_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
 }
 
 /**
@@ -270,4 +277,19 @@ void FrameRightLcd::setNounStatus(bool status) {
 void FrameRightLcd::setCompActyStatus(bool status) {
 
   lCompActy_->setStatus(status);
+}
+
+void FrameRightLcd::setR1Status(bool status) {
+
+  lR1_->setStatus(status);
+}
+
+void FrameRightLcd::setR2Status(bool status) {
+
+  lR2_->setStatus(status);
+}
+
+void FrameRightLcd::setR3Status(bool status) {
+
+  lR3_->setStatus(status);
 }

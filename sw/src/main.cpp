@@ -52,6 +52,10 @@ int main( int argc, char * argv[], char *envp[] ) {
     data.fProg = rand() % 10;
     data.fVerb = rand() % 10;
     data.fNoun = rand() % 10;
+    data.fR1 = rand() % 10;
+    data.fR2 = rand() % 10;
+    data.fR3 = rand() % 10;
+    
 
     //data.prog = 7;
     

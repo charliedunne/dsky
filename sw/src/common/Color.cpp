@@ -63,7 +63,7 @@ void Color::set(int r, int g, int b, int a) {
 
 Color::operator int() const {
 
-  int output = blue_ | green_ << 8 | red_ << 16 | alpha_ << 24;
+  int output = red_ | green_ << 8 | blue_ << 16 | alpha_ << 24;
 
   return output;
 }

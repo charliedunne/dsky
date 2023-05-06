@@ -25,6 +25,10 @@ class FrameRightLcd : public Frame {
   Label * lVerb_ = NULL;
   Label * lNoun_ = NULL;
   Label * lCompActy_ = NULL;
+  Label * lR1_ = NULL;
+  Label * lR2_ = NULL;
+  Label * lR3_ = NULL;
+
 
   Color ghostColor_;
   Color liveColor_;

@@ -23,6 +23,9 @@ typedef struct {
   bool fVerb;
   bool fNoun;
   bool fCompActy;
+  bool fR1;
+  bool fR2;
+  bool fR3;
 } HmiData;
 
 class Hmi {

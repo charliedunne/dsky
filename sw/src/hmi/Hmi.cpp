@@ -93,5 +93,9 @@ void Hmi::update(HmiData &data) {
   rightLcd_->setVerbStatus(data.fVerb);
   rightLcd_->setNounStatus(data.fNoun);
   rightLcd_->setCompActyStatus(data.fCompActy);
+  rightLcd_->setR1Status(data.fR1);
+  rightLcd_->setR2Status(data.fR2);
+  rightLcd_->setR3Status(data.fR3);
+
 
 }

@@ -74,46 +74,50 @@ void Label::draw()
              x_ + w_, y_ + h_,
              color);
 
-    // Calculate Source based on the Label Type
-    switch (lType_)
+    if (lType_ != LABEL_LINE)
     {
-    case LABEL_VERB:
-        src.y += L_HEIGHT;
-        break;
 
-    case LABEL_NOUN:
-        src.y += 2 * L_HEIGHT;
-        break;
+        // Calculate Source based on the Label Type
+        switch (lType_)
+        {
+        case LABEL_VERB:
+            src.y += L_HEIGHT;
+            break;
 
-    case LABEL_COMPACTY:
-        src.y += 3 * L_HEIGHT;
-        src.h += L_HEIGHT;
-        break;
+        case LABEL_NOUN:
+            src.y += 2 * L_HEIGHT;
+            break;
 
-    case LABEL_PROG:
-    default:
-        break;
+        case LABEL_COMPACTY:
+            src.y += 3 * L_HEIGHT;
+            src.h += L_HEIGHT;
+            break;
+
+        case LABEL_PROG:
+        default:
+            break;
+        }
+
+        // Calculate the position of the texture to be center
+        dest.x += (w_ - (L_WIDTH * L_FACTOR)) / 2;
+        dest.w = L_WIDTH * L_FACTOR;
+        dest.h = L_HEIGHT * L_FACTOR;
+
+        if (lType_ == LABEL_COMPACTY)
+        {
+            dest.h *= 2;
+            dest.y += (h_ - (2 * L_HEIGHT * L_FACTOR)) / 2;
+        }
+        else
+        {
+            dest.y += (h_ - (L_HEIGHT * L_FACTOR)) / 2;
+        }
+
+        // Draw the text
+        SDL_SetTextureColorMod(labelTx_, 0, 0, 0);
+        SDL_SetTextureAlphaMod(labelTx_, 255);
+        SDL_RenderCopy(r_, labelTx_, &src, &dest);
     }
-
-    // Calculate the position of the texture to be center
-    dest.x += (w_ - (L_WIDTH * L_FACTOR)) / 2;
-    dest.w = L_WIDTH * L_FACTOR;
-    dest.h = L_HEIGHT * L_FACTOR;
-
-    if (lType_ == LABEL_COMPACTY)
-    {
-        dest.h *= 2;
-        dest.y += (h_ - (2*L_HEIGHT * L_FACTOR)) / 2;
-    }
-    else
-    {
-        dest.y += (h_ - (L_HEIGHT * L_FACTOR)) / 2;
-    }
-
-    // Draw the text
-    SDL_SetTextureColorMod(labelTx_, 0, 0, 0);
-    SDL_SetTextureAlphaMod(labelTx_, 255);
-    SDL_RenderCopy(r_, labelTx_, &src, &dest);
 }
 
 void Label::setStatus(const bool status)
@@ -121,9 +125,8 @@ void Label::setStatus(const bool status)
     enabled_ = status;
 }
 
-
 void Label::setColor(const Color fgColor, const Color bgColor)
 {
-  fgColor_ = fgColor;
-  bgColor_ = bgColor;
+    fgColor_ = fgColor;
+    bgColor_ = bgColor;
 }
