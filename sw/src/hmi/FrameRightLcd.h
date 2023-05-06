@@ -57,12 +57,12 @@ class FrameRightLcd : public Frame {
 
 
   // Setters for numeric values
-  void setProg(int);
-  void setVerb(int);
-  void setNoun(int);
-  void setR1(int);
-  void setR2(int);
-  void setR3(int);
+  void setProg(const int value, NumberMode const mode = N_ON);
+  void setVerb(const int value, NumberMode const mode = N_ON);
+  void setNoun(const int value, NumberMode const mode = N_ON);
+  void setR1(const int value, NumberMode const mode = N_ON);
+  void setR2(const int value, NumberMode const mode = N_ON);
+  void setR3(const int value, NumberMode const mode = N_ON);
 
   // Setters for Labels
   void setProgStatus(bool);

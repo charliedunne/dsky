@@ -41,29 +41,39 @@ int main( int argc, char * argv[], char *envp[] ) {
 
   while (running) {
 
-    data.nProg = rand() % 100;
-    data.nVerb = rand() % 100;
-    data.nNoun = rand() % 100;
-    data.nR1 = rand() % 100000;
-    data.nR2 = rand() % 100000;
-    data.nR3 = rand() % 100000;
+    // data.nProg = rand() % 100;
+    // data.nVerb = rand() % 100;
+    // data.nNoun = rand() % 100;
+    // data.nR1 = rand() % 100000;
+    // data.nR2 = rand() % 100000;
+    // data.nR3 = rand() % 100000;
 
-    data.fCompActy = rand() % 10;
-    data.fProg = rand() % 10;
-    data.fVerb = rand() % 10;
-    data.fNoun = rand() % 10;
-    data.fR1 = rand() % 10;
-    data.fR2 = rand() % 10;
-    data.fR3 = rand() % 10;
+    // data.fCompActy = rand() % 10;
+    // data.fProg = rand() % 10;
+    // data.fVerb = rand() % 10;
+    // data.fNoun = rand() % 10;
+    // data.fR1 = rand() % 10;
+    // data.fR2 = rand() % 10;
+    // data.fR3 = rand() % 10;
     
+    memset(&data, 0x0, sizeof(HmiData));
 
-    //data.prog = 7;
-    
+    data.nProg = 11;
+    data.nVerb = 5;
+    data.nNoun = 2;
+    data.mProg = N_ON;
+    data.mVerb = N_BLINK;
+    data.mNoun = N_BLINK;
+
+    data.fProg = true;
+    data.fNoun = true;
+    data.fVerb = true;
+
     hmi.update(data);
 
     hmi.render();
 
-    SDL_Delay(1000);
+    SDL_Delay(200);
 
   }
 

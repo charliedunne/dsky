@@ -8,6 +8,14 @@
 
 #define N_SPACE_FACTOR (1)
 
+#define DEFAULT_BLINK_FRAMES 5
+
+typedef enum {
+  N_OFF = 0,
+  N_ON = 1,
+  N_BLINK = 2
+} NumberMode;
+
 class Number {
 
  private:
@@ -17,6 +25,10 @@ class Number {
 
   // Value to print
   std::string value_;
+
+  NumberMode nMode_ = N_ON;
+  int blinkFrames_ = DEFAULT_BLINK_FRAMES;
+  int frameCounter_ = 0;
 
   Digit *d_[5];
 
@@ -28,8 +40,8 @@ class Number {
   
   void setValue(const std::string s);
   void draw();
-
   void setPosition(const int x, const int y);
+  void setMode(const NumberMode mode, const int frames = DEFAULT_BLINK_FRAMES);
 
 };
 

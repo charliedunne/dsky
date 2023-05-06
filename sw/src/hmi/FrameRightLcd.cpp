@@ -229,34 +229,40 @@ FrameRightLcd::~FrameRightLcd()
   free(lCompActy_);
 }
 
-void FrameRightLcd::setProg(int value) 
+void FrameRightLcd::setProg(const int value, NumberMode const mode) 
 {
   nProg_->setValue(std::to_string(value).c_str());
+  nProg_->setMode(mode);
 }
 
-void FrameRightLcd::setVerb(int value)
+void FrameRightLcd::setVerb(const int value, NumberMode const mode)
 {
   nVerb_->setValue(std::to_string(value).c_str());
+  nVerb_->setMode(mode);
 }
 
-void FrameRightLcd::setNoun(int value)
+void FrameRightLcd::setNoun(const int value, NumberMode const mode)
 {
   nNoun_->setValue(std::to_string(value).c_str());
+  nNoun_->setMode(mode);
 }
 
-void FrameRightLcd::setR1(int value)
+void FrameRightLcd::setR1(const int value, NumberMode const mode)
 {
   nR1_->setValue(std::to_string(value).c_str());
+  nR1_->setMode(mode);
 }
 
-void FrameRightLcd::setR2(int value)
+void FrameRightLcd::setR2(const int value, NumberMode const mode)
 {
   nR2_->setValue(std::to_string(value).c_str());
+  nR2_->setMode(mode);
 }
 
-void FrameRightLcd::setR3(int value)
+void FrameRightLcd::setR3(const int value, NumberMode const mode)
 {
   nR3_->setValue(std::to_string(value).c_str());
+  nR3_->setMode(mode);
 }
 
 void FrameRightLcd::setProgStatus(bool status) {

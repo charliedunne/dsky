@@ -18,6 +18,14 @@ typedef struct {
   int nR2;
   int nR3;
 
+  // Modes for Values
+  NumberMode mProg;
+  NumberMode mVerb;
+  NumberMode mNoun;
+  NumberMode mR1;
+  NumberMode mR2;
+  NumberMode mR3;
+
   // Flags
   bool fProg;
   bool fVerb;

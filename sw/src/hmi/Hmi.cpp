@@ -81,12 +81,15 @@ void Hmi::render() {
 void Hmi::update(HmiData &data) {
 
   // Set values
-  rightLcd_->setProg(data.nProg);
-  rightLcd_->setVerb(data.nVerb);
-  rightLcd_->setNoun(data.nNoun);
-  rightLcd_->setR1(data.nR1);
-  rightLcd_->setR2(data.nR2);
-  rightLcd_->setR3(data.nR3);
+  rightLcd_->setProg(data.nProg, data.mProg);
+  rightLcd_->setVerb(data.nVerb, data.mVerb);
+  rightLcd_->setNoun(data.nNoun, data.mNoun);
+  rightLcd_->setR1(data.nR1, data.mR1);
+  rightLcd_->setR2(data.nR2, data.mR2);
+  rightLcd_->setR3(data.nR3, data.mR3);
+
+  // Set Numbers mode
+  
 
   // Set flags
   rightLcd_->setProgStatus(data.fProg);
