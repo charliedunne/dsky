@@ -1,7 +1,7 @@
 #include "Number.h"
 #include <Logger.h>
 
-Number::Number(SDL_Renderer *r, const int digits, const int x, const int y, const Color c, const bool glow) : Draw(r, x, y)
+Number::Number(SDL_Renderer *r, const int digits, const int x, const int y, const Color c, const bool glow) : Draw(x, y)
 {
 
   // Maximum number of digits

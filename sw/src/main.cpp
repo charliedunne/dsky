@@ -61,13 +61,13 @@ int main( int argc, char * argv[], char *envp[] ) {
     data.nProg = 11;
     data.nVerb = 5;
     data.nNoun = 2;
-    data.mProg = DRAW_ON;
-    data.mVerb = DRAW_BLINK;
-    data.mNoun = DRAW_BLINK;
+    data.nProgMode = DRAW_ON;
+    data.nVerbMode = DRAW_BLINK;
+    data.nNounMode = DRAW_BLINK;
 
-    data.fProg = true;
-    data.fNoun = true;
-    data.fVerb = true;
+    data.lProgMode = DRAW_ON;
+    data.lNounMode = DRAW_ON;
+    data.lVerbMode = DRAW_ON;
 
     hmi.update(data);
 

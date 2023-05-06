@@ -65,13 +65,13 @@ class FrameRightLcd : public Frame {
   void setR3(const int value, DrawMode const mode = DRAW_ON);
 
   // Setters for Labels
-  void setProgStatus(bool);
-  void setVerbStatus(bool);
-  void setNounStatus(bool);
-  void setCompActyStatus(bool);
-  void setR1Status(bool);
-  void setR2Status(bool);
-  void setR3Status(bool);
+  void setProgStatus(DrawMode);
+  void setVerbStatus(DrawMode);
+  void setNounStatus(DrawMode);
+  void setCompActyStatus(DrawMode);
+  void setR1Status(DrawMode);
+  void setR2Status(DrawMode);
+  void setR3Status(DrawMode);
 
 private:
 

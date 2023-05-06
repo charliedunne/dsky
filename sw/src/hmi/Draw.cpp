@@ -1,7 +1,7 @@
 // Provided interface
 #include "Draw.h"
 
-Draw::Draw(SDL_Renderer *r, const int x, const int y,
+Draw::Draw(const int x, const int y,
            const int period)
 {
     x_ = x;

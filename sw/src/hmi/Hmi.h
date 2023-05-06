@@ -19,21 +19,22 @@ typedef struct {
   int nR3;
 
   // Modes for Values
-  DrawMode mProg;
-  DrawMode mVerb;
-  DrawMode mNoun;
-  DrawMode mR1;
-  DrawMode mR2;
-  DrawMode mR3;
+  DrawMode nProgMode;
+  DrawMode nVerbMode;
+  DrawMode nNounMode;
+  DrawMode nR1Mode;
+  DrawMode nR2Mode;
+  DrawMode nR3Mode;
+  DrawMode lProgMode;
+  DrawMode lVerbMode;
+  DrawMode lNounMode;
+  DrawMode lCompActyMode;
+  DrawMode lR1Mode;
+  DrawMode lR2Mode;
+  DrawMode lR3Mode;
 
   // Flags
-  bool fProg;
-  bool fVerb;
-  bool fNoun;
-  bool fCompActy;
-  bool fR1;
-  bool fR2;
-  bool fR3;
+
 } HmiData;
 
 class Hmi {

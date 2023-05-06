@@ -6,24 +6,17 @@
 
 Label::Label(SDL_Renderer *r,
              const int x, const int y, const int w, const int h,
-             const LabelType t)
+             const LabelType t) : Draw(x, y)
 {
     // Control flag
     bool ctrlFlag = true;
 
-    // Renderer
-    r_ = r;
-
     // Initial values for position and size
-    x_ = x;
-    y_ = y;
+    r_ = r;
     w_ = w;
     h_ = h;
     bgColor_ = Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A);
     fgColor_ = Color(0, 0, 0, 255);
-
-    // Set default status
-    enabled_ = false;
 
     // Set the label type
     lType_ = t;
@@ -52,33 +45,25 @@ Label::Label(SDL_Renderer *r,
     SDL_FreeSurface(surface);
 }
 
-void Label::draw()
+void drawLabel(SDL_Renderer *r, SDL_Texture *t, const int x, const int y, const int w, const int h, const Color c, const LabelType lType)
 {
     // Create output rectange for drawing
-    SDL_Rect dest = {x_, y_, w_, h_};
+    SDL_Rect dest = {x, y, w, h};
 
     // Create source from the Sprite
     SDL_Rect src = {0, 0, L_WIDTH, L_HEIGHT};
 
-    Color color = fgColor_;
-
-    // If disabled use Ghost color
-    if (!enabled_)
-    {
-        color = bgColor_;
-    }
-
     // Draw the rectangle
-    boxColor(r_,
-             x_, y_,
-             x_ + w_, y_ + h_,
-             color);
+    boxColor(r,
+             x, y,
+             x + w, y + h,
+             c);
 
-    if (lType_ != LABEL_LINE)
+    if (lType != LABEL_LINE)
     {
 
         // Calculate Source based on the Label Type
-        switch (lType_)
+        switch (lType)
         {
         case LABEL_VERB:
             src.y += L_HEIGHT;
@@ -99,30 +84,36 @@ void Label::draw()
         }
 
         // Calculate the position of the texture to be center
-        dest.x += (w_ - (L_WIDTH * L_FACTOR)) / 2;
+        dest.x += (w - (L_WIDTH * L_FACTOR)) / 2;
         dest.w = L_WIDTH * L_FACTOR;
         dest.h = L_HEIGHT * L_FACTOR;
 
-        if (lType_ == LABEL_COMPACTY)
+        if (lType == LABEL_COMPACTY)
         {
             dest.h *= 2;
-            dest.y += (h_ - (2 * L_HEIGHT * L_FACTOR)) / 2;
+            dest.y += (h - (2 * L_HEIGHT * L_FACTOR)) / 2;
         }
         else
         {
-            dest.y += (h_ - (L_HEIGHT * L_FACTOR)) / 2;
+            dest.y += (h - (L_HEIGHT * L_FACTOR)) / 2;
         }
 
         // Draw the text
-        SDL_SetTextureColorMod(labelTx_, 0, 0, 0);
-        SDL_SetTextureAlphaMod(labelTx_, 255);
-        SDL_RenderCopy(r_, labelTx_, &src, &dest);
+        SDL_SetTextureColorMod(t, 0, 0, 0);
+        SDL_SetTextureAlphaMod(t, 255);
+        SDL_RenderCopy(r, t, &src, &dest);
     }
 }
 
-void Label::setStatus(const bool status)
+void Label::drawOn()
 {
-    enabled_ = status;
+
+    drawLabel(r_, labelTx_, x_, y_, w_, h_, fgColor_, lType_);
+}
+
+void Label::drawOff()
+{
+    drawLabel(r_, labelTx_, x_, y_, w_, h_, bgColor_, lType_);
 }
 
 void Label::setColor(const Color fgColor, const Color bgColor)

@@ -1,11 +1,18 @@
 #ifndef LABEL_H
 #define LABEL_H
 
-#include "Color.h"
+// Graphics Libraries
 #include "SDL2/SDL.h"
+
+// External configuration
 #include "config.h"
 
+// Parent clases
+#include "Draw.h"
+
+// Required Classes
 #include "Color.h"
+
 
 #define L_WIDTH 150
 #define L_HEIGHT 50
@@ -20,7 +27,7 @@ typedef enum
   LABEL_LINE
 } LabelType;
 
-class Label
+class Label : public Draw
 {
 
 private:
@@ -30,9 +37,7 @@ private:
   // Texture with the gliphs
   SDL_Texture *labelTx_ = NULL;
 
-  // Position and size
-  int x_;
-  int y_;
+  // Size
   int w_;
   int h_;
 
@@ -41,9 +46,6 @@ private:
 
   // Background color
   Color bgColor_;
-
-  // Status
-  bool enabled_ = false;
 
   // Label type
   LabelType lType_;
@@ -72,13 +74,12 @@ public:
   void setBgColor(const Color c);
   void setPosition(const int x, const int y);
 
-  void draw();
-
-  // Set the status 
+   // Set the status 
   void setStatus(const bool);
 
-  // Blink Label
-  void Blink(unsigned int freq);
+  // Base class virtual functions
+  void drawOn();
+  void drawOff();
 };
 
 #endif /* LABEL_H */

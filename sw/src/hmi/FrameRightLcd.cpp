@@ -265,37 +265,37 @@ void FrameRightLcd::setR3(const int value, DrawMode const mode)
   nR3_->setMode(mode);
 }
 
-void FrameRightLcd::setProgStatus(bool status) {
+void FrameRightLcd::setProgStatus(DrawMode status) {
 
-  lProg_->setStatus(status);
+  lProg_->setMode(status);
 }
 
-void FrameRightLcd::setVerbStatus(bool status) {
+void FrameRightLcd::setVerbStatus(DrawMode status) {
 
-  lVerb_->setStatus(status);
+  lVerb_->setMode(status);
 }
 
-void FrameRightLcd::setNounStatus(bool status) {
+void FrameRightLcd::setNounStatus(DrawMode status) {
 
-  lNoun_->setStatus(status);
+  lNoun_->setMode(status);
 }
 
-void FrameRightLcd::setCompActyStatus(bool status) {
+void FrameRightLcd::setCompActyStatus(DrawMode status) {
 
-  lCompActy_->setStatus(status);
+  lCompActy_->setMode(status);
 }
 
-void FrameRightLcd::setR1Status(bool status) {
+void FrameRightLcd::setR1Status(DrawMode status) {
 
-  lR1_->setStatus(status);
+  lR1_->setMode(status);
 }
 
-void FrameRightLcd::setR2Status(bool status) {
+void FrameRightLcd::setR2Status(DrawMode status) {
 
-  lR2_->setStatus(status);
+  lR2_->setMode(status);
 }
 
-void FrameRightLcd::setR3Status(bool status) {
+void FrameRightLcd::setR3Status(DrawMode status) {
 
-  lR3_->setStatus(status);
+  lR3_->setMode(status);
 }

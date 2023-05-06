@@ -87,12 +87,11 @@ public:
     /**
      * @brief Construct a new Draw object
      * 
-     * @param r [in] Pointer to the renderer
      * @param x [in] X position (left-top corner) [pixels]
      * @param y [in] Y position (left-top corner) [pixels]
      * @param period [OPTIONAL] Blinking period [frames]
      */
-    Draw(SDL_Renderer *r, const int x, const int y, 
+    Draw(const int x, const int y, 
     const int period = DEFAULT_BLINKING_PERIOD);
 
     /**
