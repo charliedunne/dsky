@@ -6,34 +6,20 @@
 #include "Frame.h"
 #include "Color.h"
 //#include "Digits.h"
-//#include "Label.h"
+#include "Label.h"
 #include "Digit.h"
 #include "Number.h"
 
 class FrameRightLcd : public Frame {
 
  private:
-  
-  // Frame elements
-  // Label lActComp_;
-  // Label lProg_;
-  // Label lVerb_;
-  // Label lNoun_;
 
-  // Digit dProg_;
-  // Digit dVerb_;
-  // Digit dNoun_;
-
-  // Digit dTop_;
-  // Digit dMid_;
-  // Digit dLow_;
-
-  Number * nProgBg_ = NULL;
-  Number * nVerbBg_ = NULL;
-  Number * nNounBg_ = NULL;
-  Number * nR1Bg_ = NULL;
-  Number * nR2Bg_ = NULL;
-  Number * nR3Bg_ = NULL;
+  Number * nProgGhost_ = NULL;
+  Number * nVerbGhost_ = NULL;
+  Number * nNounGhost_ = NULL;
+  Number * nR1Ghost_ = NULL;
+  Number * nR2Ghost_ = NULL;
+  Number * nR3Ghost_ = NULL;
 
   Number * nProg_ = NULL;
   Number * nVerb_ = NULL;
@@ -42,16 +28,36 @@ class FrameRightLcd : public Frame {
   Number * nR2_ = NULL;
   Number * nR3_ = NULL;
 
+  Label * lProg_ = NULL;
+  Label * lVerb_ = NULL;
+  Label * lNoun_ = NULL;
+  Label * lCompActy_ = NULL;
+
+  Color ghostColor_;
+  Color liveColor_;
+  Color dotsColor_;
+  Color lineColor_;
+
+  const bool debug_ = true;
+
  public:
 
   // Constructor
-  FrameRightLcd(SDL_Renderer *r, int xPos, int yPos, int xSize, int ySize, Color bg); 
+  FrameRightLcd(SDL_Renderer *r, int x, int y, int w, int h, Color bg); 
 
   // Destructor
   ~FrameRightLcd();
 
   // Local implementation of Render
   void render();
+
+  // Configuration functions
+  void setBgColor(const Color c);
+  void setGhostColor(const Color c);
+  void setLiveColor(const Color c);
+  void setDotsColor(const Color c);
+  void setlineColor(const Color c);
+
 
   // Operation functions
   void enableLabelActComp();
@@ -82,13 +88,16 @@ class FrameRightLcd : public Frame {
   void setDigitMid(unsigned int value);
   void setDigitLow(unsigned int value);
 
+  void setProg(int);
 private:
 
   // Drawing primitives
-  void frameBoundaries(Color c);
+  void drawFixedElements();
+  
   void compActy(Color c);
-  void background();
   void progDigits();
+
+
 
 };
 

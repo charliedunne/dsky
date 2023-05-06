@@ -6,9 +6,24 @@
 
 #cmakedefine LOG_LEVEL @LOG_LEVEL@
 
+// SDL FLAGS
 #define SDL_WINDOW_FLAGS @SDL_WINDOW_FLAGS@
 
-#define ZERLINA_FONT "/home/cav/dsky/sw/resources/fonts/Zerlina.ttf"
+// FOnts
+#define ZERLINA_FONT "@CMAKE_SOURCE_DIR@/resources/fonts/Zerlina.ttf"
 
+// Textures
 #define DIGIT_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/DigitsSpriteTemplate.png"
 #define DIGIT_GLOW_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/DigitsSpriteTemplate_glow.png"
+#define LABEL_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/LabelsTemplateLGC.png"
+
+// Default colors
+#define GHOST_COLOR_R 0x15
+#define GHOST_COLOR_G 0x0B
+#define GHOST_COLOR_B 0x0C
+#define GHOST_COLOR_A 0xFF
+
+#define LIVE_COLOR_R 0x00
+#define LIVE_COLOR_G 0xCC
+#define LIVE_COLOR_B 0x44
+#define LIVE_COLOR_A 0xFF

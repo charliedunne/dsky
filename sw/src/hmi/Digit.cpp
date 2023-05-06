@@ -191,10 +191,6 @@ void Digit::initialize(SDL_Renderer *r) {
     ctrlFlag = false;
 
   }
-  else
-  {
-    LogInfo << "Image " << DIGIT_TXT_FILE << " loaded successfully" << std::endl;
-  }
 
   SDL_Surface * surfaceGlow = IMG_Load(DIGIT_GLOW_TXT_FILE);
   if (surface == NULL) {
@@ -267,8 +263,6 @@ void Digit::draw(std::vector<bool> seg) {
   // Create source from the Sprite
   SDL_Rect src = {0, 0, S_WIDTH/2, S_HEIGHT};
 
-  LogTrace << "Position: (" << x_ << ", " << y_ << "). Size: (" << w_ << ", " << h_ << ")." << std::endl;
-
   segments_ = seg;
 
   for (int i = 0; i < seg.size(); ++i) {
@@ -280,7 +274,9 @@ void Digit::draw(std::vector<bool> seg) {
 
       // Set the color
       SDL_SetTextureColorMod(digitTx_, color_.r(), color_.g(), color_.b());
+      SDL_SetTextureAlphaMod(digitTx_, color_.a());
       SDL_SetTextureColorMod(digitGlowTx_, color_.r(), color_.g(), color_.b());
+      SDL_SetTextureAlphaMod(digitGlowTx_, color_.a());
 
       // Draw it
       if (glow_) { SDL_RenderCopy(r_, digitGlowTx_, &src, &dest); }
@@ -290,8 +286,6 @@ void Digit::draw(std::vector<bool> seg) {
 }
 
 void Digit::draw(const char c) {
-
-  LogTrace << "Printing (" << c << ")" << std::endl;
 
   Digit::draw(getSegmentsFromChar(c));
 }
