@@ -24,6 +24,6 @@
 #define GHOST_COLOR_A 0xFF
 
 #define LIVE_COLOR_R 0x00
-#define LIVE_COLOR_G 0xCC
-#define LIVE_COLOR_B 0x44
+#define LIVE_COLOR_G 0xDD
+#define LIVE_COLOR_B 0x88
 #define LIVE_COLOR_A 0xFF
