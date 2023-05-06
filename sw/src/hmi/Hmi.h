@@ -19,12 +19,12 @@ typedef struct {
   int nR3;
 
   // Modes for Values
-  NumberMode mProg;
-  NumberMode mVerb;
-  NumberMode mNoun;
-  NumberMode mR1;
-  NumberMode mR2;
-  NumberMode mR3;
+  DrawMode mProg;
+  DrawMode mVerb;
+  DrawMode mNoun;
+  DrawMode mR1;
+  DrawMode mR2;
+  DrawMode mR3;
 
   // Flags
   bool fProg;

@@ -27,3 +27,6 @@
 #define LIVE_COLOR_G 0xDD
 #define LIVE_COLOR_B 0x88
 #define LIVE_COLOR_A 0xFF
+
+// Default blinking Period [frames]
+#define DEFAULT_BLINKING_PERIOD 10

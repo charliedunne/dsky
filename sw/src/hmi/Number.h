@@ -1,22 +1,20 @@
 #ifndef NUMBER_H
 #define NUMBER_H
 
+// Parent clases
+#include "Draw.h"
+
+// Required classes
 #include "Digit.h"
 #include "Color.h"
+
+// Standard Library
 #include <vector>
 #include <string>
 
 #define N_SPACE_FACTOR (1)
 
-#define DEFAULT_BLINK_FRAMES 5
-
-typedef enum {
-  N_OFF = 0,
-  N_ON = 1,
-  N_BLINK = 2
-} NumberMode;
-
-class Number {
+class Number : public Draw {
 
  private:
 
@@ -25,10 +23,6 @@ class Number {
 
   // Value to print
   std::string value_;
-
-  NumberMode nMode_ = N_ON;
-  int blinkFrames_ = DEFAULT_BLINK_FRAMES;
-  int frameCounter_ = 0;
 
   Digit *d_[5];
 
@@ -39,9 +33,11 @@ class Number {
   Number(SDL_Renderer * r, const int digits, const int x, const int y, const Color c, const bool glow);
   
   void setValue(const std::string s);
-  void draw();
   void setPosition(const int x, const int y);
-  void setMode(const NumberMode mode, const int frames = DEFAULT_BLINK_FRAMES);
+
+  // Base class virtual functions
+  void drawOn();
+  void drawOff();
 
 };
 

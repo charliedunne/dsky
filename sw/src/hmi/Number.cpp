@@ -1,7 +1,7 @@
 #include "Number.h"
 #include <Logger.h>
 
-Number::Number(SDL_Renderer *r, const int digits, const int x, const int y, const Color c, const bool glow)
+Number::Number(SDL_Renderer *r, const int digits, const int x, const int y, const Color c, const bool glow) : Draw(r, x, y)
 {
 
   // Maximum number of digits
@@ -33,10 +33,6 @@ Number::Number(SDL_Renderer *r, const int digits, const int x, const int y, cons
       digits_.push_back(d);
     }
   }
-
-  nMode_ = N_ON;
-  blinkFrames_ = DEFAULT_BLINK_FRAMES;
-  frameCounter_ = 0;
 }
 
 void Number::setValue(const std::string s)
@@ -44,64 +40,43 @@ void Number::setValue(const std::string s)
   value_ = s;
 }
 
-void drawNumber(std::vector<Digit *> &digits, std::string &value)
+void Number::drawOn()
 {
-  if (value.size() > digits.size())
+
+  if (value_.size() > digits_.size())
   {
     LogError << "Overflow" << std::endl;
 
-    for (int i = 0; i < digits.size(); ++i)
+    for (int i = 0; i < digits_.size(); ++i)
     {
-      digits[i]->draw('o');
+      digits_[i]->draw('o');
     }
   }
   else
   {
 
-    for (int i = 0; i < digits.size(); ++i)
+    for (int i = 0; i < digits_.size(); ++i)
     {
 
-      const int nPadding = digits.size() - value.size();
+      const int nPadding = digits_.size() - value_.size();
 
       if (i < nPadding)
       {
-        digits[i]->draw('x');
+        digits_[i]->draw('x');
       }
       else
       {
-        digits[i]->draw(value[i - nPadding]);
+        digits_[i]->draw(value_[i - nPadding]);
       }
     }
   }
 }
 
-void Number::draw()
+void Number::drawOff()
 {
 
-  if ((nMode_ == N_ON) || ((nMode_ == N_BLINK) && (frameCounter_ < blinkFrames_ / 2))) {
-    drawNumber(digits_, value_);
-  }
-  else {
-    for (int i = 0; i < digits_.size(); ++i)
-    {
-      digits_[i]->draw('x');
-    }
-
-  }
-
-  // Increase the frames counter
-  frameCounter_ = (frameCounter_ + 1) % blinkFrames_;
-}
-
-
-
-void Number::setMode(const NumberMode mode, const int frames)
-{
-
-  if (mode == N_BLINK)
+  for (int i = 0; i < digits_.size(); ++i)
   {
-    blinkFrames_ = frames;
+    digits_[i]->draw('x');
   }
-
-  nMode_ = mode;
 }

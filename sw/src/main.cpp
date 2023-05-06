@@ -61,9 +61,9 @@ int main( int argc, char * argv[], char *envp[] ) {
     data.nProg = 11;
     data.nVerb = 5;
     data.nNoun = 2;
-    data.mProg = N_ON;
-    data.mVerb = N_BLINK;
-    data.mNoun = N_BLINK;
+    data.mProg = DRAW_ON;
+    data.mVerb = DRAW_BLINK;
+    data.mNoun = DRAW_BLINK;
 
     data.fProg = true;
     data.fNoun = true;
@@ -76,5 +76,4 @@ int main( int argc, char * argv[], char *envp[] ) {
     SDL_Delay(200);
 
   }
-
 }
