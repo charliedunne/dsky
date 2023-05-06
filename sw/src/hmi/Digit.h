@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "Color.h"
+#include "config.h"
 #include "SDL2/SDL.h"
 
 #define N_SEGMENTS (7)
@@ -12,13 +13,13 @@
 
 #define S_FACTOR (0.38)
 
-class Digit {
+class Digit
+{
 
- private:
-
+private:
   // Renderer
-  SDL_Renderer * r_ = NULL;
-  
+  SDL_Renderer *r_ = NULL;
+
   // Texture with the gliphs
   SDL_Texture *digitTx_ = NULL;
   SDL_Texture *digitGlowTx_ = NULL;
@@ -30,7 +31,8 @@ class Digit {
   int h_;
 
   // Color
-  Color color_;
+  Color fgColor_;
+  Color bgColor_;
 
   // Glow flag
   bool glow_;
@@ -38,21 +40,25 @@ class Digit {
   // Internal signal for every segment
   std::vector<bool> segments_ = {0, 0, 0, 0, 0, 0, 0};
 
- public:
-
+public:
   Digit();
   Digit(SDL_Renderer *r);
   ~Digit();
 
   void initialize(SDL_Renderer *r);
-  void setColor(const Color color);
+  // void setColor(const Color fgColor);
+  void setColor(const Color fgColor,
+                const Color bgColor =
+                    Color(GHOST_COLOR_R, 
+                    GHOST_COLOR_G, 
+                    GHOST_COLOR_B, 
+                    GHOST_COLOR_A));
   void setPosition(const int x, const int y);
   void setSize(const int w, const int h);
   void setGlow(const bool glow);
 
   void draw(std::vector<bool> seg);
   void draw(const char c);
-
 };
 
 #endif /* DIGIT_H */

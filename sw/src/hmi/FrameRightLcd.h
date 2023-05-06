@@ -14,13 +14,6 @@ class FrameRightLcd : public Frame {
 
  private:
 
-  Number * nProgGhost_ = NULL;
-  Number * nVerbGhost_ = NULL;
-  Number * nNounGhost_ = NULL;
-  Number * nR1Ghost_ = NULL;
-  Number * nR2Ghost_ = NULL;
-  Number * nR3Ghost_ = NULL;
-
   Number * nProg_ = NULL;
   Number * nVerb_ = NULL;
   Number * nNoun_ = NULL;

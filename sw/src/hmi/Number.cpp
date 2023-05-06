@@ -1,24 +1,29 @@
 #include "Number.h"
 #include <Logger.h>
 
-Number::Number(SDL_Renderer *r, const int digits, const int x, const int y, const Color c, const bool glow) {
+Number::Number(SDL_Renderer *r, const int digits, const int x, const int y, const Color c, const bool glow)
+{
 
   // Maximum number of digits
-  if (digits <= 5) {
+  if (digits <= 5)
+  {
 
-    for (int i = 0; i < digits; ++i) {
+    for (int i = 0; i < digits; ++i)
+    {
 
       Digit *d = new Digit(r);
 
-      if (i == 0) {
+      if (i == 0)
+      {
 
         d->setPosition(x, y);
       }
-      else {
+      else
+      {
 
-        int offset = (S_WIDTH/2*S_FACTOR)*N_SPACE_FACTOR;
+        int offset = (S_WIDTH / 2 * S_FACTOR) * N_SPACE_FACTOR;
 
-        d->setPosition(x+(offset*i), y);
+        d->setPosition(x + (offset * i), y);
       }
 
       d->setColor(c);
@@ -30,23 +35,38 @@ Number::Number(SDL_Renderer *r, const int digits, const int x, const int y, cons
   }
 }
 
-void Number::setValue(const std::string s) {
-
-  if (s.size() <= digits_.size()) {
-
-    value_ = s;
-  }
-  else {
-
-    LogError << "Excesive digits, expected <= " << digits_.size() << std::endl;
-  }
-
+void Number::setValue(const std::string s)
+{
+  value_ = s;
 }
 
-void Number::draw() {
+void Number::draw()
+{
 
-  for (int i = 0; i < digits_.size(); ++i) {
+  if (value_.size() > digits_.size())
+  {
+    LogError << "Overflow" << std::endl;
 
-      digits_[i]->draw(value_[i]);
+    for (int i = 0; i < digits_.size(); ++i) {
+      digits_[i]->draw('o');
+    }
+  }
+  else
+  {
+
+    for (int i = 0; i < digits_.size(); ++i)
+    {
+
+      const int nPadding = digits_.size() - value_.size();
+
+      if (i < nPadding)
+      {
+        digits_[i]->draw('x');
+      }
+      else
+      {
+        digits_[i]->draw(value_[i-nPadding]);
+      }
+    }
   }
 }

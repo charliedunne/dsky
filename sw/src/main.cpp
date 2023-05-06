@@ -47,12 +47,14 @@ int main( int argc, char * argv[], char *envp[] ) {
     data.r1 = rand() % 100000;
     data.r2 = rand() % 100000;
     data.r3 = rand() % 100000;
+
+    //data.prog = 7;
     
     hmi.update(data);
 
     hmi.render();
 
-    SDL_Delay(5000);
+    SDL_Delay(1000);
 
   }
 

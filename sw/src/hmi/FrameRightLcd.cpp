@@ -54,25 +54,6 @@ void FrameRightLcd::drawFixedElements()
            xRight - FRAME_MARGIN, (h_ * 0.48) + dotsRadius * 1.5,
            lineColor_);
 
-  // Draw Ghost Numbers
-  nProgGhost_->setValue("88");
-  nProgGhost_->draw();
-
-  nVerbGhost_->setValue("88");
-  nVerbGhost_->draw();
-
-  nNounGhost_->setValue("88");
-  nNounGhost_->draw();
-
-  nR1Ghost_->setValue("88888");
-  nR1Ghost_->draw();
-
-  nR2Ghost_->setValue("88888");
-  nR2Ghost_->draw();
-
-  nR3Ghost_->setValue("88888");
-  nR3Ghost_->draw();
-
   // Draw ghost Lines
   for (int i = 0; i < 3; ++i)
   {
@@ -195,21 +176,12 @@ FrameRightLcd::FrameRightLcd(SDL_Renderer *r, int x, int y, int w, int h, Color 
   // Create constants for positions
   const int nProg_x = 675;
   const int nProg_y = 40;
-  const int nVerb_x = 500;
+  const int nVerb_x = 490;
   const int nVerb_y = 150;
 
   const int nR1_x = 675 - (3 * S_WIDTH / 2 * S_FACTOR * N_SPACE_FACTOR);
   const int nR1_y = 235;
   const int nRxSep = 80;
-
-  // Create Ghost numbers objects
-  nProgGhost_ = new Number(r, 2, nProg_x, nProg_y, ghostColor_, false);
-  nVerbGhost_ = new Number(r, 2, nVerb_x, nVerb_y, ghostColor_, false);
-  nNounGhost_ = new Number(r, 2, nProg_x, nVerb_y, ghostColor_, false);
-
-  nR1Ghost_ = new Number(r, 5, nR1_x, nR1_y, ghostColor_, false);
-  nR2Ghost_ = new Number(r, 5, nR1_x, nR1_y + nRxSep, ghostColor_, false);
-  nR3Ghost_ = new Number(r, 5, nR1_x, nR1_y + 2 * nRxSep, ghostColor_, false);
 
   // Create the Live number objects
   nProg_ = new Number(r, 2, nProg_x, nProg_y, liveColor_, false);
@@ -226,10 +198,9 @@ FrameRightLcd::FrameRightLcd(SDL_Renderer *r, int x, int y, int w, int h, Color 
   const int lCompActy_y =  h_* .40 /2 - INTERBLOCK_MARGIN;
 
   lProg_ = new Label(r, nProg_x, nProg_y - lProg_h , 115, lProg_h, LABEL_PROG); 
-  lVerb_ = new Label(r, nVerb_x, nVerb_y - lProg_h , 115, lProg_h, LABEL_VERB); 
+  lVerb_ = new Label(r, nVerb_x - 10, nVerb_y - lProg_h , 115, lProg_h, LABEL_VERB); 
   lNoun_ = new Label(r, nProg_x, nVerb_y - lProg_h , 115, lProg_h, LABEL_NOUN); 
-
-  lCompActy_ = new Label(r, nVerb_x, nProg_y - lProg_h, 115, h_* .40 /2 - INTERBLOCK_MARGIN, LABEL_COMPACTY);
+  lCompActy_ = new Label(r, nVerb_x - 10, nProg_y - lProg_h, 115, h_* .40 /2 - INTERBLOCK_MARGIN, LABEL_COMPACTY);
 }
 
 /**
@@ -237,13 +208,6 @@ FrameRightLcd::FrameRightLcd(SDL_Renderer *r, int x, int y, int w, int h, Color 
  */
 FrameRightLcd::~FrameRightLcd()
 {
-
-  free(nProgGhost_);
-  free(nVerbGhost_);
-  free(nNounGhost_);
-  free(nR1Ghost_);
-  free(nR2Ghost_);
-  free(nR3Ghost_);
 
   free(nProg_);
   free(nVerb_);
