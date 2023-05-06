@@ -60,19 +60,19 @@ void Label::draw()
     // Create source from the Sprite
     SDL_Rect src = {0, 0, L_WIDTH, L_HEIGHT};
 
-    Color bgColor = bgColor_;
+    Color color = fgColor_;
 
     // If disabled use Ghost color
     if (!enabled_)
     {
-        bgColor.set(GHOST_COLOR_R, GHOST_COLOR_G, GHOST_COLOR_B, GHOST_COLOR_A);
+        color = bgColor_;
     }
 
     // Draw the rectangle
     boxColor(r_,
              x_, y_,
              x_ + w_, y_ + h_,
-             bgColor);
+             color);
 
     // Calculate Source based on the Label Type
     switch (lType_)
@@ -111,19 +111,19 @@ void Label::draw()
     }
 
     // Draw the text
-    SDL_SetTextureColorMod(labelTx_, fgColor_.r(), fgColor_.g(), fgColor_.b());
-    SDL_SetTextureAlphaMod(labelTx_, fgColor_.a());
+    SDL_SetTextureColorMod(labelTx_, 0, 0, 0);
+    SDL_SetTextureAlphaMod(labelTx_, 255);
     SDL_RenderCopy(r_, labelTx_, &src, &dest);
 }
 
-void Label::SwitchOn()
+void Label::setStatus(const bool status)
 {
-
-    enabled_ = true;
+    enabled_ = status;
 }
 
-void Label::SwitchOff()
-{
 
-    enabled_ = false;
+void Label::setColor(const Color fgColor, const Color bgColor)
+{
+  fgColor_ = fgColor;
+  bgColor_ = bgColor;
 }

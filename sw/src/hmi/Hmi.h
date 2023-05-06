@@ -4,16 +4,25 @@
 #include <vector>
 #include "Frame.h"
 #include "FrameRightLcd.h"
+#include "FrameLeftLcd.h"
 
 #include "SDL2/SDL.h"
 
 typedef struct {
-  int prog;
-  int verb;
-  int noun;
-  int r1;
-  int r2;
-  int r3;
+
+  // Values
+  int nProg;
+  int nVerb;
+  int nNoun;
+  int nR1;
+  int nR2;
+  int nR3;
+
+  // Flags
+  bool fProg;
+  bool fVerb;
+  bool fNoun;
+  bool fCompActy;
 } HmiData;
 
 class Hmi {
@@ -21,9 +30,9 @@ class Hmi {
  private:
 
   // Frames
-  FrameRightLcd * rightLcd  = NULL;
-  FrameRightLcd * centerLcd  = NULL;
-  FrameRightLcd * leftLcd  = NULL;
+  FrameRightLcd * rightLcd_  = NULL;
+  FrameLeftLcd * centerLcd_  = NULL;
+  FrameLeftLcd * leftLcd_  = NULL;
 
   // Window properties
   int w_ = 0;
@@ -43,12 +52,6 @@ public:
   // Destructor
   ~Hmi();
 
-  // Function for the display of the HMI
-  void switchOn();
-
-  // Function to switch off the display of the HMI 
-  void switchOff();
-
   // Function to draw the HMI (it must be called every time it needs to be update)
   void render();
 
@@ -57,7 +60,6 @@ public:
   // Wait for event
   void wait();
 
-  // @TODO Set functions for update values
 };
 
 

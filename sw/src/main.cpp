@@ -41,12 +41,17 @@ int main( int argc, char * argv[], char *envp[] ) {
 
   while (running) {
 
-    data.prog = rand() % 100;
-    data.verb = rand() % 100;
-    data.noun = rand() % 100;
-    data.r1 = rand() % 100000;
-    data.r2 = rand() % 100000;
-    data.r3 = rand() % 100000;
+    data.nProg = rand() % 100;
+    data.nVerb = rand() % 100;
+    data.nNoun = rand() % 100;
+    data.nR1 = rand() % 100000;
+    data.nR2 = rand() % 100000;
+    data.nR3 = rand() % 100000;
+
+    data.fCompActy = rand() % 10;
+    data.fProg = rand() % 10;
+    data.fVerb = rand() % 10;
+    data.fNoun = rand() % 10;
 
     //data.prog = 7;
     

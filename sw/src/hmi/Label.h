@@ -3,6 +3,7 @@
 
 #include "Color.h"
 #include "SDL2/SDL.h"
+#include "config.h"
 
 #include "Color.h"
 
@@ -15,7 +16,8 @@ typedef enum
   LABEL_PROG,
   LABEL_VERB,
   LABEL_NOUN,
-  LABEL_COMPACTY
+  LABEL_COMPACTY,
+  LABEL_LINE
 } LabelType;
 
 class Label
@@ -60,17 +62,20 @@ public:
   ~Label();
 
   // Setters and Getters
-  void setFgColor(const Color c);
+  void setColor(const Color fgColor,
+                const Color bgColor =
+                    Color(GHOST_COLOR_R,
+                          GHOST_COLOR_G,
+                          GHOST_COLOR_B,
+                          GHOST_COLOR_A));
+  ;
   void setBgColor(const Color c);
   void setPosition(const int x, const int y);
 
   void draw();
 
-  // Enable Label
-  void SwitchOn();
-
-  // Disable Label
-  void SwitchOff();
+  // Set the status 
+  void setStatus(const bool);
 
   // Blink Label
   void Blink(unsigned int freq);

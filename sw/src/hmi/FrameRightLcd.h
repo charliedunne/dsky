@@ -52,34 +52,22 @@ class FrameRightLcd : public Frame {
   void setlineColor(const Color c);
 
 
-  // Operation functions
-  void enableLabelActComp();
-  void disableLabelActComp();
-  void enableLabelProg();
-  void disableLabelProg();
-  void enableLabelVerb();
-  void disableLabelVerb();
-  void enableLabelNoun();
-  void disableLabelNoun();
-  void enableDigitProg();
-  void disableDigitProg();
-  void enableDigitVerb();
-  void disableDigitVerb();
-  void enableDigitNoun();
-  void disableDigitNoun();
-  void enableDigitTop();
-  void disableDigitTop();
-  void enableDigitMid();
-  void disableDigitMid();
-  void enableDigitLow();
-  void disableDigitLow();
-
+  // Setters for numeric values
   void setProg(int);
   void setVerb(int);
   void setNoun(int);
   void setR1(int);
   void setR2(int);
   void setR3(int);
+
+  // Setters for Labels
+  void setProgStatus(bool);
+  void setVerbStatus(bool);
+  void setNounStatus(bool);
+  void setCompActyStatus(bool);
+  void setR1Status(bool);
+  void setR2Status(bool);
+  void setR3Status(bool);
 
 private:
 

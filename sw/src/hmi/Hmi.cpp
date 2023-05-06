@@ -37,7 +37,8 @@ Hmi::Hmi(int w, int h) {
   SDL_ShowCursor(SDL_DISABLE);
 
   // Create the frames
-  rightLcd = new FrameRightLcd(ren_, w_-330, 0, 330, h_, Color(0, 0, 0));
+  rightLcd_ = new FrameRightLcd(ren_, w_-330, 0, 330, h_, Color(0, 0, 0));
+  leftLcd_ = new FrameLeftLcd(ren_, 0, 0, w_-330-1, h_, Color(0, 0, 0));
 
 }
 
@@ -69,7 +70,8 @@ void Hmi::render() {
   }
 
   // Save all the Frames draw into buffer
-  rightLcd->render();
+  rightLcd_->render();
+  leftLcd_->render();
 
 
   // Render the window
@@ -77,10 +79,19 @@ void Hmi::render() {
 }
 
 void Hmi::update(HmiData &data) {
-  rightLcd->setProg(data.prog);
-  rightLcd->setVerb(data.verb);
-  rightLcd->setNoun(data.noun);
-  rightLcd->setR1(data.r1);
-  rightLcd->setR2(data.r2);
-  rightLcd->setR3(data.r3);
+
+  // Set values
+  rightLcd_->setProg(data.nProg);
+  rightLcd_->setVerb(data.nVerb);
+  rightLcd_->setNoun(data.nNoun);
+  rightLcd_->setR1(data.nR1);
+  rightLcd_->setR2(data.nR2);
+  rightLcd_->setR3(data.nR3);
+
+  // Set flags
+  rightLcd_->setProgStatus(data.fProg);
+  rightLcd_->setVerbStatus(data.fVerb);
+  rightLcd_->setNounStatus(data.fNoun);
+  rightLcd_->setCompActyStatus(data.fCompActy);
+
 }

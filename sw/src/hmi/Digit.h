@@ -47,6 +47,7 @@ public:
 
   void initialize(SDL_Renderer *r);
   // void setColor(const Color fgColor);
+
   void setColor(const Color fgColor,
                 const Color bgColor =
                     Color(GHOST_COLOR_R, 

@@ -124,18 +124,14 @@ void FrameRightLcd::render()
 
   std::vector<bool> value = {1, 1, 1, 1, 1, 1, 1};
 
-  lCompActy_->SwitchOn();
   lCompActy_->draw();
 
-  lProg_->SwitchOn();
   lProg_->draw();
 
-  lVerb_->SwitchOn();
   lVerb_->draw();
 
-  lNoun_->SwitchOn();
   lNoun_->draw();
-      
+     
 
   nProg_->draw();
   nVerb_->draw();
@@ -164,11 +160,10 @@ FrameRightLcd::FrameRightLcd(SDL_Renderer *r, int x, int y, int w, int h, Color 
    * @brief This function will perform the following steps:
    * @li Save input parameters as in Frame constructor
    * @li Set-up the default colors
-   * @li Create all the dynamic objects (digits, background digits, labels, lines, etc...)
+   * @li Create all the dynamic objects (digits and labels)
    */
 
   // Colors
-  ghostColor_ = Color(GHOST_COLOR_R, GHOST_COLOR_G, GHOST_COLOR_B, GHOST_COLOR_A);
   liveColor_ = Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A);
   dotsColor_ = Color(0xF0, 0xF0, 0xF0, 0xFF);
   lineColor_ = Color(0xC0, 0xC0, 0xC0, 0xFF);
@@ -201,6 +196,11 @@ FrameRightLcd::FrameRightLcd(SDL_Renderer *r, int x, int y, int w, int h, Color 
   lVerb_ = new Label(r, nVerb_x - 10, nVerb_y - lProg_h , 115, lProg_h, LABEL_VERB); 
   lNoun_ = new Label(r, nProg_x, nVerb_y - lProg_h , 115, lProg_h, LABEL_NOUN); 
   lCompActy_ = new Label(r, nVerb_x - 10, nProg_y - lProg_h, 115, h_* .40 /2 - INTERBLOCK_MARGIN, LABEL_COMPACTY);
+
+  lCompActy_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
+  lProg_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
+  lNoun_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
+  lVerb_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
 }
 
 /**
@@ -222,7 +222,7 @@ FrameRightLcd::~FrameRightLcd()
   free(lCompActy_);
 }
 
-void FrameRightLcd::setProg(int value)
+void FrameRightLcd::setProg(int value) 
 {
   nProg_->setValue(std::to_string(value).c_str());
 }
@@ -250,4 +250,24 @@ void FrameRightLcd::setR2(int value)
 void FrameRightLcd::setR3(int value)
 {
   nR3_->setValue(std::to_string(value).c_str());
+}
+
+void FrameRightLcd::setProgStatus(bool status) {
+
+  lProg_->setStatus(status);
+}
+
+void FrameRightLcd::setVerbStatus(bool status) {
+
+  lVerb_->setStatus(status);
+}
+
+void FrameRightLcd::setNounStatus(bool status) {
+
+  lNoun_->setStatus(status);
+}
+
+void FrameRightLcd::setCompActyStatus(bool status) {
+
+  lCompActy_->setStatus(status);
 }
