@@ -176,8 +176,6 @@ void Sign::draw(std::vector<bool> seg)
             SDL_RenderCopy(r_, signGlowTx_, &src, &dest);
         }
         SDL_RenderCopy(r_, signTx_, &src, &dest);
-        LogInfo << "SRC (" << src.x << ", " << src.y << ", " << src.w << ", " << src.h << ")" << std::endl;
-        LogInfo << "DST (" << dest.x << ", " << dest.y << ", " << dest.w << ", " << dest.h << ")" << std::endl;
     }
 }
 
