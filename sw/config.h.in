@@ -15,6 +15,9 @@
 // Textures
 #define DIGIT_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/DigitsSpriteTemplate.png"
 #define DIGIT_GLOW_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/DigitsSpriteTemplate_glow.png"
+#define SIGN_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/SignsSpriteTemplate.png"
+#define SIGN_GLOW_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/SignsSpriteTemplate_glow.png"
+
 #define LABEL_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/LabelsTemplateLGC.png"
 
 // Default colors

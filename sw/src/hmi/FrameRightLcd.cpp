@@ -181,6 +181,10 @@ FrameRightLcd::FrameRightLcd(SDL_Renderer *r, int x, int y, int w, int h, Color 
   nR2_ = new Number(r, 5, nR1_x, nR1_y + nRxSep, liveColor_, false);
   nR3_ = new Number(r, 5, nR1_x, nR1_y + 2 * nRxSep, liveColor_, false);
 
+  nR1_->enableSign();
+  nR2_->enableSign();
+  nR3_->enableSign();
+
   // Create Labels
   const int lProg_y = 5;
   const int lProg_h = 30;
@@ -208,6 +212,7 @@ FrameRightLcd::FrameRightLcd(SDL_Renderer *r, int x, int y, int w, int h, Color 
   lR1_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
   lR2_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
   lR3_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
+
 }
 
 /**

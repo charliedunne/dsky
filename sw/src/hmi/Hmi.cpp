@@ -90,7 +90,6 @@ void Hmi::update(HmiData &data) {
 
   // Set Numbers mode
   
-
   // Set flags
   rightLcd_->setProgStatus(data.lProgMode);
   rightLcd_->setVerbStatus(data.lProgMode);

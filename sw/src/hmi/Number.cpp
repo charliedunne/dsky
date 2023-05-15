@@ -32,6 +32,14 @@ Number::Number(SDL_Renderer *r, const int digits, const int x, const int y, cons
 
       digits_.push_back(d);
     }
+
+    // Set-up sign
+    showSign_ = false;
+
+    sign_ = new Sign(r);
+    sign_->setPosition(x - S_WIDTH / 6, y);
+    sign_->setColor(c);
+    sign_->setGlow(glow);
   }
 }
 
@@ -42,8 +50,15 @@ void Number::setValue(const std::string s)
 
 void Number::drawOn()
 {
+  int valueSize = value_.size();
 
-  if (value_.size() > digits_.size())
+  /* Check negative values */
+  if (value_[0] == '-')
+  {
+    valueSize--;
+  }
+
+  if (valueSize > digits_.size())
   {
     LogError << "Overflow" << std::endl;
 
@@ -54,7 +69,20 @@ void Number::drawOn()
   }
   else
   {
+    // Draw sign
+    if (showSign_)
+    {
+      if (value_[0] == '-')
+      {
+        sign_->draw('-');
+      }
+      else
+      {
+        sign_->draw('+');
+      }
+    }
 
+    // Draw digits
     for (int i = 0; i < digits_.size(); ++i)
     {
 
@@ -79,4 +107,14 @@ void Number::drawOff()
   {
     digits_[i]->draw('x');
   }
+}
+
+void Number::enableSign()
+{
+  showSign_ = true;
+}
+
+void Number::disableSign()
+{
+  showSign_ = false;
 }

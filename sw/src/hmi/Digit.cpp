@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-std::vector<bool> getSegmentsFromChar(const char c)
+static std::vector<bool> getSegmentsFromChar(const char c)
 {
 
   std::vector<bool> segments = {0, 0, 0, 0, 0, 0, 0};
@@ -153,6 +153,17 @@ std::vector<bool> getSegmentsFromChar(const char c)
     segments[4] = 1;
     segments[5] = 1;
     segments[6] = 1;
+    break;
+
+  case '+':
+  case '-':
+    segments[0] = 0;
+    segments[1] = 0;
+    segments[2] = 0;
+    segments[3] = 0;
+    segments[4] = 0;
+    segments[5] = 0;
+    segments[6] = 0;
     break;
 
   default:

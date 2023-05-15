@@ -9,6 +9,9 @@
 // HMI
 #include "Hmi.h"
 
+// Core
+#include "Keyboard.h"
+
 // Logging
 #include <Logger.h>
 
@@ -32,8 +35,9 @@ int main( int argc, char * argv[], char *envp[] ) {
   // Capture signals
   signal(SIGINT, handler);
 
-
   Hmi hmi = Hmi(800, 480);
+
+  Keyboard kb("share.txt");
 
   std::string num;
 
@@ -56,6 +60,13 @@ int main( int argc, char * argv[], char *envp[] ) {
     // data.fR2 = rand() % 10;
     // data.fR3 = rand() % 10;
     
+    kb.update();
+
+    if (kb.eventsAvailable())
+    {
+      LogInfo << "New Keyboard Event available" << std::endl;
+    }
+
     memset(&data, 0x0, sizeof(HmiData));
 
     data.nProg = 11;
@@ -68,6 +79,16 @@ int main( int argc, char * argv[], char *envp[] ) {
     data.lProgMode = DRAW_ON;
     data.lNounMode = DRAW_ON;
     data.lVerbMode = DRAW_ON;
+
+    data.nR1 = 34523;
+    data.nR2 = -12438;
+    data.nR3 = -7;
+    data.nR1Mode = DRAW_ON;
+    data.nR2Mode = DRAW_ON;
+    data.nR3Mode = DRAW_ON;
+    data.lR1Mode = DRAW_ON;
+    data.lR2Mode = DRAW_ON;
+    data.lR3Mode = DRAW_BLINK;
 
     hmi.update(data);
 
