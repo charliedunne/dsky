@@ -17,6 +17,9 @@
 
 #include <signal.h>
 
+// GFX
+#include "SDL2_framerate.h"
+
 bool running = true;
 
 void handler(int s) {
@@ -28,6 +31,10 @@ int main( int argc, char * argv[], char *envp[] ) {
 
   // Initialize core
   LogInfo << "Initializing core...\n";
+
+  // FPS Manager
+  FPSmanager fpsManager;
+  int extraTime = 0;
 
   // Initialize HMI
   std::srand(std::time(0));
@@ -42,6 +49,9 @@ int main( int argc, char * argv[], char *envp[] ) {
   std::string num;
 
   HmiData data;
+
+  // Initialize FPS Manager
+  SDL_initFramerate(&fpsManager);
 
   while (running) {
 
@@ -94,7 +104,13 @@ int main( int argc, char * argv[], char *envp[] ) {
 
     hmi.render();
 
-    SDL_Delay(200);
+    extraTime = SDL_framerateDelay(&fpsManager);
+
+    if (extraTime <= 0) {
+      LogError << "Computing time issue with FPS" << std::endl;
+    }
+
+    //SDL_Delay(200);
 
   }
 }
