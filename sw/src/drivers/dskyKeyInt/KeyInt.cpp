@@ -1,6 +1,16 @@
+// Provided interface
 #include "KeyInt.h"
 
+// Message queues
+#include <sys/ipc.h>
+#include <sys/msg.h>
+
+// PiGpio Lib
 #include "pigpio.h"
+
+
+static int msgid;
+
 
 KeyInt::KeyInt(const int iicBus,
                const int iicAddrLeft, const int iicAddrRigth,

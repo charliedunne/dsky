@@ -3,6 +3,8 @@
 
 #include "Pcf8575.h"
 
+#include "KeyIntMsgDef.h"
+
 class KeyInt
 {
 
@@ -42,13 +44,17 @@ public:
      */
     KeyInt(const int iicBus = 1, 
     const int iicAddrLeft = 0x20, const int iicAddrRigth = 0x22,
-    const int gpioInt);
+    const int gpioInt = 4);
 
     /**
      * @brief Destroy the Key Int object
      * 
      */
     virtual ~KeyInt();
+
+private:
+
+    KeyMsg_t buildMessage(int leftKe);
 
 };
 
