@@ -27,7 +27,7 @@ typedef struct  {
     /**
      * @brief Id of the key pressed 
      */
-    int keyId;
+    unsigned int keyId;
 
     /**
      * @brief Modifier of the key pressed 
