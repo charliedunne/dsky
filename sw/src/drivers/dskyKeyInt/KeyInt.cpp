@@ -53,7 +53,7 @@ KeyInt::KeyInt(const int iicBus,
     }
 
     // Register callback for interruption
-    gpioSetAlertFunc(gpioInt_, KeyInt::intHandler);
+    gpioSetAlertFunc(gpioInt_, intHandler);
 }
 
 KeyInt::~KeyInt()
@@ -66,27 +66,30 @@ void KeyInt::intHandler(int gpio, int level, uint32_t tick)
     // Read the interruption line
     int intLine = gpioRead(gpioInt_);
 
-    // Read data from the PCF8575
-    int leftData = leftKbd_->read(); 
-    int rightData = rightKbd_->read(); 
-
-    // Only process data when data is available
-    if ((leftData != 0xFFFF) || (rightData != 0xFFFF)) {
-
-        /* Compose message to send */
-        KeyMsg_t msg;
-
-        msg.mType = 1;
-        msg.mData.keyId = leftData << 16 | rightData;
-        msg.mData.keyModifier = KM_SHORT;
-
-        LogTrace << "KeyId: 0x" << std::hex << msg.mData.keyId << std::endl;
-
-        /* Queue message for sending */
-        if (msgsnd(msgId_, &msg, sizeof(KeyMsg_t), 0) != 0)
-        {
-            throw std::domain_error("msgsnd() Error");
-        }
-    }
-
+    if (intLine == 0) 
+      {
+	
+	// Read data from the PCF8575
+	int leftData = leftKbd_->read(); 
+	int rightData = rightKbd_->read(); 
+	
+	// Only process data when data is available
+	if ((leftData != 0xFFFF) || (rightData != 0xFFFF)) {
+	  
+	  /* Compose message to send */
+	  KeyMsg_t msg;
+	  
+	  msg.mType = 1;
+	  msg.mData.keyId = leftData << 16 | rightData;
+	  msg.mData.keyModifier = KM_SHORT;
+	  
+	  std::cout << "KeyId: 0x" << std::hex << msg.mData.keyId << std::endl;
+	  
+	  /* Queue message for sending */
+	  if (msgsnd(msgId_, &msg, sizeof(KeyMsg_t), 0) != 0)
+	    {
+	      throw std::domain_error("msgsnd() Error");
+	    }
+	}
+      }
 }
