@@ -11,6 +11,7 @@
 
 // Core
 #include "Keyboard.h"
+#include "Keypad.h"
 
 // Logging
 #include <Logger.h>
@@ -45,6 +46,7 @@ int main( int argc, char * argv[], char *envp[] ) {
   Hmi hmi = Hmi(800, 480);
 
   Keyboard kb("share.txt");
+  Keypad keypad;
 
   std::string num;
 
@@ -71,6 +73,15 @@ int main( int argc, char * argv[], char *envp[] ) {
     // data.fR3 = rand() % 10;
     
     kb.update();
+    std::vector<Event> events = keypad.getEvents();
+
+    /** @todo Call core function to process environment before rendering.
+     * it will contain:
+     * @li List of keypad events
+     * @li 
+     * 
+     * The output of this function will be the HmiData struct
+     */
 
     if (kb.eventsAvailable())
     {

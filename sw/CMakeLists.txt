@@ -7,7 +7,25 @@ project (dsky VERSION 0.1)
 set(LOG_LEVEL LOG_DEBUG)
 
 # Add executable
-add_executable(dsky src/main.cpp src/hmi/Hmi.cpp src/hmi/Frame.cpp src/common/Color.cpp src/hmi/FrameRightLcd.cpp src/hmi/Digit.cpp src/hmi/Number.cpp src/hmi/Label.cpp src/hmi/FrameLeftLcd.cpp src/hmi/Draw.cpp src/hmi/Sign.cpp src/core/Keyboard.cpp src/core/Event.cpp)
+add_executable(dsky "")
+
+# Sources 
+target_sources(dsky PRIVATE
+  src/main.cpp 
+  src/hmi/Hmi.cpp 
+  src/hmi/Frame.cpp 
+  src/common/Color.cpp 
+  src/hmi/FrameRightLcd.cpp 
+  src/hmi/Digit.cpp 
+  src/hmi/Number.cpp 
+  src/hmi/Label.cpp 
+  src/hmi/FrameLeftLcd.cpp 
+  src/hmi/Draw.cpp 
+  src/hmi/Sign.cpp 
+  src/core/Keypad.cpp 
+  src/core/Keyboard.cpp
+  src/core/Event.cpp
+)
 
 # CFLAGS
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_REENTRANT")
@@ -37,6 +55,7 @@ include_directories(src/hmi)
 include_directories(src/common)
 include_directories(src/core)
 include_directories(3rdparty/simple-cpp-logger/include)
+include_directories(src/drivers/dskyKeyInt)
 
 # Logger definitions
 add_definitions( -D LOGGER_MAX_LOG_LEVEL_PRINTED=7 )

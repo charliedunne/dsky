@@ -58,6 +58,10 @@ KeyInt::KeyInt(const int iicBus,
 
 KeyInt::~KeyInt()
 {
+    // Remove message queue
+    msgctl(msgId_, IPC_RMID, NULL);
+
+    // Terminate GPIO operation
     gpioTerminate();
 }
 

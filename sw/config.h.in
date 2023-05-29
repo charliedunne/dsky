@@ -33,3 +33,7 @@
 
 // Default blinking Period [frames]
 #define DEFAULT_BLINKING_PERIOD 10
+
+// Message queue file 
+#define KEY_INT_MSG_QUEUE_FILE "/var/local/dskykeyint"
+#define KEY_INT_MSG_QUEUE_ID 10
