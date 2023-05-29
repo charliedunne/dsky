@@ -5,6 +5,13 @@
 
 #include "KeyIntMsgDef.h"
 
+/* Message queues */
+#include <sys/ipc.h>
+#include <sys/msg.h>
+
+/* PiGpio */
+#include "pigpio.h"
+
 class KeyInt
 {
 
@@ -13,25 +20,36 @@ private:
     /**
      * @brief Left Keyboard PCF8575 controller
      */
-    Pcf8575 * leftKbd_;
+    static Pcf8575 * leftKbd_;
 
     /**
      * @brief Right Keyboard PCF8575 controller
      */
-    Pcf8575 * rightKbd_;
+    static Pcf8575 * rightKbd_;
 
     /**
      * @brief Gpio Line where the interruption port is connected to
      */
-    int gpioInt_;
+    static int gpioInt_;
 
     /**
      * @brief Interrupt handler.
      * This funcion will be called on every change in the gpioInt
      * 
      */
-    void intHandler();
+    static void intHandler(int gpio, int level, uint32_t tick);
 
+    /** 
+     * @brief Message queue key
+    */
+    static key_t key_;
+
+    /**
+     * @brief Message queue id
+     * 
+     */
+    static int msgId_;
+    
 public:
 
     /**

@@ -1,0 +1,5 @@
+// Configuration file for dskyKeyInt
+
+// Message queue file 
+#define KEY_INT_MSG_QUEUE_FILE "/var/local/dskykeyint"
+#define KEY_INT_MSG_QUEUE_ID 10

@@ -22,7 +22,7 @@ int Pcf8575::read()
     if (handle < 0)
     {
 
-        throw domain_error("i2cOpen() Error")
+        throw std::domain_error("i2cOpen() Error");
     }
 
     // Read all GPIO data
@@ -31,14 +31,14 @@ int Pcf8575::read()
     if (data < 0)
     {
 
-        throw domain_error("i2cReadWordData() Error")
+        throw std::domain_error("i2cReadWordData() Error");
     }
 
     // Close i2c communication
     if (i2cClose(handle) != 0)
     {
 
-        throw domain_error("i2cClose() Error")
+        throw std::domain_error("i2cClose() Error");
     }
 
     return data;
