@@ -12,6 +12,7 @@
 	path = sw/3rdparty/SDL_image
 	url = git@github.com:libsdl-org/SDL_image.git
 	branch = SDL2
+	ignore = untracked
 [submodule "sw/3rdparty/pigpio"]
 	path = sw/3rdparty/pigpio
 	url = git@github.com:joan2937/pigpio.git
