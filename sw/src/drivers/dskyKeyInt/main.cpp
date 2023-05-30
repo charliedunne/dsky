@@ -30,6 +30,16 @@ int main(int arg, char *argv[], char *envp[])
         while (true)
         {
             sleep(1);
+
+            /** @todo Polling/blocking call TBC over another message 
+             *  queue to detect operation on the HW 
+             *
+             * @li Enable/Disable Keypad Leds
+             * @li Brightness of the screen
+             * @li Access to other sensors/actuators (DH111, IMU)
+             * @li Shutdown computer
+             * @li enable/disable screen?
+             */
         }
     } catch (const std::exception &e) {
         std::cerr << "Som error occurr!: " << e.what() << std::endl;

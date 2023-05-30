@@ -8,6 +8,7 @@
 
 // HMI
 #include "Hmi.h"
+#include "HmiLogic.h"
 
 // Core
 #include "Keyboard.h"
@@ -44,6 +45,7 @@ int main( int argc, char * argv[], char *envp[] ) {
   signal(SIGINT, handler);
 
   Hmi hmi = Hmi(800, 480);
+  HmiLogic logic;
 
   Keypad keypad;
 
@@ -72,6 +74,8 @@ int main( int argc, char * argv[], char *envp[] ) {
     // data.fR3 = rand() % 10;
     
     std::vector<Event> events = keypad.getEvents();
+
+    logic.parseKeyEvents(events);
 
     for (int i = 0; i < events.size(); ++i) {
 
@@ -108,6 +112,9 @@ int main( int argc, char * argv[], char *envp[] ) {
     data.lR1Mode = DRAW_ON;
     data.lR2Mode = DRAW_ON;
     data.lR3Mode = DRAW_BLINK;
+
+    /* Call the logic updated */
+    logic.updateHmiData(&data);
 
     hmi.update(data);
 
