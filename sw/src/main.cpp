@@ -92,26 +92,6 @@ int main( int argc, char * argv[], char *envp[] ) {
 
     memset(&data, 0x0, sizeof(HmiData));
 
-    data.nProg = 11;
-    data.nVerb = 5;
-    data.nNoun = 2;
-    data.nProgMode = DRAW_ON;
-    data.nVerbMode = DRAW_BLINK;
-    data.nNounMode = DRAW_BLINK;
-
-    data.lProgMode = DRAW_ON;
-    data.lNounMode = DRAW_ON;
-    data.lVerbMode = DRAW_ON;
-
-    data.nR1 = 34523;
-    data.nR2 = -12438;
-    data.nR3 = -7;
-    data.nR1Mode = DRAW_ON;
-    data.nR2Mode = DRAW_ON;
-    data.nR3Mode = DRAW_ON;
-    data.lR1Mode = DRAW_ON;
-    data.lR2Mode = DRAW_ON;
-    data.lR3Mode = DRAW_BLINK;
 
     /* Call the logic updated */
     logic.updateHmiData(&data);

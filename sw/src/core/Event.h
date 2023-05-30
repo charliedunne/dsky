@@ -57,6 +57,7 @@ public:
      * @return std::time_t 
      */
     std::time_t getTimestamp();
+
 };
 
 #endif /* _EVENT_H_ */
