@@ -45,7 +45,6 @@ int main( int argc, char * argv[], char *envp[] ) {
 
   Hmi hmi = Hmi(800, 480);
 
-  Keyboard kb("share.txt");
   Keypad keypad;
 
   std::string num;
@@ -72,8 +71,12 @@ int main( int argc, char * argv[], char *envp[] ) {
     // data.fR2 = rand() % 10;
     // data.fR3 = rand() % 10;
     
-    kb.update();
     std::vector<Event> events = keypad.getEvents();
+
+    for (int i = 0; i < events.size(); ++i) {
+
+      std::cout << "[" << i << "] Keystroke Received: " << std::hex << events[i].getEvent() << std::endl;
+    }
 
     /** @todo Call core function to process environment before rendering.
      * it will contain:
@@ -82,11 +85,6 @@ int main( int argc, char * argv[], char *envp[] ) {
      * 
      * The output of this function will be the HmiData struct
      */
-
-    if (kb.eventsAvailable())
-    {
-      LogInfo << "New Keyboard Event available" << std::endl;
-    }
 
     memset(&data, 0x0, sizeof(HmiData));
 

@@ -4,26 +4,26 @@
 #include <ctime>
 
 typedef enum {
-    E_KEY_0 = 0,
-    E_KEY_1 = 1,
-    E_KEY_2 = 2,
-    E_KEY_3 = 3,
-    E_KEY_4 = 4,
-    E_KEY_5 = 5,
-    E_KEY_6 = 6,
-    E_KEY_7 = 7,
-    E_KEY_8 = 8,
-    E_KEY_9 = 9,
-    E_KEY_PLUS,
-    E_KEY_MINUS,
-    E_KEY_VERB,
-    E_KEY_NOUN,
-    E_KEY_CLR,
-    E_KEY_KEYREL,
-    E_KEY_ENTR,
-    E_KEY_RSET,
-    E_KEY_PRO,
-    E_NO_EVENT = 0xFFFF
+    E_KEY_0 = 0xf7ffffff,
+    E_KEY_1 = 0xffefffff,
+    E_KEY_2 = 0xffffdfff,
+    E_KEY_3 = 0xfffffbff,
+    E_KEY_4 = 0xfff7ffff,
+    E_KEY_5 = 0xffffbfff,
+    E_KEY_6 = 0xfffff7ff,
+    E_KEY_7 = 0xfffbffff,
+    E_KEY_8 = 0xffff7fff,
+    E_KEY_9 = 0xffffefff,
+    E_KEY_PLUS = 0xdfffffff,
+    E_KEY_MINUS = 0xefffffff,
+    E_KEY_VERB = 0x7fffffff,
+    E_KEY_NOUN = 0xbfffffff,
+    E_KEY_CLR = 0xfffffffb,
+    E_KEY_KEYREL = 0xffffffef,
+    E_KEY_ENTR = 0xffffffdf,
+    E_KEY_RSET = 0xffffffbf,
+    E_KEY_PRO = 0xfffffff7,
+    E_NO_EVENT = 0xffffffff
 } EventId_t;
 
 class Event {

@@ -35,7 +35,7 @@ class FrameRightLcd : public Frame {
   Color dotsColor_;
   Color lineColor_;
 
-  const bool debug_ = true;
+  const bool debug_ = false;
 
  public:
 

@@ -44,7 +44,7 @@ std::vector<Event> Keypad::getEvents() {
     {
         Event e = Event((EventId_t)msg.mData.keyId);
 
-        std::cout << "Key Received: " << std::hex << msg.mData.keyId << std::endl;
+	//        std::cout << "Key Received: " << std::hex << msg.mData.keyId << std::endl;
 
         events.push_back(e);
     }
