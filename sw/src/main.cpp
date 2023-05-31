@@ -90,11 +90,28 @@ int main( int argc, char * argv[], char *envp[] ) {
      * The output of this function will be the HmiData struct
      */
 
-    memset(&data, 0x0, sizeof(HmiData));
+    //    memset(&data, 0x0, sizeof(HmiData));
 
 
     /* Call the logic updated */
     logic.updateHmiData(&data);
+
+    /**
+     * @todo Get feedback from logic and send message queue to another
+     * application that will run the actions.
+     *
+     * Also it would be required some data from the application to the
+     * HMI
+     *
+     * Other option is to create and run an independent thread
+     * that will make the operation. it will run in parallel and we
+     * can use some synchronization method to report data.
+     *
+     * E.G: CLOCK:
+     * @li Required:
+     *   @li update every second the time
+     *   
+     */
 
     hmi.update(data);
 

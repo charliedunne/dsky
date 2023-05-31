@@ -7,12 +7,8 @@
 // External configuration
 #include "config.h"
 
-typedef enum
-{
-    DRAW_OFF = 0,
-    DRAW_ON = 1,
-    DRAW_BLINK = 2
-} DrawMode;
+// HMI Definitions
+#include "HmiDefinitions.h"
 
 class Draw
 {

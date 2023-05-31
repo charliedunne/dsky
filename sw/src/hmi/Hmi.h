@@ -8,34 +8,7 @@
 
 #include "SDL2/SDL.h"
 
-typedef struct {
-
-  // Values
-  int nProg;
-  int nVerb;
-  int nNoun;
-  int nR1;
-  int nR2;
-  int nR3;
-
-  // Modes for Values
-  DrawMode nProgMode;
-  DrawMode nVerbMode;
-  DrawMode nNounMode;
-  DrawMode nR1Mode;
-  DrawMode nR2Mode;
-  DrawMode nR3Mode;
-  DrawMode lProgMode;
-  DrawMode lVerbMode;
-  DrawMode lNounMode;
-  DrawMode lCompActyMode;
-  DrawMode lR1Mode;
-  DrawMode lR2Mode;
-  DrawMode lR3Mode;
-
-  // Flags
-
-} HmiData;
+#include "HmiDefinitions.h"
 
 class Hmi {
 
