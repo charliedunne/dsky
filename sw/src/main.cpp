@@ -6,6 +6,10 @@
 // Configuration
 #include "config.h"
 
+// Actions
+#include "Action.h"
+#include "ActionClock.h"
+
 // HMI
 #include "Hmi.h"
 #include "HmiLogic.h"
@@ -17,6 +21,7 @@
 // Logging
 #include <Logger.h>
 
+// Signal handling
 #include <signal.h>
 
 // GFX
@@ -52,6 +57,9 @@ int main( int argc, char * argv[], char *envp[] ) {
   std::string num;
 
   HmiData data;
+
+  ActionClock a_Clock(&data);
+  logic.registerAction(&a_Clock);
 
   // Initialize FPS Manager
   SDL_initFramerate(&fpsManager);

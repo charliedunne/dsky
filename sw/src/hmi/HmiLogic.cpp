@@ -44,7 +44,7 @@ void HmiLogic::updateHmiData(HmiData * data) {
       break;
 
     case HSM_RUN:
-      run();
+      run(data->nVerb, data->nNoun);
       break;
 
     default:
@@ -220,9 +220,15 @@ void HmiLogic::nounInput() {
 
 }
 
-void HmiLogic::run() {
+void HmiLogic::run(int verb, int noun) {
 
   LogTrace << "Running program..." << std::endl;
+  actions_(verb, noun);
+}
+
+void HmiLogic::registerAction(Action * action) 
+{
+  actions_.registerAction(action);
 }
 
 int key(EventId_t id) {

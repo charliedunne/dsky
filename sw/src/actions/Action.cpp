@@ -2,12 +2,14 @@
 
 // STL
 #include <stdexcept>
+#include <chrono>
 
 // Test
 #include <iostream>
 #include <unistd.h>
 
-Action::Action(int verb, int noun, HmiData * data, ActionSchedule_e actionSchedule) {
+Action::Action(int verb, int noun, HmiData *data, ActionSchedule_e actionSchedule)
+{
 
   /* Set internal configuration */
   verb_ = verb;
@@ -17,10 +19,12 @@ Action::Action(int verb, int noun, HmiData * data, ActionSchedule_e actionSchedu
   running_ = true;
 }
 
-Action::~Action() {
+Action::~Action()
+{
 }
 
-void Action::setPeriod(int period) {
+void Action::setPeriod(int period)
+{
 
   /* Set the period */
   period_ = period;
@@ -29,37 +33,48 @@ void Action::setPeriod(int period) {
   actionSchedule_ = ACTION_PERIODIC;
 }
 
-int Action::getVerb() {
+int Action::getVerb()
+{
 
   return verb_;
 }
 
-int Action::getNoun() {
+int Action::getNoun()
+{
 
   return noun_;
 }
 
-ActionSchedule_e Action::getSchedule() {
+ActionSchedule_e Action::getSchedule()
+{
 
   return actionSchedule_;
 }
 
-void Action::loop() {
-
-  if (actionSchedule_ == ACTION_SINGLE) {
-    std::cout << "Action Single" << std::endl;
+void Action::loop()
+{
+  if (actionSchedule_ == ACTION_SINGLE)
+  {
     operation();
   }
-  else {
-    while (running_) {
-      std::cout << "Periodic" << std::endl;
+  else
+  {
+    while (running_)
+    {
+      /* Get time when the thread must stops */
+      const auto next = std::chrono::steady_clock::now() +
+                        std::chrono::milliseconds(period_);
+     
       operation();
-      usleep(1000 * period_);
+      
+      // Wait for next cycle.
+      std::this_thread::sleep_until(next);
     }
   }
 }
 
-void Action::run() {
+void Action::run()
+{
 
   /* Create and start the thread */
   thread_ = new std::thread(&Action::loop, this);
@@ -68,8 +83,8 @@ void Action::run() {
   thread_->join();
 }
 
-void Action::stop() {
-
+void Action::stop()
+{
   running_ = false;
 
   /**

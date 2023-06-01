@@ -10,6 +10,9 @@
 // HMI 
 #include "Hmi.h"
 
+// Actions 
+#include "ListOfActions.h"
+
 typedef enum {
 
   HSM_IDLE,
@@ -38,6 +41,11 @@ class HmiLogic {
    */
   HmiData data_;
 
+  /**
+   * @brief List of actions registered
+   */
+  ListOfActions actions_;
+
  public:
 
   HmiLogic();
@@ -55,12 +63,20 @@ class HmiLogic {
    */
   void updateHmiData(HmiData * data);
 
+  /**
+   * @brief This function is used to register actions in the
+   * logic
+   * 
+   * @param action 
+   */
+  void registerAction(Action * action);
+
  private:
 
   void idle();
   void verbInput();
   void nounInput();
-  void run();
+  void run(int verb, int noun);
 
 };
 
