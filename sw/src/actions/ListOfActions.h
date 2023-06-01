@@ -35,6 +35,18 @@ class ListOfActions {
      * @param noun[in] Noun 
      */
     void operator()(int verb, int noun);
+
+    /**
+     * @brief This function is used to know if a registered
+     * verb needs a noun for its execution or it can be
+     * executed by itself
+     * 
+     * @param verb[in] Verb
+     *
+     * @return true If Noun is expected for this Verb
+     * @return false If any Noun is expected
+     */
+    bool needNoun(int verb);
 };
 
 #endif /* _LISTOFACTIONS_H_ */
