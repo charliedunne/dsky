@@ -105,7 +105,13 @@ class Action {
    */
   void stop();
 
-  std::function<void(void)> threadPtr_;
+  /**
+   * @brief Check the execution status of the action
+   * 
+   * @return true Action is being executed right now
+   * @return false Action is not being executed.
+   */
+  bool isRunning();
 
  protected:
 

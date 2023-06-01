@@ -92,3 +92,8 @@ void Action::stop()
    * abort the thread
    */
 }
+
+bool Action::isRunning() 
+{
+  return running_;
+}

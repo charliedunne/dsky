@@ -10,7 +10,7 @@ void ListOfActions::registerAction(Action * action) {
     actions_.push_back(action);
 }
 
-void ListOfActions::operator()(int verb, int noun)
+Action * ListOfActions::operator()(int verb, int noun)
 {
     /* Find the Action to do and execute */
     for (int i = 0; i < actions_.size(); ++i)
@@ -18,10 +18,12 @@ void ListOfActions::operator()(int verb, int noun)
         if ((actions_[i]->getVerb() == verb) &&
             (actions_[i]->getNoun() == noun))
         {
-            actions_[i]->run();
-            break;
+            return actions_[i];        
         }
     }
+
+    /* In case of not find the verb required rise an exception */
+    throw std::domain_error("Unregistered Verb");
 }
 
 bool ListOfActions::needNoun(int verb) {

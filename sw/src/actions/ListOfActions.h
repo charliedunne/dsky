@@ -34,7 +34,7 @@ class ListOfActions {
      * @param verb[in] Verb 
      * @param noun[in] Noun 
      */
-    void operator()(int verb, int noun);
+    Action * operator()(int verb, int noun);
 
     /**
      * @brief This function is used to know if a registered
@@ -47,6 +47,7 @@ class ListOfActions {
      * @return false If any Noun is expected
      */
     bool needNoun(int verb);
+
 };
 
 #endif /* _LISTOFACTIONS_H_ */

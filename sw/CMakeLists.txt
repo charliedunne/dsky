@@ -26,6 +26,9 @@ target_sources(dsky PRIVATE
   src/core/Keypad.cpp 
   src/core/Keyboard.cpp
   src/core/Event.cpp
+  src/actions/Action.cpp
+  src/actions/ListOfActions.cpp
+  src/actions/ActionClock.cpp
 )
 
 # CFLAGS
@@ -55,6 +58,7 @@ include_directories(build/include/SDL2)
 include_directories(src/hmi)
 include_directories(src/common)
 include_directories(src/core)
+include_directories(src/actions)
 include_directories(3rdparty/simple-cpp-logger/include)
 include_directories(src/drivers/dskyKeyInt)
 
