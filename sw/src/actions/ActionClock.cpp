@@ -7,9 +7,6 @@
 
 ActionClock::ActionClock(HmiData *data) : Action(1, -1, data, ACTION_PERIODIC)
 {
-
-  /* Base constructor */
-  //  super(1, -1, data, ACTION_PERIODIC);
 }
 
 void ActionClock::operation()

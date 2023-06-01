@@ -49,40 +49,35 @@ int main( int argc, char * argv[], char *envp[] ) {
   // Capture signals
   signal(SIGINT, handler);
 
+  // Instanciation of the HMI
   Hmi hmi = Hmi(800, 480);
+
+  // Instance of the logic
   HmiLogic logic;
 
+  // Instance of the Keypad
   Keypad keypad;
 
   std::string num;
 
+  // Data to be shared between the logic and the hmi
   HmiData data;
 
+  /* Actions */
   ActionClock a_Clock(&data);
+
+  /* Actions registration */
   logic.registerAction(&a_Clock);
 
   // Initialize FPS Manager
   SDL_initFramerate(&fpsManager);
 
   while (running) {
-
-    // data.nProg = rand() % 100;
-    // data.nVerb = rand() % 100;
-    // data.nNoun = rand() % 100;
-    // data.nR1 = rand() % 100000;
-    // data.nR2 = rand() % 100000;
-    // data.nR3 = rand() % 100000;
-
-    // data.fCompActy = rand() % 10;
-    // data.fProg = rand() % 10;
-    // data.fVerb = rand() % 10;
-    // data.fNoun = rand() % 10;
-    // data.fR1 = rand() % 10;
-    // data.fR2 = rand() % 10;
-    // data.fR3 = rand() % 10;
-    
+  
+    /* Array to register all the keypad events (normally only one per cycle) */
     std::vector<Event> events = keypad.getEvents();
 
+    /* Parse the key events in the logic */
     logic.parseKeyEvents(events);
 
     for (int i = 0; i < events.size(); ++i) {
