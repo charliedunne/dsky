@@ -6,21 +6,13 @@
 
 // Core
 #include "Event.h"
+#include "StatusMachine.h"
 
 // HMI 
 #include "Hmi.h"
 
 // Actions 
 #include "ListOfActions.h"
-
-typedef enum {
-
-  HSM_IDLE,
-  HSM_V_INPUT,
-  HSM_N_INPUT,
-  HSM_RUN
-
-} HmiStatus_e;
 
 class HmiLogic {
 
@@ -34,7 +26,7 @@ class HmiLogic {
   /**
    * @brief status machine for the Hmi Logic
    */
-  HmiStatus_e status_;
+  StatusMachine status_;
 
   /**
    * @brief Internal copy of the data to be published
@@ -77,6 +69,11 @@ class HmiLogic {
   void verbInput();
   void nounInput();
   void run(int verb, int noun);
+  void error();
+
+  void resetHmi();
+  void verbHmi();
+  void nounHmi();
 
 };
 

@@ -26,6 +26,7 @@ target_sources(dsky PRIVATE
   src/core/Keypad.cpp 
   src/core/Keyboard.cpp
   src/core/Event.cpp
+  src/core/StatusMachine.cpp
   src/actions/Action.cpp
   src/actions/ListOfActions.cpp
   src/actions/ActionClock.cpp
@@ -33,7 +34,7 @@ target_sources(dsky PRIVATE
 
 # CFLAGS
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_REENTRANT")
-#set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Debug)
 SET(CMAKE_CXX_FLAGS "-std=c++20")
 
 # Set-up System

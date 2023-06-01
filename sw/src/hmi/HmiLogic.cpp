@@ -11,8 +11,7 @@ int key(EventId_t);
 
 HmiLogic::HmiLogic()
 {
-
-  status_ = HSM_IDLE;
+  resetHmi();
 }
 
 HmiLogic::~HmiLogic()
@@ -28,26 +27,34 @@ void HmiLogic::parseKeyEvents(std::vector<Event> events)
 void HmiLogic::updateHmiData(HmiData *data)
 {
 
+  // LogDebug << "Current Status: " << status_.to_string() << std::endl;
+
   if (keyEvents_.size() == 1)
   {
 
-    switch (status_)
+    LogDebug << "New key pressed" << std::endl;
+
+    switch (status_())
     {
 
-    case HSM_IDLE:
+    case MODE_IDLE:
       idle();
       break;
 
-    case HSM_V_INPUT:
+    case MODE_V_INPUT:
       verbInput();
       break;
 
-    case HSM_N_INPUT:
+    case MODE_N_INPUT:
       nounInput();
       break;
 
-    case HSM_RUN:
+    case MODE_RUN:
       run(data->nVerb, data->nNoun);
+      break;
+
+    case MODE_ERROR:
+      error();
       break;
 
     default:
@@ -65,49 +72,31 @@ void HmiLogic::updateHmiData(HmiData *data)
     LogWarning << "@TODO Handle more than one event at one" << std::endl;
   }
 
+  if (status_() == MODE_RUN)
+  {
+    run(data_.nVerb, data_.nNoun);
+  }
+
   /* Publish the data */
   std::memcpy(data, &data_, sizeof(HmiData));
 }
 
 void HmiLogic::idle()
 {
-
   if (keyEvents_[0].getEvent() == E_KEY_VERB)
   {
-
     LogTrace << "VERB" << std::endl;
 
-    data_.nProgMode = DRAW_OFF;
-    data_.nVerbMode = DRAW_OFF;
-    data_.nNounMode = DRAW_OFF;
+    verbHmi();
 
-    data_.nR1Mode = DRAW_OFF;
-    data_.nR2Mode = DRAW_OFF;
-    data_.nR3Mode = DRAW_OFF;
-
-    data_.lProgMode = DRAW_ON;
-    data_.lVerbMode = DRAW_ON;
-    data_.lNounMode = DRAW_ON;
-
-    data_.lCompActyMode = DRAW_OFF;
-
-    data_.lR1Mode = DRAW_ON;
-    data_.lR2Mode = DRAW_ON;
-    data_.lR3Mode = DRAW_ON;
-
-    status_ = HSM_V_INPUT;
+    status_.transit(MODE_V_INPUT);
   }
 }
 
 void HmiLogic::verbInput()
 {
-
   /* Copy the Event key received */
   EventId_t eventKey = keyEvents_[0].getEvent();
-
-  /* Set-up the labels for Verb and disable Noun */
-  data_.lVerbMode = DRAW_ON;
-  data_.lNounMode = DRAW_OFF;
 
   switch (eventKey)
   {
@@ -115,19 +104,20 @@ void HmiLogic::verbInput()
   case E_KEY_ENTR:
   case E_KEY_NOUN:
 
-    LogTrace << "Enter during Verb input" << std::endl;
+    LogTrace << "Enter Verb input" << std::endl;
 
     if (actions_.needNoun(data_.nVerb))
     {
-      data_.lNounMode = DRAW_ON;
-      status_ = HSM_N_INPUT;
+      nounHmi();
+      status_.transit(MODE_N_INPUT);
       LogTrace << "Go no Noun input" << std::endl;
     }
     else
     {
       data_.nNoun = -1;
-      status_ = HSM_RUN;
+      status_.transit(MODE_RUN);
       LogTrace << "Run action since Verb is enough [verb: " << data_.nVerb << "]" << std::endl;
+      run(data_.nVerb, data_.nNoun);
     }
     break;
 
@@ -156,13 +146,12 @@ void HmiLogic::verbInput()
 
   case E_KEY_VERB:
   case E_KEY_CLR:
-    data_.nVerbMode = DRAW_OFF;
-    data_.nVerb = 0;
+    verbHmi();
     break;
 
   case E_KEY_RSET:
-    /** @todo clear all */
-    status_ = HSM_IDLE;
+    resetHmi();
+    status_.transit(MODE_IDLE);
     break;
 
   default:
@@ -186,7 +175,7 @@ void HmiLogic::nounInput()
 
   case E_KEY_ENTR:
 
-    status_ = HSM_RUN;
+    status_.transit(MODE_RUN);
     break;
 
   case E_KEY_0:
@@ -202,7 +191,6 @@ void HmiLogic::nounInput()
 
     if (data_.nNounMode == DRAW_OFF)
     {
-
       data_.nNounMode = DRAW_ON;
       data_.nNoun = key(eventKey);
     }
@@ -214,24 +202,17 @@ void HmiLogic::nounInput()
     break;
 
   case E_KEY_VERB:
-    data_.nVerb = 0;
-    data_.nNoun = 0;
-
-    data_.nVerbMode = DRAW_OFF;
-    data_.nNounMode = DRAW_OFF;
-    data_.lVerbMode = DRAW_ON;
-    data_.lNounMode = DRAW_OFF;
-    status_ = HSM_V_INPUT;
+    verbHmi();
+    status_.transit(MODE_V_INPUT);
 
   case E_KEY_NOUN:
   case E_KEY_CLR:
-    data_.nNounMode = DRAW_OFF;
-    data_.nNoun = 0;
+    nounHmi();
     break;
 
   case E_KEY_RSET:
-    /** @todo clear all */
-    status_ = HSM_IDLE;
+    resetHmi();
+    status_.transit(MODE_IDLE);
     break;
 
   default:
@@ -242,19 +223,25 @@ void HmiLogic::nounInput()
 
 void HmiLogic::run(int verb, int noun)
 {
-
-  /* Copy the Event key received */
-  EventId_t eventKey = keyEvents_[0].getEvent();
-
-  switch (eventKey)
+  if (keyEvents_.size() > 0)
   {
-  case E_KEY_RSET:
-    actions_(verb, noun)->stop();
-    status_ = HSM_IDLE;
-    break;
 
-  default:
-    break;
+    /* Copy the Event key received */
+    EventId_t eventKey = keyEvents_[0].getEvent();
+
+    LogTrace << "Key detected" << std::endl;
+
+    switch (eventKey)
+    {
+    case E_KEY_RSET:
+      actions_(verb, noun)->stop();
+      resetHmi();
+      status_.transit(MODE_IDLE);
+      break;
+
+    default:
+      break;
+    }
   }
 
   if (!actions_(verb, noun)->isRunning())
@@ -264,9 +251,53 @@ void HmiLogic::run(int verb, int noun)
   }
 }
 
+void HmiLogic::error()
+{
+  LogError << "Error state" << std::endl;
+}
+
 void HmiLogic::registerAction(Action *action)
 {
   actions_.registerAction(action);
+}
+
+void HmiLogic::resetHmi()
+{
+  data_.nVerb = -1;
+  data_.nNoun = -1;
+  data_.nR1 = -1;
+  data_.nR2 = -1;
+  data_.nR3 = -1;
+
+  data_.nProgMode = DRAW_OFF;
+  data_.nVerbMode = DRAW_OFF;
+  data_.nNounMode = DRAW_OFF;
+
+  data_.nR1Mode = DRAW_OFF;
+  data_.nR2Mode = DRAW_OFF;
+  data_.nR3Mode = DRAW_OFF;
+
+  data_.lProgMode = DRAW_OFF;
+  data_.lVerbMode = DRAW_OFF;
+  data_.lNounMode = DRAW_OFF;
+
+  data_.lCompActyMode = DRAW_OFF;
+
+  data_.lR1Mode = DRAW_OFF;
+  data_.lR2Mode = DRAW_OFF;
+  data_.lR3Mode = DRAW_OFF;
+}
+
+void HmiLogic::verbHmi()
+{
+  resetHmi();
+  data_.lVerbMode = DRAW_ON;
+}
+
+void HmiLogic::nounHmi()
+{
+  verbHmi();
+  data_.lNounMode = DRAW_ON;
 }
 
 int key(EventId_t id)

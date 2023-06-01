@@ -72,7 +72,10 @@ int main( int argc, char * argv[], char *envp[] ) {
   // Initialize FPS Manager
   SDL_initFramerate(&fpsManager);
 
+  SDL_Event PingStop;
+
   while (running) {
+    //while(SDL_PollEvent(&PingStop)) {
   
     /* Array to register all the keypad events (normally only one per cycle) */
     std::vector<Event> events = keypad.getEvents();
@@ -97,7 +100,9 @@ int main( int argc, char * argv[], char *envp[] ) {
 
 
     /* Call the logic updated */
+    //LogDebug << "Before lVerb: " << data.lVerbMode << std::endl;
     logic.updateHmiData(&data);
+    //LogDebug << "After lVerb: " << data.lVerbMode << std::endl;
 
     /**
      * @todo Get feedback from logic and send message queue to another
@@ -121,12 +126,11 @@ int main( int argc, char * argv[], char *envp[] ) {
     hmi.render();
 
     extraTime = SDL_framerateDelay(&fpsManager);
+    //SDL_Delay(200);
 
     if (extraTime <= 0) {
       LogError << "Computing time issue with FPS" << std::endl;
     }
-
-    //SDL_Delay(200);
 
   }
 }
