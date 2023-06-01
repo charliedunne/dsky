@@ -15,8 +15,6 @@ Action::Action(int verb, int noun, HmiData * data, ActionSchedule_e actionSchedu
   hmiData_ = data;
   actionSchedule_ = actionSchedule_;
   running_ = true;
-
-  threadPtr_ = Action::loop;
 }
 
 Action::~Action() {
@@ -55,8 +53,8 @@ void Action::loop() {
   else {
     while (running_) {
       std::cout << "Periodic" << std::endl;
-
-      usleep(1000000 * 2);
+      operation();
+      usleep(1000 * period_);
     }
   }
 }
@@ -64,7 +62,7 @@ void Action::loop() {
 void Action::run() {
 
   /* Create and start the thread */
-  thread_ = new std::thread(threadPtr_);
+  thread_ = new std::thread(&Action::loop, this);
 
   /* Wait for the thread to finish */
   thread_->join();
@@ -78,7 +76,4 @@ void Action::stop() {
    * @todo In case of an error there must be a way to also
    * abort the thread
    */
-}
-
-void Action::operation() {
 }

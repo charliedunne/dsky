@@ -12,6 +12,7 @@ add_executable(actionClock "")
 # Sources
 target_sources(actionClock PRIVATE
   main.cpp
+  ../src/actions/OpClock.cpp
   ../src/actions/Action.cpp
   ../src/actions/ActionClock.cpp
 )

@@ -112,7 +112,7 @@ class Action {
   /**
    * @brief Define in derived classes the operation to do in the thread
    */
-  virtual void operation();
+  virtual void operation() = 0;
 
   void loop();
 };
