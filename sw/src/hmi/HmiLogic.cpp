@@ -2,7 +2,6 @@
 
 #include "Logger.h"
 
-
 /**
  * @brief Function to resolve the falue of the key event
  *
@@ -10,26 +9,30 @@
  */
 int key(EventId_t);
 
-
-HmiLogic::HmiLogic() {
+HmiLogic::HmiLogic()
+{
 
   status_ = HSM_IDLE;
 }
 
-HmiLogic::~HmiLogic() {
+HmiLogic::~HmiLogic()
+{
 }
 
-void HmiLogic::parseKeyEvents(std::vector<Event> events) {
+void HmiLogic::parseKeyEvents(std::vector<Event> events)
+{
 
   keyEvents_ = events;
 }
 
-void HmiLogic::updateHmiData(HmiData * data) {
+void HmiLogic::updateHmiData(HmiData *data)
+{
 
+  if (keyEvents_.size() == 1)
+  {
 
-  if (keyEvents_.size() == 1) {
-
-    switch (status_) {
+    switch (status_)
+    {
 
     case HSM_IDLE:
       idle();
@@ -52,7 +55,8 @@ void HmiLogic::updateHmiData(HmiData * data) {
       break;
     }
   }
-  else if (keyEvents_.size() > 1) {
+  else if (keyEvents_.size() > 1)
+  {
 
     /**
      * @todo What to do for multiple events at once
@@ -65,9 +69,11 @@ void HmiLogic::updateHmiData(HmiData * data) {
   std::memcpy(data, &data_, sizeof(HmiData));
 }
 
-void HmiLogic::idle() {
+void HmiLogic::idle()
+{
 
-  if (keyEvents_[0].getEvent() == E_KEY_VERB) {
+  if (keyEvents_[0].getEvent() == E_KEY_VERB)
+  {
 
     LogTrace << "VERB" << std::endl;
 
@@ -88,12 +94,13 @@ void HmiLogic::idle() {
     data_.lR1Mode = DRAW_ON;
     data_.lR2Mode = DRAW_ON;
     data_.lR3Mode = DRAW_ON;
-    
+
     status_ = HSM_V_INPUT;
   }
 }
 
-void HmiLogic::verbInput() {
+void HmiLogic::verbInput()
+{
 
   /* Copy the Event key received */
   EventId_t eventKey = keyEvents_[0].getEvent();
@@ -102,16 +109,26 @@ void HmiLogic::verbInput() {
   data_.lVerbMode = DRAW_ON;
   data_.lNounMode = DRAW_OFF;
 
-  switch(eventKey) {
-    
+  switch (eventKey)
+  {
+
   case E_KEY_ENTR:
   case E_KEY_NOUN:
 
-    /**
-     * @TODO check if the verb can be executed by itself
-     */
-    data_.lNounMode = DRAW_ON;
-    status_ = HSM_N_INPUT;
+    LogTrace << "Enter during Verb input" << std::endl;
+
+    if (actions_.needNoun(data_.nVerb))
+    {
+      data_.lNounMode = DRAW_ON;
+      status_ = HSM_N_INPUT;
+      LogTrace << "Go no Noun input" << std::endl;
+    }
+    else
+    {
+      data_.nNoun = -1;
+      status_ = HSM_RUN;
+      LogTrace << "Run action since Verb is enough [verb: " << data_.nVerb << "]" << std::endl;
+    }
     break;
 
   case E_KEY_0:
@@ -125,13 +142,15 @@ void HmiLogic::verbInput() {
   case E_KEY_8:
   case E_KEY_9:
 
-    if (data_.nVerbMode == DRAW_OFF) {
-      
+    if (data_.nVerbMode == DRAW_OFF)
+    {
+
       data_.nVerbMode = DRAW_ON;
       data_.nVerb = key(eventKey);
-    } 
-    else {
-      data_.nVerb = data_.nVerb*10 + key(eventKey);
+    }
+    else
+    {
+      data_.nVerb = data_.nVerb * 10 + key(eventKey);
     }
     break;
 
@@ -146,15 +165,14 @@ void HmiLogic::verbInput() {
     status_ = HSM_IDLE;
     break;
 
-
   default:
     LogWarning << "Not available operation" << std::endl;
     break;
   }
-
 }
 
-void HmiLogic::nounInput() {
+void HmiLogic::nounInput()
+{
 
   /* Copy the Event key received */
   EventId_t eventKey = keyEvents_[0].getEvent();
@@ -163,8 +181,9 @@ void HmiLogic::nounInput() {
   data_.lVerbMode = DRAW_ON;
   data_.lNounMode = DRAW_ON;
 
-  switch(eventKey) {
-    
+  switch (eventKey)
+  {
+
   case E_KEY_ENTR:
 
     status_ = HSM_RUN;
@@ -180,14 +199,16 @@ void HmiLogic::nounInput() {
   case E_KEY_7:
   case E_KEY_8:
   case E_KEY_9:
-    
-    if (data_.nNounMode == DRAW_OFF) {
-      
+
+    if (data_.nNounMode == DRAW_OFF)
+    {
+
       data_.nNounMode = DRAW_ON;
       data_.nNoun = key(eventKey);
-    } 
-    else {
-      data_.nNoun = data_.nNoun*10 + key(eventKey);
+    }
+    else
+    {
+      data_.nNoun = data_.nNoun * 10 + key(eventKey);
     }
 
     break;
@@ -217,26 +238,45 @@ void HmiLogic::nounInput() {
     LogWarning << "Not available operation" << std::endl;
     break;
   }
-
 }
 
-void HmiLogic::run(int verb, int noun) {
+void HmiLogic::run(int verb, int noun)
+{
 
-  LogTrace << "Running program..." << std::endl;
-  actions_(verb, noun);
+  /* Copy the Event key received */
+  EventId_t eventKey = keyEvents_[0].getEvent();
+
+  switch (eventKey)
+  {
+  case E_KEY_RSET:
+    actions_(verb, noun)->stop();
+    status_ = HSM_IDLE;
+    break;
+
+  default:
+    break;
+  }
+
+  if (!actions_(verb, noun)->isRunning())
+  {
+    LogTrace << "Running action..." << std::endl;
+    actions_(verb, noun)->run();
+  }
 }
 
-void HmiLogic::registerAction(Action * action) 
+void HmiLogic::registerAction(Action *action)
 {
   actions_.registerAction(action);
 }
 
-int key(EventId_t id) {
+int key(EventId_t id)
+{
 
   /* Return value */
   int value = 0;
 
-  switch (id) {
+  switch (id)
+  {
 
   case E_KEY_0:
     value = 0;
@@ -277,7 +317,6 @@ int key(EventId_t id) {
   case E_KEY_9:
     value = 9;
     break;
-
 
   default:
     return -1;
