@@ -18,6 +18,8 @@ void ActionClock::operation()
   const std::time_t now = std::time(nullptr);
   const std::tm calendarTime = *std::localtime(std::addressof(now));
 
+  LogDebug << "InActionClock: BEFORE nR1 = " << hmiData_->nR1 << std::endl;
+
   hmiData_->nR1 = calendarTime.tm_hour;
   hmiData_->nR1Mode = DRAW_ON;
   hmiData_->lR1Mode = DRAW_ON;
@@ -30,7 +32,9 @@ void ActionClock::operation()
   hmiData_->nR1Mode = DRAW_ON;
   hmiData_->lR3Mode = DRAW_ON;
 
-  std::cout << "hmiData Address = 0x" << std::hex << hmiData_ << std::endl;
+  LogDebug << "InActionClock: AFTER nR1 = " << hmiData_->nR1 << std::endl;
+
+  //std::cout << "hmiData Address = 0x" << std::hex << hmiData_-><< std::endl;
 
   LogTrace << "Time: " << hmiData_->nR1 << ":" << hmiData_->nR2 << ":" << hmiData_->nR3 << std::endl;
 }

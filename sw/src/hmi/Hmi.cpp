@@ -80,6 +80,8 @@ void Hmi::render() {
 
 void Hmi::update(HmiData &data) {
 
+  LogDebug << "nR1 = " << data.nR1 << std::endl;
+
   // Set values
   rightLcd_->setProg(data.nProg, data.nProgMode);
   rightLcd_->setVerb(data.nVerb, data.nVerbMode);

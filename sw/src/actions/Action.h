@@ -23,7 +23,7 @@ class Action {
   /**
    * @brief thread object
    */
-  std::thread * thread_ = NULL;
+  std::thread thread_;
   /**
    * @brief Action Type (in terms of scheduling)
    */
@@ -48,7 +48,7 @@ class Action {
    * @brief Flag to determine if the thread must continue its execution
    *
    */
-   bool running_;
+   std::atomic_bool running_;
 
 
  protected:
@@ -56,7 +56,7 @@ class Action {
   /**
    * @brief pointer to the Data to be updated (HMI Data input)
    */
-  HmiData * hmiData_ = NULL;
+  HmiData * hmiData_;
 
  public:
 

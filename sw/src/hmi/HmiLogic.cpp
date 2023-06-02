@@ -237,7 +237,7 @@ void HmiLogic::run(int verb, int noun)
       actions_(verb, noun)->stop();
       resetHmi();
       status_.transit(MODE_IDLE);
-      break;
+      return;
 
     default:
       break;

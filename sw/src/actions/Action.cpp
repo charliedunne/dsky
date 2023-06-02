@@ -11,7 +11,7 @@
 // Logging
 #include "Logger.h"
 
-Action::Action(int verb, int noun, HmiData *data, ActionSchedule_e actionSchedule)
+Action::Action(int verb, int noun, HmiData *data, ActionSchedule_e actionSchedule) 
 {
 
   /* Set internal configuration */
@@ -20,6 +20,8 @@ Action::Action(int verb, int noun, HmiData *data, ActionSchedule_e actionSchedul
   hmiData_ = data;
   actionSchedule_ = actionSchedule_;
   running_ = false;
+
+  //std::cout << "hmiDataPtr = 0x" << std::hex << hmiData_ << std::endl;
 }
 
 Action::~Action()
@@ -63,15 +65,13 @@ void Action::loop()
   }
   else
   {
-    while (this->running_)
+    while (isRunning() == true)
     {
       /* Get time when the thread must stops */
       const auto next = std::chrono::steady_clock::now() +
                         std::chrono::milliseconds(period_);
     
       operation();
-
-      LogDebug << "Inside thread while, running_ = " << this->running_ << std::endl;
       
       // Wait for next cycle.
       std::this_thread::sleep_until(next);
@@ -87,23 +87,19 @@ void Action::run()
   running_ = true;
 
   /* Create and start the thread */
-  thread_ = new std::thread(&Action::loop, this);
-
-  /* Wait for the thread to finish */
-  //thread_->join();
+  thread_ = std::thread(&Action::loop, this);
 }
 
 void Action::stop()
 {
-
-  LogDebug << "Before Stop thread commanded, runnin_ = " << running_ << std::endl;
   running_ = false;
-  LogDebug << "After Stop thread commanded, runnin_ = " << running_ << std::endl;
 
   /**
    * @todo In case of an error there must be a way to also
    * abort the thread
    */
+  thread_.join();
+  thread_.~thread();
 }
 
 bool Action::isRunning() 

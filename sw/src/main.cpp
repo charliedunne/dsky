@@ -102,6 +102,8 @@ int main( int argc, char * argv[], char *envp[] ) {
     /* Call the logic updated */
     //LogDebug << "Before lVerb: " << data.lVerbMode << std::endl;
     logic.updateHmiData(&data);
+
+    LogDebug << "After Update nR1 = " << data.nR1 << std::endl;
     //LogDebug << "After lVerb: " << data.lVerbMode << std::endl;
 
     /**
