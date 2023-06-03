@@ -29,7 +29,7 @@ int main(int arg, char *argv[], char *envp[])
 
         while (true)
         {
-            sleep(1);
+            sleep(10);
 
             /** @todo Polling/blocking call TBC over another message 
              *  queue to detect operation on the HW 

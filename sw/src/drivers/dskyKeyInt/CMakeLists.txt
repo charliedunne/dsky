@@ -25,6 +25,7 @@ include_directories(../../../3rdparty/simple-cpp-logger/include)
 # Libraries
 target_link_directories(dskyKeyInt PUBLIC ../../../build/lib)
 target_link_libraries(dskyKeyInt pigpio)
+target_link_libraries(dskyKeyInt pthread)
 
 # Logger definitions
 add_definitions( -D LOGGER_MAX_LOG_LEVEL_PRINTED=7 )
