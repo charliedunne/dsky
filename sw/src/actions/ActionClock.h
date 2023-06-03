@@ -7,7 +7,7 @@ class ActionClock : public Action {
 
  public:
 
-  ActionClock(HmiData * data);
+  ActionClock(HmiData & data);
 
   void operation();
 };

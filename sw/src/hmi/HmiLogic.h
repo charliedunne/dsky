@@ -29,11 +29,6 @@ class HmiLogic {
   StatusMachine status_;
 
   /**
-   * @brief Internal copy of the data to be published
-   */
-  HmiData data_;
-
-  /**
    * @brief List of actions registered
    */
   ListOfActions actions_;
@@ -53,7 +48,7 @@ class HmiLogic {
   /**
    * @brief Update the struct to pass to the Hmi
    */
-  void updateHmiData(HmiData * data);
+  void updateHmiData(HmiData &data);
 
   /**
    * @brief This function is used to register actions in the
@@ -65,16 +60,11 @@ class HmiLogic {
 
  private:
 
-  void idle();
-  void verbInput();
-  void nounInput();
-  void run(int verb, int noun);
-  void error();
-
-  void resetHmi();
-  void verbHmi();
-  void nounHmi();
-
+  void idle(HmiData &data);
+  void verbInput(HmiData &data);
+  void nounInput(HmiData &data);
+  void run(HmiData &data);
+  void error(HmiData &data);
 };
 
 #endif /* _HMILOGIC_H_ */

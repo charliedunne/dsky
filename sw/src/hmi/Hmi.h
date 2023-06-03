@@ -8,7 +8,7 @@
 
 #include "SDL2/SDL.h"
 
-#include "HmiDefinitions.h"
+#include "HmiData.h"
 
 class Hmi {
 

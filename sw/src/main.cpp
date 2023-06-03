@@ -64,7 +64,7 @@ int main( int argc, char * argv[], char *envp[] ) {
   HmiData data;
 
   /* Actions */
-  ActionClock a_Clock(&data);
+  ActionClock a_Clock(data);
 
   /* Actions registration */
   logic.registerAction(&a_Clock);
@@ -88,40 +88,8 @@ int main( int argc, char * argv[], char *envp[] ) {
       std::cout << "[" << i << "] Keystroke Received: " << std::hex << events[i].getEvent() << std::endl;
     }
 
-    /** @todo Call core function to process environment before rendering.
-     * it will contain:
-     * @li List of keypad events
-     * @li 
-     * 
-     * The output of this function will be the HmiData struct
-     */
-
-    //    memset(&data, 0x0, sizeof(HmiData));
-
-
     /* Call the logic updated */
-    //LogDebug << "Before lVerb: " << data.lVerbMode << std::endl;
-    logic.updateHmiData(&data);
-
-    LogDebug << "After Update nR1 = " << data.nR1 << std::endl;
-    //LogDebug << "After lVerb: " << data.lVerbMode << std::endl;
-
-    /**
-     * @todo Get feedback from logic and send message queue to another
-     * application that will run the actions.
-     *
-     * Also it would be required some data from the application to the
-     * HMI
-     *
-     * Other option is to create and run an independent thread
-     * that will make the operation. it will run in parallel and we
-     * can use some synchronization method to report data.
-     *
-     * E.G: CLOCK:
-     * @li Required:
-     *   @li update every second the time
-     *   
-     */
+    logic.updateHmiData(data);
 
     hmi.update(data);
 

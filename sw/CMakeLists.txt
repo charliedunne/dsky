@@ -23,6 +23,7 @@ target_sources(dsky PRIVATE
   src/hmi/Draw.cpp 
   src/hmi/Sign.cpp 
   src/hmi/HmiLogic.cpp
+  src/hmi/HmiData.cpp
   src/core/Keypad.cpp 
   src/core/Keyboard.cpp
   src/core/Event.cpp

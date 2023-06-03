@@ -10,8 +10,11 @@ void ListOfActions::registerAction(Action * action) {
     actions_.push_back(action);
 }
 
-Action * ListOfActions::operator()(int verb, int noun)
+Action * ListOfActions::operator()(HmiData &data)
 {
+    int verb = data.getRightLcdData().nVerb;
+    int noun = data.getRightLcdData().nNoun;
+
     /* Find the Action to do and execute */
     for (int i = 0; i < actions_.size(); ++i)
     {
@@ -44,5 +47,8 @@ bool ListOfActions::needNoun(int verb) {
     }
 
     /* In case of not find the verb required rise an exception */
-    throw std::domain_error("Unregistered Verb");
+    /** @todo I think it is not necessary to rise an execption here, 
+     * just return true so the operation can continue. At least for debuggin purposes */
+    //throw std::domain_error("Unregistered Verb");
+    return true;
 }

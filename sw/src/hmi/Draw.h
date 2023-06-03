@@ -8,7 +8,7 @@
 #include "config.h"
 
 // HMI Definitions
-#include "HmiDefinitions.h"
+#include "HmiData.h"
 
 class Draw
 {

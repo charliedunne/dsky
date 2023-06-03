@@ -80,26 +80,24 @@ void Hmi::render() {
 
 void Hmi::update(HmiData &data) {
 
-  LogDebug << "nR1 = " << data.nR1 << std::endl;
-
   // Set values
-  rightLcd_->setProg(data.nProg, data.nProgMode);
-  rightLcd_->setVerb(data.nVerb, data.nVerbMode);
-  rightLcd_->setNoun(data.nNoun, data.nNounMode);
-  rightLcd_->setR1(data.nR1, data.nR1Mode);
-  rightLcd_->setR2(data.nR2, data.nR2Mode);
-  rightLcd_->setR3(data.nR3, data.nR3Mode);
+  rightLcd_->setProg(data.getRightLcdData().nProg, data.getRightLcdData().nProgMode);
+  rightLcd_->setVerb(data.getRightLcdData().nVerb, data.getRightLcdData().nVerbMode);
+  rightLcd_->setNoun(data.getRightLcdData().nNoun, data.getRightLcdData().nNounMode);
+  rightLcd_->setR1(data.getRightLcdData().nR1, data.getRightLcdData().nR1Mode);
+  rightLcd_->setR2(data.getRightLcdData().nR2, data.getRightLcdData().nR2Mode);
+  rightLcd_->setR3(data.getRightLcdData().nR3, data.getRightLcdData().nR3Mode);
 
   // Set Numbers mode
   
   // Set flags
-  rightLcd_->setProgStatus(data.lProgMode);
-  rightLcd_->setVerbStatus(data.lVerbMode);
-  rightLcd_->setNounStatus(data.lNounMode);
-  rightLcd_->setCompActyStatus(data.lCompActyMode);
-  rightLcd_->setR1Status(data.lR1Mode);
-  rightLcd_->setR2Status(data.lR2Mode);
-  rightLcd_->setR3Status(data.lR3Mode);
+  rightLcd_->setProgStatus(data.getRightLcdData().lProgMode);
+  rightLcd_->setVerbStatus(data.getRightLcdData().lVerbMode);
+  rightLcd_->setNounStatus(data.getRightLcdData().lNounMode);
+  rightLcd_->setCompActyStatus(data.getRightLcdData().lCompActyMode);
+  rightLcd_->setR1Status(data.getRightLcdData().lR1Mode);
+  rightLcd_->setR2Status(data.getRightLcdData().lR2Mode);
+  rightLcd_->setR3Status(data.getRightLcdData().lR3Mode);
 
 
 }

@@ -11,13 +11,13 @@
 // Logging
 #include "Logger.h"
 
-Action::Action(int verb, int noun, HmiData *data, ActionSchedule_e actionSchedule) 
+Action::Action(int verb, int noun, HmiData &data, ActionSchedule_e actionSchedule) 
+: hmiData_(data)
 {
 
   /* Set internal configuration */
   verb_ = verb;
   noun_ = noun;
-  hmiData_ = data;
   actionSchedule_ = actionSchedule_;
   running_ = false;
 
@@ -76,8 +76,6 @@ void Action::loop()
       // Wait for next cycle.
       std::this_thread::sleep_until(next);
     }
-
-    LogDebug << "Thread finished" << std::endl;
   }
 }
 

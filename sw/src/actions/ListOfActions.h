@@ -31,10 +31,9 @@ class ListOfActions {
     /**
      * @brief Overload to the operator() to make a functor
      * 
-     * @param verb[in] Verb 
-     * @param noun[in] Noun 
+     * @param data[in] Hmi data required for the action
      */
-    Action * operator()(int verb, int noun);
+    Action * operator()(HmiData &data);
 
     /**
      * @brief This function is used to know if a registered

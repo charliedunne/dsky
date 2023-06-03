@@ -2,13 +2,14 @@
 #define _ACTION_H_
 
 /* HMI Definitions */
-#include "HmiDefinitions.h"
+#include "HmiData.h"
 
 /* STL */
 #include <thread>
 #include <functional>
 
-typedef enum {
+typedef enum
+{
 
   ACTION_SINGLE,
   ACTION_PERIODIC,
@@ -16,10 +17,10 @@ typedef enum {
 
 } ActionSchedule_e;
 
-class Action {
+class Action
+{
 
- private:
-
+private:
   /**
    * @brief thread object
    */
@@ -48,19 +49,13 @@ class Action {
    * @brief Flag to determine if the thread must continue its execution
    *
    */
-   std::atomic_bool running_;
+  std::atomic_bool running_;
 
+protected:
+  HmiData &hmiData_;
 
- protected:
-
-  /**
-   * @brief pointer to the Data to be updated (HMI Data input)
-   */
-  HmiData * hmiData_;
-
- public:
-
-  Action(int verb, int noun, HmiData * data, ActionSchedule_e actionSchedule = ACTION_SINGLE);
+public:
+  Action(int verb, int noun, HmiData &data, ActionSchedule_e actionSchedule = ACTION_SINGLE);
 
   virtual ~Action();
 
@@ -107,14 +102,13 @@ class Action {
 
   /**
    * @brief Check the execution status of the action
-   * 
+   *
    * @return true Action is being executed right now
    * @return false Action is not being executed.
    */
   bool isRunning();
 
- protected:
-
+protected:
   /**
    * @brief Define in derived classes the operation to do in the thread
    */
