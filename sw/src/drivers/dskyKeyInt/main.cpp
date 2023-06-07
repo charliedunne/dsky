@@ -10,9 +10,15 @@
 // KeyInt library
 #include "KeyInt.h"
 
+/* PiGpio */
+#include "pigpio.h"
+
 void signal_callback_handler(int signum)
 {
     std::cout << "System Signal received (" << signum << ")." << std::endl;
+
+    // Terminate GPIO Library
+    gpioTerminate();
 
     exit(signum);
 }
@@ -22,6 +28,9 @@ int main(int arg, char *argv[], char *envp[])
 
     // Register handler for SIGNING
     signal(SIGINT, signal_callback_handler);
+
+    // Initialize piGpio Library
+    gpioInitialise();
 
     try
     {

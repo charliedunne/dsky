@@ -8,92 +8,69 @@
 // Configuration
 #include "config.h"
 
-// Message queues
-#include <sys/ipc.h>
-#include <sys/msg.h>
-
 // Logging
 #include "Logger.h"
 
 /* Definition of static members */
 int KeyInt::gpioInt_ = 0;
-Pcf8575 * KeyInt::leftKbd_ = NULL;
-Pcf8575 * KeyInt::rightKbd_ = NULL;
-key_t KeyInt::key_;
-int KeyInt::msgId_ = 0;
+Pcf8575 *KeyInt::leftKbd_ = nullptr;
+Pcf8575 *KeyInt::rightKbd_ = nullptr;
+MsgQueue *KeyInt::outMsgQueue_ = nullptr;
 
 KeyInt::KeyInt(const int iicBus,
                const int iicAddrLeft, const int iicAddrRigth,
                const int gpioInt)
 {
-    // Save info locally
-    gpioInt_ = gpioInt;
+  // Save info locally
+  gpioInt_ = gpioInt;
 
-    // Initialize the PCF8575 controller
-    leftKbd_ = new Pcf8575(iicBus, iicAddrLeft);
-    rightKbd_ = new Pcf8575(iicBus, iicAddrRigth);
+  // Initialize the PCF8575 controller
+  leftKbd_ = new Pcf8575(iicBus, iicAddrLeft);
+  rightKbd_ = new Pcf8575(iicBus, iicAddrRigth);
 
-    // Initialize pigpio driver
-    gpioInitialise();
+  // Set the interruption GPIO configuration
+  gpioSetMode(gpioInt_, PI_INPUT);
 
-    // Set the interruption GPIO configuration
-    gpioSetMode(gpioInt_, PI_INPUT);
+  outMsgQueue_ = new MsgQueue(KEY_INT_MSG_QUEUE_FILE,
+                              KEY_INT_MSG_QUEUE_ID, MSG_QUEUE_OUT);
 
-    // Generate Unique Message queue key
-    key_ = ftok(KEY_INT_MSG_QUEUE_FILE, KEY_INT_MSG_QUEUE_ID);
-    if (key_ == -1) {
-        throw std::domain_error("ftok() Error");
-    }
-
-    // Create the message queue
-    msgId_ = msgget(key_, 0666 | IPC_CREAT);
-    if (msgId_ == -1)
-    {
-        throw std::domain_error("msgget() Error");
-    }
-
-    // Register callback for interruption
-    gpioSetAlertFunc(gpioInt_, intHandler);
+  // Register callback for interruption
+  gpioSetAlertFunc(gpioInt_, intHandler);
 }
 
 KeyInt::~KeyInt()
 {
-    // Remove message queue
-    msgctl(msgId_, IPC_RMID, NULL);
-
-    // Terminate GPIO operation
-    gpioTerminate();
+  // Remove message queue
+  delete outMsgQueue_;
 }
 
 void KeyInt::intHandler(int gpio, int level, uint32_t tick)
 {
-    // Read the interruption line
-    int intLine = gpioRead(gpioInt_);
+  // Read the interruption line
+  int intLine = gpioRead(gpioInt_);
 
-    if (intLine == 0) 
-      {
-	
-	// Read data from the PCF8575
-	int leftData = leftKbd_->read(); 
-	int rightData = rightKbd_->read(); 
-	
-	// Only process data when data is available
-	if ((leftData != 0xFFFF) || (rightData != 0xFFFF)) {
-	  
-	  /* Compose message to send */
-	  KeyMsg_t msg;
-	  
-	  msg.mType = 1;
-	  msg.mData.keyId = leftData << 16 | rightData;
-	  msg.mData.keyModifier = KM_SHORT;
-	  
-	  std::cout << "KeyId: 0x" << std::hex << msg.mData.keyId << std::endl;
-	  
-	  /* Queue message for sending */
-	  if (msgsnd(msgId_, &msg, sizeof(KeyMsg_t), 0) != 0)
-	    {
-	      throw std::domain_error("msgsnd() Error");
-	    }
-	}
-      }
+  if (intLine == 0)
+  {
+
+    // Read data from the PCF8575
+    int leftData = leftKbd_->read();
+    int rightData = rightKbd_->read();
+
+    // Only process data when data is available
+    if ((leftData != 0xFFFF) || (rightData != 0xFFFF))
+    {
+
+      /* Compose message to send */
+      KeyMsg_t msg;
+
+      msg.mType = 1;
+      msg.mData.keyId = leftData << 16 | rightData;
+      msg.mData.keyModifier = KM_SHORT;
+
+      std::cout << "KeyId: 0x" << std::hex << msg.mData.keyId << std::endl;
+
+      /* Queue message for sending */
+      outMsgQueue_->send(msg);
+    }
+  }
 }

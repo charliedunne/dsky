@@ -5,9 +5,8 @@
 
 #include "KeyIntMsgDef.h"
 
-/* Message queues */
-#include <sys/ipc.h>
-#include <sys/msg.h>
+// Message queues
+#include "MsgQueue.h"
 
 /* PiGpio */
 #include "pigpio.h"
@@ -39,16 +38,10 @@ private:
      */
     static void intHandler(int gpio, int level, uint32_t tick);
 
-    /** 
-     * @brief Message queue key
-    */
-    static key_t key_;
-
     /**
-     * @brief Message queue id
-     * 
-     */
-    static int msgId_;
+     * @brief Output Message queue for the output events
+    */
+   static MsgQueue * outMsgQueue_;
     
 public:
 
