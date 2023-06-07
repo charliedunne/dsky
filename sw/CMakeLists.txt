@@ -31,6 +31,8 @@ target_sources(dsky PRIVATE
   src/actions/Action.cpp
   src/actions/ListOfActions.cpp
   src/actions/ActionClock.cpp
+  src/actions/EnableKeypadLight.cpp
+  src/drivers/dskyKeyInt/MsgQueue.cpp
 )
 
 # CFLAGS

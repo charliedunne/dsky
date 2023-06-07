@@ -9,6 +9,7 @@
 
 // KeyInt library
 #include "KeyInt.h"
+#include "CmdManager.h"
 
 /* PiGpio */
 #include "pigpio.h"
@@ -35,10 +36,17 @@ int main(int arg, char *argv[], char *envp[])
     try
     {
         KeyInt keyInt;
+        CmdManager cmdManager;
 
         while (true)
         {
-            sleep(10);
+            cmdManager.waitForCommand();
+
+            CommMsg_t cmd = cmdManager.getCommand();
+
+            std::cout << "Command Received: Type: " << cmd.mType << std::endl;
+
+            sleep(1);
 
             /** @todo Polling/blocking call TBC over another message 
              *  queue to detect operation on the HW 
@@ -51,7 +59,7 @@ int main(int arg, char *argv[], char *envp[])
              */
         }
     } catch (const std::exception &e) {
-        std::cerr << "Som error occurr!: " << e.what() << std::endl;
+        std::cerr << "Some error occurr!: " << e.what() << std::endl;
         std::cerr << "Type: " << typeid(e).name() << std::endl;
     }
 

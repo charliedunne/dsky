@@ -2,8 +2,6 @@
 
 // STL
 #include <stdexcept>
-#include <vector>
-#include <typeinfo>
 
 MsgQueue::MsgQueue(char *queueFile, int queueId, MsgQueueDirection_e dir)
 {

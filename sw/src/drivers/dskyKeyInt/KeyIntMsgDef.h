@@ -53,4 +53,37 @@ typedef struct {
 
 } KeyMsg_t;
 
+typedef struct {
+
+    bool enable;
+    unsigned int brightness;
+
+} KeyLight_cmd;
+
+typedef union {
+    
+    KeyLight_cmd keylight;
+
+} Command_t;
+
+/**
+ * @brief Struct for the input command messages
+ * 
+ */
+typedef struct {
+
+    /**
+     * @brief Message type, only 1 is used.
+     */
+    long mType;
+
+    /**
+     * @brief Encapsulated data in the message.
+     * @attention Note that it contains a union of the different
+     * kind of command messages that can be received.
+     */
+    Command_t cmd;
+
+} CommMsg_t;
+
 #endif /* _KEYINTMSGDEF_H_ */
