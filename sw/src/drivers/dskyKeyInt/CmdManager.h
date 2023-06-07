@@ -20,7 +20,7 @@ private:
     /**
      * @brief Input Command queue for the output events
      */
-    MsgQueue *inMsgQueue_;
+    MsgQueue inMsgQueue_;
 
 public:
     CmdManager();
