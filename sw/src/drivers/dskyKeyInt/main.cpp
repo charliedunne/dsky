@@ -41,7 +41,7 @@ int main(int arg, char *argv[], char *envp[])
         while (true)
         {
             cmdManager.waitForCommand();
-
+        
             CommMsg_t cmd = cmdManager.getCommand();
 
             std::cout << "Command Received: Type: " << cmd.mType << std::endl;

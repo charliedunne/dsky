@@ -9,7 +9,10 @@ CmdManager::CmdManager()
                                CMD_MSG_QUEUE_ID, MSG_QUEUE_IN);
 }
 
-CmdManager::~CmdManager() {}
+CmdManager::~CmdManager() 
+{
+    delete inMsgQueue_;
+}
 
 void CmdManager::waitForCommand()
 {

@@ -39,54 +39,13 @@ public:
     virtual ~MsgQueue();
 
     template <class T>
-    void send(T &msg)
-    {
-        if (dir_ == MSG_QUEUE_OUT)
-        {
-            if (msgsnd(msgId_, &msg, sizeof(T), 0) != 0)
-            {
-                throw std::domain_error("msgsnd() Error");
-            }
-        }
-        else
-        {
-            throw std::domain_error("Send is only compatible with MSG_QUEUE_OUT");
-        }
-    }
+    void send(T &msg);
 
     template <class T>
-    void recv(T &msg)
-    {
-        if (dir_ == MSG_QUEUE_IN)
-        {
-            /* Vector to return */
-            if (msgrcv(msgId_, &msg, sizeof(T), 1, 0) < 0)
-            {
-                throw std::domain_error("Error in msgrcv (poll)");
-            }
-        }
-        else
-        {
-            throw std::domain_error("Recv is only compatible with MSG_QUEUE_IN");
-        }
-    }
+    void recv(T &msg);
 
     template <class T>
-    void poll(T &msg)
-    {
-        if (dir_ == MSG_QUEUE_IN)
-        {
-            /* Vector to return */
-            if (msgrcv(msgId_, &msg, sizeof(T), 1, IPC_NOWAIT) < 0)
-            {
-                throw std::domain_error("Error in msgrcv (poll)");
-            }
-        }
-        else
-        {
-            throw std::domain_error("Poll is only compatible with MSG_QUEUE_IN");
-        }
-    }
+    void poll(T &msg);
 };
 
 #endif /* _MSGQUEUE_H_ */
