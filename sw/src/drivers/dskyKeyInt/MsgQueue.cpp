@@ -34,6 +34,8 @@ MsgQueue::~MsgQueue()
 template <class T>
 void MsgQueue::send(T &msg)
 {
+
+    
     if (dir_ == MSG_QUEUE_OUT)
     {
         if (msgsnd(msgId_, &msg, sizeof(T), 0) != 0)

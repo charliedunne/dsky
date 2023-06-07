@@ -10,6 +10,7 @@
 // KeyInt library
 #include "KeyInt.h"
 #include "CmdManager.h"
+#include "KeypadLed.h"
 
 /* PiGpio */
 #include "pigpio.h"
@@ -37,19 +38,30 @@ int main(int arg, char *argv[], char *envp[])
     {
         KeyInt keyInt;
         CmdManager cmdManager;
+        KeypadLed keypadLed;
 
         while (true)
         {
             cmdManager.waitForCommand();
-        
+
             CommMsg_t cmd = cmdManager.getCommand();
 
-            std::cout << "Command Received: Type: " << cmd.mType << std::endl;
+            if (cmd.mType == 1)
+            {
+                if (cmd.cmd.keylight.enable)
+                {
+                    keypadLed.on(cmd.cmd.keylight.brightness);
+                }
+                else
+                {
+                    keypadLed.off();
+                }
+            }
 
             sleep(1);
 
-            /** @todo Polling/blocking call TBC over another message 
-             *  queue to detect operation on the HW 
+            /** @todo Polling/blocking call TBC over another message
+             *  queue to detect operation on the HW
              *
              * @li Enable/Disable Keypad Leds
              * @li Brightness of the screen
@@ -58,7 +70,9 @@ int main(int arg, char *argv[], char *envp[])
              * @li enable/disable screen?
              */
         }
-    } catch (const std::exception &e) {
+    }
+    catch (const std::exception &e)
+    {
         std::cerr << "Some error occurr!: " << e.what() << std::endl;
         std::cerr << "Type: " << typeid(e).name() << std::endl;
     }

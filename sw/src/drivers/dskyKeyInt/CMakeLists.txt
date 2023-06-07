@@ -16,6 +16,7 @@ target_sources(dskyKeyInt PRIVATE
     Pcf8575.cpp
     MsgQueue.cpp
     CmdManager.cpp
+    KeypadLed.cpp
 )
 
 

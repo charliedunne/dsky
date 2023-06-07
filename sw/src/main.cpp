@@ -10,6 +10,7 @@
 #include "Action.h"
 #include "ActionClock.h"
 #include "EnableKeypadLight.h"
+#include "DisableKeypadLight.h"
 
 // HMI
 #include "Hmi.h"
@@ -67,10 +68,12 @@ int main( int argc, char * argv[], char *envp[] ) {
   /* Actions */
   ActionClock a_Clock(data);
   EnableKeypadLight a_EnableKeypadLight(data);
+  DisableKeypadLight a_DisableKeypadLight(data);
 
   /* Actions registration */
   logic.registerAction(&a_Clock);
   logic.registerAction(&a_EnableKeypadLight);
+  logic.registerAction(&a_DisableKeypadLight);
 
   // Initialize FPS Manager
   SDL_initFramerate(&fpsManager);
