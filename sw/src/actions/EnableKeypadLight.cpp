@@ -7,6 +7,9 @@
 #include "MsgQueue.h"
 #include "KeyIntMsgDef.h"
 
+// Logging
+#include "Logger.h"
+
 EnableKeypadLight::EnableKeypadLight(HmiData &data) : Action(2, 1, data, ACTION_SINGLE)
 {
 }
@@ -23,6 +26,8 @@ void EnableKeypadLight::operation()
     cmd.mType = 1;
     cmd.cmd.keylight.enable = true;
     cmd.cmd.keylight.brightness = 255;
+
+    LogTrace << "Running Keypad Light ON" << std::endl;
 
     msgQueue.send(cmd);
 }
