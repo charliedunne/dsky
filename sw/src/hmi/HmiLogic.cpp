@@ -235,7 +235,7 @@ void HmiLogic::run(HmiData &data)
     switch (eventKey)
     {
     case E_KEY_RSET:
-      actions_(data)->stop();
+      actions_(data).stop();
       data.resetRightLcdData();
       status_.transit(MODE_IDLE);
       return;
@@ -245,10 +245,10 @@ void HmiLogic::run(HmiData &data)
     }
   }
 
-  if (!actions_(data)->isRunning())
+  if (!actions_(data).isRunning())
   {
     LogTrace << "Running action..." << std::endl;
-    actions_(data)->run();
+    actions_(data).run();
   }
 }
 
@@ -257,7 +257,7 @@ void HmiLogic::error(HmiData &data)
   LogError << "Error state" << std::endl;
 }
 
-void HmiLogic::registerAction(Action *action)
+void HmiLogic::registerAction(Action &action)
 {
   actions_.registerAction(action);
 }

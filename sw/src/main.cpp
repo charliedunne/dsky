@@ -71,9 +71,9 @@ int main( int argc, char * argv[], char *envp[] ) {
   DisableKeypadLight a_DisableKeypadLight(data);
 
   /* Actions registration */
-  logic.registerAction(&a_Clock);
-  logic.registerAction(&a_EnableKeypadLight);
-  logic.registerAction(&a_DisableKeypadLight);
+  logic.registerAction(a_Clock);
+  logic.registerAction(a_EnableKeypadLight);
+  logic.registerAction(a_DisableKeypadLight);
 
   // Initialize FPS Manager
   SDL_initFramerate(&fpsManager);

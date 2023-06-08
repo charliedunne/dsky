@@ -56,7 +56,7 @@ class HmiLogic {
    * 
    * @param action 
    */
-  void registerAction(Action * action);
+  void registerAction(Action & action);
 
  private:
 

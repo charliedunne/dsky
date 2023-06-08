@@ -14,7 +14,7 @@ class ListOfActions {
     /**
      * @brief Array of actions
      */
-    std::vector<Action *> actions_;
+    std::vector<std::reference_wrapper<Action>> actions_;
 
     public:
 
@@ -26,14 +26,14 @@ class ListOfActions {
      * 
      * @param action[in] Pointer to the action to register 
      */
-    void registerAction(Action * action);
+    void registerAction(Action &action);
 
     /**
      * @brief Overload to the operator() to make a functor
      * 
      * @param data[in] Hmi data required for the action
      */
-    Action * operator()(HmiData &data);
+    Action & operator()(HmiData &data);
 
     /**
      * @brief This function is used to know if a registered

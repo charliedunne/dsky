@@ -6,11 +6,11 @@
 ListOfActions::ListOfActions() {}
 ListOfActions::~ListOfActions() {}
 
-void ListOfActions::registerAction(Action * action) {
+void ListOfActions::registerAction(Action &action) {
     actions_.push_back(action);
 }
 
-Action * ListOfActions::operator()(HmiData &data)
+Action & ListOfActions::operator()(HmiData &data)
 {
     int verb = data.getRightLcdData().nVerb;
     int noun = data.getRightLcdData().nNoun;
@@ -18,8 +18,8 @@ Action * ListOfActions::operator()(HmiData &data)
     /* Find the Action to do and execute */
     for (int i = 0; i < actions_.size(); ++i)
     {
-        if ((actions_[i]->getVerb() == verb) &&
-            (actions_[i]->getNoun() == noun))
+        if ((actions_[i].operator Action &().getVerb() == verb) &&
+            (actions_[i].operator Action &().getNoun() == noun))
         {
             return actions_[i];        
         }
@@ -33,9 +33,9 @@ bool ListOfActions::needNoun(int verb) {
 
     for (int i = 0; i < actions_.size(); ++i)
     {
-        if (actions_[i]->getVerb() == verb)
+        if (actions_[i].operator Action &().getVerb() == verb)
         {
-            if (actions_[i]->getNoun() == -1) {
+            if (actions_[i].operator Action &().getNoun() == -1) {
                 return false;
             }
             else
