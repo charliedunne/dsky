@@ -86,6 +86,7 @@ void Action::run()
 {
   /* Set flag to running */
   running_ = true;
+  finished_ = false;
 
   /* Create and start the thread */
   thread_ = std::thread(&Action::loop, this);
@@ -102,6 +103,8 @@ void Action::stop()
   thread_.join();
 
   thread_.~thread();
+  
+  finished_ = true;
 }
 
 bool Action::isRunning() 

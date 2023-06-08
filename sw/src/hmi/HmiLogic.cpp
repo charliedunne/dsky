@@ -244,14 +244,15 @@ void HmiLogic::run(HmiData &data)
     }
   }
 
-  if ((!actions_(data).isRunning()) && (!actions_(data).finished()))
+  if (!actions_(data).isRunning())
   {
     LogTrace << "Running action..." << std::endl;
     actions_(data).run();
   }
 
-  if (!actions_(data).finished())
+  if (actions_(data).finished())
   {
+    LogTrace << "Action finished move to IDLE" << std::endl;
       data.resetRightLcdData();
       status_.transit(MODE_IDLE);    
   }
