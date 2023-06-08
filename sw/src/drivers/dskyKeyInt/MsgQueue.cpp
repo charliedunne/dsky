@@ -35,7 +35,7 @@ template <class T>
 void MsgQueue::send(T &msg)
 {
 
-    
+
     if (dir_ == MSG_QUEUE_OUT)
     {
         if (msgsnd(msgId_, &msg, sizeof(T), 0) != 0)
@@ -55,7 +55,7 @@ void MsgQueue::recv(T &msg)
     if (dir_ == MSG_QUEUE_IN)
     {
         /* Vector to return */
-        if (msgrcv(msgId_, &msg, sizeof(T), 1, 0) < 0)
+        if (msgrcv(msgId_, &msg, sizeof(T), 0, 0) < 0)
         {
             throw std::domain_error("Error in msgrcv (poll)");
         }
@@ -72,7 +72,7 @@ void MsgQueue::poll(T &msg)
     if (dir_ == MSG_QUEUE_IN)
     {
         /* Vector to return */
-        if (msgrcv(msgId_, &msg, sizeof(T), 1, IPC_NOWAIT) < 0)
+        if (msgrcv(msgId_, &msg, sizeof(T), 0, IPC_NOWAIT) < 0)
         {
             throw std::domain_error("Error in msgrcv (poll)");
         }

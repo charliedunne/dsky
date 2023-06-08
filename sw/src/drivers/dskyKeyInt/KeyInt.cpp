@@ -52,25 +52,32 @@ void KeyInt::intHandler(int gpio, int level, uint32_t tick)
   if (intLine == 0)
   {
 
-    // Read data from the PCF8575
-    int leftData = leftKbd_->read();
-    int rightData = rightKbd_->read();
-
-    // Only process data when data is available
-    if ((leftData != 0xFFFF) || (rightData != 0xFFFF))
+    try
     {
+      // Read data from the PCF8575
+      int leftData = leftKbd_->read();
+      int rightData = rightKbd_->read();
 
-      /* Compose message to send */
-      KeyMsg_t msg;
+      // Only process data when data is available
+      if ((leftData != 0xFFFF) || (rightData != 0xFFFF))
+      {
 
-      msg.mType = 1;
-      msg.mData.keyId = leftData << 16 | rightData;
-      msg.mData.keyModifier = KM_SHORT;
+        /* Compose message to send */
+        KeyMsg_t msg;
 
-      std::cout << "KeyId: 0x" << std::hex << msg.mData.keyId << std::endl;
+        msg.mType = 1;
+        msg.mData.keyId = leftData << 16 | rightData;
+        msg.mData.keyModifier = KM_SHORT;
 
-      /* Queue message for sending */
-      outMsgQueue_->send(msg);
+        std::cout << "KeyId: 0x" << std::hex << msg.mData.keyId << std::endl;
+
+        /* Queue message for sending */
+        outMsgQueue_->send(msg);
+      }
+    }
+    catch (const exception &e)
+    {
+      LogWarning << "Fail accessing to the PCF8575" << std::endl;
     }
   }
 }

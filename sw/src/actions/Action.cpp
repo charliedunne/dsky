@@ -62,6 +62,7 @@ void Action::loop()
   {
     LogTrace << "Single Action" << std::endl;
     operation();
+
   }
   else
   {
@@ -97,7 +98,11 @@ void Action::stop()
    * abort the thread
    */
   thread_.join();
-  thread_.~thread();
+
+  if (actionSchedule_ != ACTION_SINGLE)
+  {
+    thread_.~thread();
+  }
 }
 
 bool Action::isRunning() 

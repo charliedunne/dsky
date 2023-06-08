@@ -170,6 +170,7 @@ void HmiLogic::nounInput(HmiData &data)
   case E_KEY_ENTR:
 
     status_.transit(MODE_RUN);
+    run(data);
     break;
 
   case E_KEY_0:
