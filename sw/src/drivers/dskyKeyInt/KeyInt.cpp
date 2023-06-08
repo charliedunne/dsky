@@ -75,7 +75,7 @@ void KeyInt::intHandler(int gpio, int level, uint32_t tick)
         outMsgQueue_->send(msg);
       }
     }
-    catch (const exception &e)
+    catch (const std::exception &e)
     {
       LogWarning << "Fail accessing to the PCF8575" << std::endl;
     }
