@@ -20,6 +20,7 @@ Action::Action(int verb, int noun, HmiData &data, ActionSchedule_e actionSchedul
   noun_ = noun;
   actionSchedule_ = actionSchedule_;
   running_ = false;
+  finished_ = false;
 
   //std::cout << "hmiDataPtr = 0x" << std::hex << hmiData_ << std::endl;
 }
@@ -62,7 +63,8 @@ void Action::loop()
   {
     LogTrace << "Single Action" << std::endl;
     operation();
-
+    finished_ = true;
+    running_ = false;
   }
   else
   {
@@ -99,13 +101,15 @@ void Action::stop()
    */
   thread_.join();
 
-  if (actionSchedule_ != ACTION_SINGLE)
-  {
-    thread_.~thread();
-  }
+  thread_.~thread();
 }
 
 bool Action::isRunning() 
 {
   return running_;
+}
+
+bool Action::finished()
+{
+  return finished_;
 }

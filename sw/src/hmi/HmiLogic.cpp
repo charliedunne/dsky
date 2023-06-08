@@ -226,7 +226,6 @@ void HmiLogic::run(HmiData &data)
 
   if (keyEvents_.size() > 0)
   {
-
     /* Copy the Event key received */
     EventId_t eventKey = keyEvents_[0].getEvent();
 
@@ -245,10 +244,16 @@ void HmiLogic::run(HmiData &data)
     }
   }
 
-  if (!actions_(data).isRunning())
+  if ((!actions_(data).isRunning()) && (!actions_(data).finished()))
   {
     LogTrace << "Running action..." << std::endl;
     actions_(data).run();
+  }
+
+  if (!actions_(data).finished())
+  {
+      data.resetRightLcdData();
+      status_.transit(MODE_IDLE);    
   }
 }
 

@@ -51,6 +51,12 @@ private:
    */
   std::atomic_bool running_;
 
+  /**
+   * @brief Flag to determine if the operation has finished.
+   * 
+   */
+  std::atomic_bool finished_;
+
 protected:
   HmiData &hmiData_;
 
@@ -107,6 +113,14 @@ public:
    * @return false Action is not being executed.
    */
   bool isRunning();
+
+  /**
+   * @brief Check if the action has been marked as finisehd
+   * 
+   * @return true If the action has been marked as finished
+   * @return false Otherwise
+   */
+  bool finished();
 
 protected:
   /**
