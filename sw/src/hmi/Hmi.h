@@ -5,6 +5,7 @@
 #include "Frame.h"
 #include "FrameRightLcd.h"
 #include "FrameLeftLcd.h"
+#include "FrameCenterLcd.h"
 
 #include "SDL2/SDL.h"
 
@@ -16,7 +17,7 @@ class Hmi {
 
   // Frames
   FrameRightLcd * rightLcd_  = NULL;
-  FrameLeftLcd * centerLcd_  = NULL;
+  FrameCenterLcd * centerLcd_  = NULL;
   FrameLeftLcd * leftLcd_  = NULL;
 
   // Window properties
@@ -49,3 +50,4 @@ public:
 
 
 #endif /* HMI_H */
+

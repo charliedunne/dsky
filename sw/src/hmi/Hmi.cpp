@@ -38,7 +38,8 @@ Hmi::Hmi(int w, int h) {
 
   // Create the frames
   rightLcd_ = new FrameRightLcd(ren_, w_-330, 0, 330, h_, Color(0, 0, 0));
-  leftLcd_ = new FrameLeftLcd(ren_, 0, 0, w_-330-1, h_, Color(0, 0, 0));
+  leftLcd_ = new FrameLeftLcd(ren_, 0, 0, 330, h_, Color(0, 0, 0));
+  centerLcd_ = new FrameCenterLcd(ren_, 331, 0, w_-331, h_, Color(0, 0, 0));
 
 }
 
@@ -70,6 +71,7 @@ void Hmi::render() {
   }
 
   // Save all the Frames draw into buffer
+  centerLcd_->render();
   rightLcd_->render();
   leftLcd_->render();
 

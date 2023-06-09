@@ -15,11 +15,12 @@ target_sources(dsky PRIVATE
   src/hmi/Hmi.cpp 
   src/hmi/Frame.cpp 
   src/common/Color.cpp 
+  src/hmi/FrameLeftLcd.cpp 
+  src/hmi/FrameCenterLcd.cpp 
   src/hmi/FrameRightLcd.cpp 
   src/hmi/Digit.cpp 
   src/hmi/Number.cpp 
   src/hmi/Label.cpp 
-  src/hmi/FrameLeftLcd.cpp 
   src/hmi/Draw.cpp 
   src/hmi/Sign.cpp 
   src/hmi/HmiLogic.cpp
