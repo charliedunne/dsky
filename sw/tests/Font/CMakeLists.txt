@@ -17,7 +17,7 @@ target_sources(font PRIVATE
 
 # CFLAGS
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_REENTRANT")
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
 SET(CMAKE_CXX_FLAGS "-std=c++20")
 
 # Include directory
@@ -38,3 +38,4 @@ add_definitions( -D LOGGER_ENABLE_COLORS_ON_USER_HEADER=0 )
 target_link_directories(font PUBLIC ../../build/lib)
 target_link_libraries(font SDL2)
 target_link_libraries(font SDL2_image)
+target_link_libraries(font SDL2_gfx)
