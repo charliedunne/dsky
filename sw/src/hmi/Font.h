@@ -11,6 +11,9 @@
 // SDL
 #include "SDL2/SDL.h"
 
+// Hmi
+#include "Color.h"
+
 typedef struct
 {
 
@@ -46,6 +49,11 @@ private:
     int pixelHeight_;
 
     /**
+     * @brief SPC Size 
+     */
+    int spcSize_;
+
+    /**
      * @brief Vector of coordinates as extracted from fnt file 
      */
     std::vector<charCoords_t> coords_;
@@ -55,8 +63,18 @@ private:
 
     // Texture with the gliphs
     SDL_Texture *texture_ = NULL;
+
+    /**
+     * @brief Text color
+     */
+    Color color_;
  
     void parseFnt();
+
+    int getX(char c);
+    int getY(char c);
+    int getW(char c);
+    int getH(char c);
 
 public:
     /**
@@ -68,6 +86,8 @@ public:
      */
     Font(SDL_Renderer *r, std::string bitmap, std::string fnt);
     virtual ~Font();
+
+    void setColor(Color c);
 
     void drawText(std::string text, int x, int y);
 };

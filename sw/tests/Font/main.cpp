@@ -39,9 +39,22 @@ int main()
         LogError << "SDL_CreateRenderer()" << std::endl;
     }
 
-    std::string bitmap = "../../../resources/fonts/Gorton-Condensed_32px.png";
+    std::string bitmap = GORTON_FONT_BITMAP;
     // std::string bitmap = DIGIT_TXT_FILE;
-    std::string fnt = "../../../resources/fonts/Gorton-Condensed_32px.fnt";
+    std::string fnt = GORTON_FONT_FNT;
 
-    Font(ren_, bitmap, fnt);
+    Font text = Font(ren_, bitmap, fnt);
+
+    // Clear the screen
+    if (SDL_RenderClear(ren_) != 0)
+    {
+        LogError << "SDL_RenderClear" << std::endl;
+    }
+
+    text.drawText(std::string("HELLO WORLD\nMY FRIENDS"), 100, 100);
+
+    // Render the window
+    SDL_RenderPresent(ren_);
+
+    SDL_Delay(10000);
 }

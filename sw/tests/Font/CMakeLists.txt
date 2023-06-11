@@ -13,16 +13,18 @@ add_executable(font "")
 target_sources(font PRIVATE
   main.cpp
   ../../src/hmi/Font.cpp
+  ../../src/common/Color.cpp
 )
 
 # CFLAGS
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_REENTRANT")
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 SET(CMAKE_CXX_FLAGS "-std=c++20")
 
 # Include directory
 include_directories(../../)
 include_directories(../../src/hmi)
+include_directories(../../src/common)
 include_directories(../../build/include/SDL2)
 include_directories(../../build)
 include_directories(../../build/include)
