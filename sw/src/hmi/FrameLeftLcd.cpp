@@ -40,10 +40,10 @@ FrameLeftLcd::FrameLeftLcd(SDL_Renderer *r, int x, int y, int w, int h, Color bg
                             w_ / 2, (h_ / 2) / 3, std::string("NONE"));
 
     // Create the Grid object
-    SDL_Surface *surface = IMG_Load(GRID_TXT_FILE);
+    SDL_Surface *surface = IMG_Load(GRID_FULL_TXT_FILE);
     if (surface == NULL)
     {
-        LogError << "Fail loading the Segment texture (" << GRID_TXT_FILE << "): " << SDL_GetError() << std::endl;
+        LogError << "Fail loading the Segment texture (" << GRID_FULL_TXT_FILE << "): " << SDL_GetError() << std::endl;
         throw std::domain_error("Fail opening grid image");
     }
 
