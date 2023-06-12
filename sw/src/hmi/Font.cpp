@@ -140,8 +140,8 @@ void Font::parseFnt()
             if (fId & fX & fY & fW & fH & fXoffset & fYoffset & fXadvance)
             {
                 coords_.push_back(coords);
-                
-                // Avoid to include copies if there are more information not 
+
+                // Avoid to include copies if there are more information not
                 // parsed in the line
                 fId = false;
             }
@@ -153,12 +153,13 @@ void Font::parseFnt()
 
     // Get the pixelHeight
     auto max = std::max_element(coords_.begin(), coords_.end(),
-                                         [](const charCoords_t& p1, const charCoords_t& p2) {
-                                             return p1.h < p2.h;
-                                         });
+                                [](const charCoords_t &p1, const charCoords_t &p2)
+                                {
+                                    return p1.h < p2.h;
+                                });
 
     pixelHeight_ = (int)max->h;
-    spcSize_ = (int)((pixelHeight_/3));
+    spcSize_ = (int)((pixelHeight_ / 3));
 
     // std::cout << "pixeHeight_ = " << pixelHeight_ << ", spcSize_ = " << spcSize_ << std::endl;
     // std::cout << "Number of glyphs: " << coords_.size() << std::endl;
@@ -224,9 +225,15 @@ void Font::drawText(std::string text, int x, int y)
         if (text[i] == '\n')
         {
             xPos = x;
-            yPos +=pixelHeight_;
+            yPos += pixelHeight_;
         }
     }
+}
+
+void Font::drawText(std::string text, int x, int y, Color c)
+{
+    color_ = c;
+    drawText(text, x, y);
 }
 
 int Font::getX(char c)
@@ -287,4 +294,33 @@ int Font::getW(char c)
     }
 
     return -1;
+}
+
+void Font::estimateSize(std::string text, int *w, int *h)
+{
+    /* Initial size */
+    *w = 0;
+    *h = pixelHeight_;
+
+    for (int i = 0; i < text.size(); ++i)
+    {
+        int width = getW(text[i]);
+        int height = getH(text[i]);
+
+        if ((width != -1) && (height != -1))
+        {
+            if (text[i] == 32)
+            {
+                *w += spcSize_;
+            }
+            else if (text[i] == '\n')
+            {
+                *h += pixelHeight_;
+            }
+            else
+            {
+                *w += width;
+            }
+        }
+    }
 }

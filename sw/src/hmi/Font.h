@@ -90,6 +90,9 @@ public:
     void setColor(Color c);
 
     void drawText(std::string text, int x, int y);
+    void drawText(std::string text, int x, int y, Color c);
+
+    void estimateSize(std::string, int *w, int *h);
 };
 
 #endif /* _FONT_H_ */
