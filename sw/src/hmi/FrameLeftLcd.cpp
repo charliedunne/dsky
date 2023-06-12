@@ -1,6 +1,8 @@
 #include "FrameLeftLcd.h"
 
+// STL
 #include <iostream>
+#include <stdexcept>
 
 // Configuration
 #include "config.h"
@@ -8,29 +10,49 @@
 // Logging
 #include <Logger.h>
 
-// GFX
+// GFX/SDL
+#include "SDL2/SDL_image.h"
 #include "GFX/SDL2_gfxPrimitives.h"
 
 FrameLeftLcd::FrameLeftLcd(SDL_Renderer *r, int x, int y, int w, int h, Color bg)
     : Frame(r, x, y, w, h, bg)
 {
-    uplinkAct = new AlarmLabel(r_, 0, 0,
-                                      w_ / 2, (h_ / 2) / 3, std::string("UPLINK"));
+    int extGridSize = 5;
 
-    temp = new AlarmLabel(r_, w_ / 2 + 1, 0,
-                                 w_ / 2, (h_ / 2) / 3, std::string("TEMP"));
+    // Create the Alarms Label objects
 
-    keyErr = new AlarmLabel(r_, 0, (h_ / 2) / 3 + 1,
-                                   w_ / 2, (h_ / 2) / 3, std::string("KEY REL"));
+    uplinkAct = new AlarmLabel(r_, extGridSize, extGridSize+2,
+                               w_ / 2, (h_ / 2) / 3, std::string("UPLINK"));
+
+    temp = new AlarmLabel(r_, w_ / 2 + 1, extGridSize+2,
+                          w_ / 2, (h_ / 2) / 3, std::string("TEMP"));
+
+    keyErr = new AlarmLabel(r_, extGridSize, (h_ / 2) / 3 + 1,
+                            w_ / 2, (h_ / 2) / 3, std::string("KEY REL"));
 
     spare1 = new AlarmLabel(r_, w_ / 2 + 1, (h_ / 2) / 3 + 1,
-                                   w_ / 2, (h_ / 2) / 3, std::string("NONE"));
+                            w_ / 2, (h_ / 2) / 3, std::string("NONE"));
 
-    opError = new AlarmLabel(r_, 0, 2 * (h_ / 2) / 3 + 2,
-                                    w_ / 2, (h_ / 2) / 3, std::string("OP ERR"));
+    opError = new AlarmLabel(r_, extGridSize, 2 * (h_ / 2) / 3 + 2,
+                             w_ / 2, (h_ / 2) / 3, std::string("OP ERR"));
 
     spare2 = new AlarmLabel(r_, w_ / 2 + 1, 2 * (h_ / 2) / 3 + 2,
-                                   w_ / 2, (h_ / 2) / 3, std::string("NONE"));
+                            w_ / 2, (h_ / 2) / 3, std::string("NONE"));
+
+    // Create the Grid object
+    SDL_Surface *surface = IMG_Load(GRID_TXT_FILE);
+    if (surface == NULL)
+    {
+        LogError << "Fail loading the Segment texture (" << GRID_TXT_FILE << "): " << SDL_GetError() << std::endl;
+        throw std::domain_error("Fail opening grid image");
+    }
+
+    gridTxt_ = SDL_CreateTextureFromSurface(r_, surface);
+    if (gridTxt_ == NULL)
+    {
+        LogError << "Fail in the creation of Grid texture" << std::endl;
+        throw std::domain_error("Fail creating grid image");
+    }
 }
 
 FrameLeftLcd::~FrameLeftLcd()
@@ -56,42 +78,20 @@ void FrameLeftLcd::render()
                               M_PI * 8, Color(255, 255, 0));
     }
 
-    // Draw the separation lines
-    drawLines(Color(128, 128, 128), lineThickness_);
-
     // Draw Labels
     drawLabels();
+
+    // Draw the separation lines
+    drawLines();
 }
 
-void FrameLeftLcd::drawLines(Color c, int thickness)
+void FrameLeftLcd::drawLines()
 {
-    int width = w_ - thickness;
-    int heigh = h_ / 2 - thickness;
+    // Create output rectange for drawing
+    SDL_Rect dest = {x_, y_, w_, h_};
 
-    int numRows = 3;
-    int numCols = 2;
-
-    // Horizontal lines
-    for (int i = 0; i < numRows + 1; ++i)
-    {
-        int y = (i * (heigh / numRows)) - i * thickness / 2;
-
-        boxColor(r_,
-                 x_, y,
-                 x_ + w_, y + thickness,
-                 c);
-    }
-
-    // Vertical Lines
-    for (int i = 0; i < numCols + 1; ++i)
-    {
-        int x = i * width / numCols;
-
-        boxColor(r_,
-                 x, y_,
-                 x + thickness, h_ / 2,
-                 c);
-    }
+    // Render the grid image
+    SDL_RenderCopy(r_, gridTxt_, NULL, &dest);
 }
 
 void FrameLeftLcd::drawLabels()

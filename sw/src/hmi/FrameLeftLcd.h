@@ -17,12 +17,15 @@ private:
 
   int lineThickness_ = 15;
 
-    AlarmLabel *uplinkAct = nullptr;
-    AlarmLabel *temp = nullptr;
-    AlarmLabel *keyErr = nullptr;
-    AlarmLabel *spare1 = nullptr;
-    AlarmLabel *opError = nullptr;
-    AlarmLabel *spare2 = nullptr;
+  AlarmLabel *uplinkAct = nullptr;
+  AlarmLabel *temp = nullptr;
+  AlarmLabel *keyErr = nullptr;
+  AlarmLabel *spare1 = nullptr;
+  AlarmLabel *opError = nullptr;
+  AlarmLabel *spare2 = nullptr;
+
+  SDL_Texture *gridTxt_ = nullptr;
+
 public:
   // Constructor
   FrameLeftLcd(SDL_Renderer *r, int x, int y, int w, int h, Color bg);
@@ -34,17 +37,17 @@ public:
   void render();
 
 private:
+  /**
+   * @brief Draw the background lines (grid)
+   *
+   */
+  void drawLines();
 
   /**
-   * @brief Draw the background lines
+   * @brief draw the alarm labels
    * 
-   * @param c[in] Color of the linnnes
-   * @param thickness[in] Thickness of the lines
-  */
-  void drawLines(Color c, int thickness);
-
+   */
   void drawLabels();
-
 };
 
 #endif /* FRAMELEFTLCD_H */
