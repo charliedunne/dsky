@@ -17,6 +17,8 @@
 #define DIGIT_GLOW_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/DigitsSpriteTemplate_glow.png"
 #define SIGN_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/SignsSpriteTemplate.png"
 #define SIGN_GLOW_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/SignsSpriteTemplate_glow.png"
+#define GORTON_FONT_BITMAP "@CMAKE_SOURCE_DIR@/resources/fonts/Gorton-Condensed_32px.png"
+#define GORTON_FONT_FNT "@CMAKE_SOURCE_DIR@/resources/fonts/Gorton-Condensed_32px.fnt"
 
 #define LABEL_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/LabelsTemplateLGC.png"
 
