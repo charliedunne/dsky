@@ -82,6 +82,15 @@ void Hmi::render() {
 
 void Hmi::update(HmiData &data) {
 
+  // Left LCD
+  leftLcd_->setUplink(data.getLeftLcdData().lUplinkAct);
+  leftLcd_->setTemp(data.getLeftLcdData().lTemp);
+  leftLcd_->setKeyErr(data.getLeftLcdData().lKeyErr);
+  leftLcd_->setOpErr(data.getLeftLcdData().lOpErr);
+
+
+  // Right LCD
+
   // Set values
   rightLcd_->setProg(data.getRightLcdData().nProg, data.getRightLcdData().nProgMode);
   rightLcd_->setVerb(data.getRightLcdData().nVerb, data.getRightLcdData().nVerbMode);

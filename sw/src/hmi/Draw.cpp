@@ -1,6 +1,12 @@
 // Provided interface
 #include "Draw.h"
 
+// STL
+#include <iostream>
+
+// Logging
+#include "Logger.h"
+
 Draw::Draw(const int x, const int y,
            const int period)
 {
@@ -14,10 +20,37 @@ Draw::Draw(const int x, const int y,
 
 void Draw::draw()
 {
+    switch (mode_)
+    {
+    case DRAW_ON:
+        drawOn();
+        break;
 
-    // Select the drawing (depending on the mode)
-    if ((mode_ == DRAW_ON) ||
-        ((mode_ == DRAW_BLINK) && (frameCounter_ < blinkPeriod_ / 2)))
+    case DRAW_OFF:
+        drawOff();
+        break;
+
+    case DRAW_ERROR:
+        drawErr();
+        break;
+
+    case DRAW_BLINK:
+        drawBlink();
+        break;
+
+    default:
+        /** @TODO handle unexpected error */
+        LogError << "Unexpected DRAW mode" << std::endl;
+        break;
+    }
+
+    // Increase the frames counter
+    frameCounter_ = (frameCounter_ + 1) % blinkPeriod_;
+}
+
+void Draw::drawBlink()
+{
+    if (frameCounter_ < blinkPeriod_ / 2)
     {
         drawOn();
     }
@@ -25,9 +58,11 @@ void Draw::draw()
     {
         drawOff();
     }
+}
 
-    // Increase the frames counter
-    frameCounter_ = (frameCounter_ + 1) % blinkPeriod_;
+void Draw::drawErr()
+{
+    drawOff();
 }
 
 void Draw::setMode(const DrawMode mode, const int period)
