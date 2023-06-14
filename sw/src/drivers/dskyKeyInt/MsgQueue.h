@@ -7,6 +7,7 @@
 
 // STL
 #include <stdexcept>
+#include <string>
 
 typedef enum
 {
@@ -35,7 +36,7 @@ private:
     MsgQueueDirection_e dir_;
 
 public:
-    MsgQueue(char *, int, MsgQueueDirection_e);
+  MsgQueue(std::string, int, MsgQueueDirection_e);
     virtual ~MsgQueue();
 
     template <class T>
