@@ -9,11 +9,11 @@
 
 class DskyException : public std::exception
 {
-private:
+protected:
     std::string msg_;
 
 public:
-    DskyException(std::string &msg);
+    DskyException(std::string msg);
 
     const char * what();
 };

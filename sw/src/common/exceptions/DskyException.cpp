@@ -1,6 +1,6 @@
 #include "DskyException.h"
 
-DskyException::DskyException(std::string &msg)
+DskyException::DskyException(std::string msg)
 {
     msg_ = msg;
 }
