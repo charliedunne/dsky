@@ -21,7 +21,7 @@ private:
   AlarmLabel *temp = nullptr;
   AlarmLabel *keyErr = nullptr;
   AlarmLabel *spare1 = nullptr;
-  AlarmLabel *opError = nullptr;
+  AlarmLabel *opErr = nullptr;
   AlarmLabel *spare2 = nullptr;
 
   SDL_Texture *gridTxt_ = nullptr;
@@ -35,6 +35,13 @@ public:
 
   // Local implementation of Render
   void render();
+
+  // Setters for alarms and status
+  void setUplink(DrawMode);
+  void setTemp(DrawMode);
+  void setKeyErr(DrawMode);
+  void setOpErr(DrawMode);
+
 
 private:
   /**

@@ -33,7 +33,7 @@ FrameLeftLcd::FrameLeftLcd(SDL_Renderer *r, int x, int y, int w, int h, Color bg
     spare1 = new AlarmLabel(r_, w_ / 2 + 1, (h_ / 2) / 3 + 1,
                             w_ / 2, (h_ / 2) / 3, std::string("NONE"));
 
-    opError = new AlarmLabel(r_, extGridSize, 2 * (h_ / 2) / 3 + 2,
+    opErr = new AlarmLabel(r_, extGridSize, 2 * (h_ / 2) / 3 + 2,
                              w_ / 2, (h_ / 2) / 3, std::string("OP ERR"));
 
     spare2 = new AlarmLabel(r_, w_ / 2 + 1, 2 * (h_ / 2) / 3 + 2,
@@ -61,7 +61,7 @@ FrameLeftLcd::~FrameLeftLcd()
     delete temp;
     delete keyErr;
     delete spare1;
-    delete opError;
+    delete opErr;
     delete spare2;
 }
 
@@ -96,13 +96,33 @@ void FrameLeftLcd::drawLines()
 
 void FrameLeftLcd::drawLabels()
 {
-    uplinkAct->setMode(DRAW_ON);
+    uplinkAct->setMode(DRAW_BLINK);
 
     uplinkAct->draw();
     temp->draw();
     keyErr->draw();
     spare1->draw();
-    opError->setMode(DRAW_BLINK);
-    opError->draw();
+    opErr->draw();
     spare2->draw();
 }
+
+  void FrameLeftLcd::setUplink(DrawMode mode)
+  {
+    uplinkAct->setMode(mode);
+  }
+
+  void FrameLeftLcd::setTemp(DrawMode mode)
+  {
+    temp->setMode(mode);
+  }
+  
+  void FrameLeftLcd::setKeyErr(DrawMode mode)
+  {
+    keyErr->setMode(mode);
+  }
+  
+  void FrameLeftLcd::setOpErr(DrawMode mode)
+  {
+    opErr->setMode(mode);
+  }
+  

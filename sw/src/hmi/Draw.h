@@ -14,19 +14,17 @@ class Draw
 {
 
 protected:
-
     /**
      * @brief X position (left-upper corner)
-     * 
+     *
      */
     int x_;
 
     /**
      * @brief Y position (left-upper corner)
-     * 
+     *
      */
     int y_;
-
 
 private:
     /**
@@ -40,13 +38,13 @@ private:
      *
      * @note The blinking period is for the entire animation. The
      * object will be visible for the half of the time and invisible
-     * the other half. 
+     * the other half.
      */
     int blinkPeriod_;
 
     /**
      * @brief Internal counter for the blinking logic
-     * 
+     *
      */
     int frameCounter_;
 
@@ -78,21 +76,36 @@ private:
      */
     virtual void drawOn() = 0;
 
-public:
+    /**
+     * @brief Behaviour of the object rendering when the
+     * mode is set to @b ERROR
+     *
+     * @attention This is a virtual function normally
+     * copying the functionality of the drawOff() unless
+     * it was overload in the derivated clases
+     */
+    virtual void drawErr();
 
     /**
+     * @brief Behaviour of the object rendering when the
+     * mode is set to @b BLINK
+     */
+    void drawBlink();
+
+public:
+    /**
      * @brief Construct a new Draw object
-     * 
+     *
      * @param x [in] X position (left-top corner) [pixels]
      * @param y [in] Y position (left-top corner) [pixels]
      * @param period [OPTIONAL] Blinking period [frames]
      */
-    Draw(const int x, const int y, 
-    const int period = DEFAULT_BLINKING_PERIOD);
+    Draw(const int x, const int y,
+         const int period = DEFAULT_BLINKING_PERIOD);
 
     /**
      * @brief Set the Mode object
-     * 
+     *
      * @param mode [in] Desired mode (@b ON/OFF/BLINK)
      * @param period [OPTIONAL] Blinking period [frames]
      */
@@ -109,7 +122,7 @@ public:
 
     /**
      * @brief Set the Blinking Period
-     * 
+     *
      * @param period [in] Period [frames]
      */
     void setBlinkingPeriod(const int period);

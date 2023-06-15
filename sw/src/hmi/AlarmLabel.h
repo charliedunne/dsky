@@ -36,6 +36,7 @@ public:
     // Base class virtual functions
     void drawOn();
     void drawOff();
+    void drawErr();
 };
 
 #endif /* _ALARMLABEL_H_ */

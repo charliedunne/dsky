@@ -35,10 +35,19 @@ void HmiData::resetRightLcdData()
     rLcdData_.lR3Mode = DRAW_OFF;
 }
 
+void HmiData::resetLeftLcdData()
+{
+    lLcdData_.lUplinkAct = DRAW_OFF;
+    lLcdData_.lTemp = DRAW_OFF;
+    lLcdData_.lKeyErr = DRAW_OFF;
+    lLcdData_.lOpErr = DRAW_OFF;
+}
+
 HmiData::HmiData()
 {
     /* Set Default values */
     resetRightLcdData();
+    resetLeftLcdData();
 }
 
 HmiData::~HmiData() {}
@@ -70,6 +79,37 @@ void HmiData::setRightLcdData(const RightLcdData &data)
     mutex_.lock();
 
     std::memcpy(&rLcdData_, &data, sizeof(RightLcdData));
+
+    mutex_.unlock();
+}
+
+/**
+ * @brief Getter for the entire Left LCD Structure
+ *
+ * @return copy of the Left LCD Data structure
+ */
+const LeftLcdData &HmiData::getLeftLcdData()
+{
+    mutex_.lock();
+
+    /* Value to return */
+    LeftLcdData &out = lLcdData_;
+
+    mutex_.unlock();
+
+    return out;
+}
+
+/**
+ * @brief Update the set of Left LCD Data
+ *
+ * @param data[in] Reference to
+ */
+void HmiData::setLeftLcdData(const LeftLcdData &data)
+{
+    mutex_.lock();
+
+    std::memcpy(&lLcdData_, &data, sizeof(LeftLcdData));
 
     mutex_.unlock();
 }
@@ -223,6 +263,42 @@ void HmiData::rSetR3Label(DrawMode mode)
     mutex_.lock();
 
     rLcdData_.lR3Mode = mode;
+
+    mutex_.unlock();
+}
+
+void HmiData::lSetUplinkAct(DrawMode mode)
+{
+    mutex_.lock();
+
+    lLcdData_.lUplinkAct = mode;
+
+    mutex_.unlock();
+}
+
+void HmiData::lSetTemp(DrawMode mode)
+{
+    mutex_.lock();
+
+    lLcdData_.lTemp = mode;
+
+    mutex_.unlock();
+}
+
+void HmiData::lSetKeyErr(DrawMode mode)
+{
+    mutex_.lock();
+
+    lLcdData_.lKeyErr = mode;
+
+    mutex_.unlock();
+}
+
+void HmiData::lSetOpErr(DrawMode mode)
+{
+    mutex_.lock();
+
+    lLcdData_.lOpErr = mode;
 
     mutex_.unlock();
 }

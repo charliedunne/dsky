@@ -63,3 +63,8 @@ void AlarmLabel::drawOff()
 {
     drawLabel(bgColor_);
 }
+
+void AlarmLabel::drawErr()
+{
+    drawLabel(Color(255, 50, 50));
+}

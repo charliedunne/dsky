@@ -11,7 +11,8 @@ typedef enum
 {
     DRAW_OFF = 0,
     DRAW_ON = 1,
-    DRAW_BLINK = 2
+    DRAW_BLINK = 2,
+    DRAW_ERROR = 3
 } DrawMode;
 
 #define UNASIGNED (0xFFFFFFFF)
@@ -44,15 +45,25 @@ typedef struct
     DrawMode lR2Mode;
     DrawMode lR3Mode;
 
-    // Flags
-
 } RightLcdData;
+
+/**
+ * @brief HMI Left LCD Data structure
+ */
+typedef struct
+{
+    // Flags
+    DrawMode lUplinkAct;
+    DrawMode lTemp;
+    DrawMode lKeyErr;
+    DrawMode lOpErr;
+
+} LeftLcdData;
 
 class HmiData
 {
 
 private:
-
     /**
      * @brief Mutex for safe access to the data
      */
@@ -63,17 +74,25 @@ private:
      */
     RightLcdData rLcdData_;
 
+    /**
+     * @brief Right LCD shared information
+     */
+    LeftLcdData lLcdData_;
+
 public:
-
     HmiData();
-    virtual ~ HmiData();
+    virtual ~HmiData();
 
-    const RightLcdData& getRightLcdData();
+    const RightLcdData &getRightLcdData();
     void setRightLcdData(const RightLcdData &);
 
-    void resetRightLcdData();
+    const LeftLcdData &getLeftLcdData();
+    void setLeftLcdData(const LeftLcdData &);
 
-/*     HmiData& operator=(const HmiData &); */
+    void resetRightLcdData();
+    void resetLeftLcdData();
+
+    /*     HmiData& operator=(const HmiData &); */
 
     /* Setters */
     void rSetnProg(int nProg, DrawMode mode);
@@ -91,9 +110,12 @@ public:
     void rSetR2Label(DrawMode mode);
     void rSetR3Label(DrawMode mode);
 
+    void lSetUplinkAct(DrawMode mode);
+    void lSetTemp(DrawMode mode);
+    void lSetKeyErr(DrawMode mode);
+    void lSetOpErr(DrawMode mode);
+
     void _debugPrintLcdData();
-
-
 };
 
 #endif /* _HMIDATA_H_ */
