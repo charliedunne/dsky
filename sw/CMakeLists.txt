@@ -15,6 +15,7 @@ target_sources(dsky PRIVATE
   src/hmi/Hmi.cpp 
   src/hmi/Frame.cpp 
   src/common/Color.cpp 
+  src/common/exceptions/DskyException.cpp
   src/hmi/FrameLeftLcd.cpp 
   src/hmi/FrameCenterLcd.cpp 
   src/hmi/FrameRightLcd.cpp 
