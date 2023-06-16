@@ -6,12 +6,12 @@
 // Common types
 #include "KeyIntMsgDef.h"
 
-MsgQueue::MsgQueue(char *queueFile, int queueId, MsgQueueDirection_e dir)
+MsgQueue::MsgQueue(std::string queueFile, int queueId, MsgQueueDirection_e dir)
 {
     dir_ = dir;
 
     // Generate Unique Message queue key
-    key_ = ftok(queueFile, queueId);
+    key_ = ftok(queueFile.c_str(), queueId);
     if (key_ == -1)
     {
         throw std::domain_error("ftok() Error");
