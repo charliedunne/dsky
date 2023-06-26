@@ -3,6 +3,9 @@
 // STL
 #include <stdexcept>
 
+// Exceptions
+#include "ExcInvalidCommand.h"
+
 ListOfActions::ListOfActions() {}
 ListOfActions::~ListOfActions() {}
 
@@ -49,6 +52,6 @@ bool ListOfActions::needNoun(int verb) {
     /* In case of not find the verb required rise an exception */
     /** @todo I think it is not necessary to rise an execption here, 
      * just return true so the operation can continue. At least for debuggin purposes */
-    //throw std::domain_error("Unregistered Verb");
+    throw ExcInvalidCommand(verb, -1);
     return true;
 }

@@ -1,6 +1,10 @@
 #include "HmiLogic.h"
 
+// Logging
 #include "Logger.h"
+
+// Exceptions
+#include "ExcInvalidCommand.h"
 
 /**
  * @brief Function to resolve the falue of the key event
@@ -105,18 +109,26 @@ void HmiLogic::verbInput(HmiData &data)
      * actions
      */
 
-    if (actions_.needNoun(data.getRightLcdData().nVerb))
+    try
     {
-      status_.transit(MODE_N_INPUT);
-      data.rSetNounLabel(DRAW_ON);
-      LogTrace << "Go no Noun input" << std::endl;
+      if (actions_.needNoun(data.getRightLcdData().nVerb))
+      {
+        status_.transit(MODE_N_INPUT);
+        data.rSetNounLabel(DRAW_ON);
+        LogTrace << "Go no Noun input" << std::endl;
+      }
+      else
+      {
+        status_.transit(MODE_RUN);
+        LogTrace << "Run action since Verb is enough [verb: " << data.getRightLcdData().nVerb << "]" << std::endl;
+        run(data);
+      }
     }
-    else
+    catch (const ExcInvalidCommand &e)
     {
-      status_.transit(MODE_RUN);
-      LogTrace << "Run action since Verb is enough [verb: " << data.getRightLcdData().nVerb << "]" << std::endl;
-      run(data);
+      data.lSetOpErr(DRAW_BLINK);
     }
+
     break;
 
   case E_KEY_0:
@@ -149,6 +161,7 @@ void HmiLogic::verbInput(HmiData &data)
 
   case E_KEY_RSET:
     data.resetRightLcdData();
+    data.resetLeftLcdData();
     status_.transit(MODE_IDLE);
     break;
 
@@ -209,6 +222,7 @@ void HmiLogic::nounInput(HmiData &data)
 
   case E_KEY_RSET:
     data.resetRightLcdData();
+    data.resetLeftLcdData();
     status_.transit(MODE_IDLE);
     break;
 
@@ -236,6 +250,7 @@ void HmiLogic::run(HmiData &data)
     case E_KEY_RSET:
       actions_(data).stop();
       data.resetRightLcdData();
+      data.resetLeftLcdData();
       status_.transit(MODE_IDLE);
       return;
 
@@ -253,8 +268,8 @@ void HmiLogic::run(HmiData &data)
   if (actions_(data).finished())
   {
     LogTrace << "Action finished move to IDLE" << std::endl;
-      data.resetRightLcdData();
-      status_.transit(MODE_IDLE);    
+    data.resetRightLcdData();
+    status_.transit(MODE_IDLE);
   }
 }
 

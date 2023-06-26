@@ -15,6 +15,8 @@ target_sources(dsky PRIVATE
   src/hmi/Hmi.cpp 
   src/hmi/Frame.cpp 
   src/common/Color.cpp 
+  src/common/exceptions/DskyException.cpp
+  src/common/exceptions/ExcInvalidCommand.cpp
   src/hmi/FrameLeftLcd.cpp 
   src/hmi/FrameCenterLcd.cpp 
   src/hmi/FrameRightLcd.cpp 
@@ -65,6 +67,7 @@ include_directories(build/include)
 include_directories(build/include/SDL2)
 include_directories(src/hmi)
 include_directories(src/common)
+include_directories(src/common/exceptions)
 include_directories(src/core)
 include_directories(src/actions)
 include_directories(3rdparty/simple-cpp-logger/include)

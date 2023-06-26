@@ -96,8 +96,6 @@ void FrameLeftLcd::drawLines()
 
 void FrameLeftLcd::drawLabels()
 {
-    uplinkAct->setMode(DRAW_BLINK);
-
     uplinkAct->draw();
     temp->draw();
     keyErr->draw();
