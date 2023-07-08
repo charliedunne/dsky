@@ -33,6 +33,7 @@ target_sources(dsky PRIVATE
   src/core/Keyboard.cpp
   src/core/Event.cpp
   src/core/StatusMachine.cpp
+  src/core/Configuration.cpp
   src/actions/Action.cpp
   src/actions/ListOfActions.cpp
   src/actions/ActionClock.cpp

@@ -16,3 +16,6 @@
 [submodule "sw/3rdparty/pigpio"]
 	path = sw/3rdparty/pigpio
 	url = git@github.com:joan2937/pigpio.git
+[submodule "sw/3rdparty/json"]
+	path = sw/3rdparty/json
+	url = git@github.com:taocpp/json.git

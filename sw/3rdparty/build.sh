@@ -5,7 +5,7 @@ ARCH=$(uname -m)
 
 if [ $# -ne 1 ]
 then
-    echo "Usage: ./build.sh ALL|SDL|SDL_ttf|GFX|PIGPIO|SDL_image"
+    echo "Usage: ./build.sh ALL|SDL|SDL_ttf|GFX|PIGPIO|SDL_image|JSON"
     exit
 fi
 
@@ -88,6 +88,22 @@ function build_pigpio() {
     cd ..
 }
 
+# BUILD JSON
+function build_json() {
+
+    echo "JSON Building..."
+    cd json
+    git submodule init
+    git submodule update
+    cd ..
+    mkdir -p ../build/include/tao
+    ln -s ${ROOT}/json/include/tao/json.hpp ../build/include/tao/json.hpp
+    ln -s ${ROOT}/json/include/tao/json/ ../build/include/tao/json
+    ln -s ${ROOT}/json/external/PEGTL/include/tao/pegtl.hpp ../build/include/tao/pegtl.hpp
+    ln -s ${ROOT}/json/external/PEGTL/include/tao/pegtl/ ../build/include/tao/pegtl
+
+}
+
 
 if [ $1 == "ALL" ]
 then
@@ -115,6 +131,9 @@ then
 elif [ $1 == "PIGPIO" ]
 then
     build_pigpio
+elif [ $1 == "JSON" ]
+then
+    build_json
 fi
 
 exit
