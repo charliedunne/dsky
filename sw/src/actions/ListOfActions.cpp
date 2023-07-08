@@ -29,7 +29,8 @@ Action & ListOfActions::operator()(HmiData &data)
     }
 
     /* In case of not find the verb required rise an exception */
-    throw std::domain_error("Unregistered Verb");
+    //throw std::domain_error("Unregistered Verb");
+    throw ExcInvalidCommand(verb, -1);
 }
 
 bool ListOfActions::needNoun(int verb) {

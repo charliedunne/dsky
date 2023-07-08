@@ -127,6 +127,7 @@ void HmiLogic::verbInput(HmiData &data)
     catch (const ExcInvalidCommand &e)
     {
       data.lSetOpErr(DRAW_BLINK);
+      status_.transit(MODE_ERROR);
     }
 
     break;
@@ -182,8 +183,18 @@ void HmiLogic::nounInput(HmiData &data)
 
   case E_KEY_ENTR:
 
-    status_.transit(MODE_RUN);
-    run(data);
+    try
+    {
+      status_.transit(MODE_RUN);
+      run(data);
+    }
+    catch (const ExcInvalidCommand &e)
+    {
+      LogWarning << "Invalid command set";
+      data.lSetOpErr(DRAW_BLINK);
+      status_.transit(MODE_ERROR);
+    }
+
     break;
 
   case E_KEY_0:
@@ -275,6 +286,22 @@ void HmiLogic::run(HmiData &data)
 
 void HmiLogic::error(HmiData &data)
 {
+  /* Copy the Event key received */
+  EventId_t eventKey = keyEvents_[0].getEvent();
+
+  switch (eventKey)
+  {
+
+  case E_KEY_RSET:
+    data.resetRightLcdData();
+    data.resetLeftLcdData();
+    status_.transit(MODE_IDLE);
+    break;
+
+  default:
+    break;
+  }
+  
   LogError << "Error state" << std::endl;
 }
 
