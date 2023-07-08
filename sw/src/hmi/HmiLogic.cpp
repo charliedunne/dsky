@@ -104,11 +104,6 @@ void HmiLogic::verbInput(HmiData &data)
 
     LogTrace << "Enter Verb input" << std::endl;
 
-    /**
-     * @todo put needNoun in a try to capture unknown
-     * actions
-     */
-
     try
     {
       if (actions_.needNoun(data.getRightLcdData().nVerb))
@@ -126,6 +121,7 @@ void HmiLogic::verbInput(HmiData &data)
     }
     catch (const ExcInvalidCommand &e)
     {
+      LogTrace << "Invalid Verb command" << std::endl;
       data.lSetOpErr(DRAW_BLINK);
       status_.transit(MODE_ERROR);
     }
@@ -293,6 +289,7 @@ void HmiLogic::error(HmiData &data)
   {
 
   case E_KEY_RSET:
+    LogTrace << "Key RESET Pressed" << std::endl;
     data.resetRightLcdData();
     data.resetLeftLcdData();
     status_.transit(MODE_IDLE);
@@ -301,7 +298,7 @@ void HmiLogic::error(HmiData &data)
   default:
     break;
   }
-  
+
   LogError << "Error state" << std::endl;
 }
 

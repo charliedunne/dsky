@@ -63,6 +63,7 @@ void StatusMachine::transit(Mode_e dstMode)
         case MODE_V_INPUT:
         case MODE_N_INPUT:
         case MODE_RUN:
+        case MODE_ERROR:
             LogDebug << "Transit to IDLE" << std::endl;
             /* Transit */
             mode_ = MODE_IDLE;
@@ -138,6 +139,11 @@ void StatusMachine::transit(Mode_e dstMode)
         }    
         break;
 
+    case MODE_ERROR:
+
+        mode_ = MODE_ERROR;
+        break;
+        
     default:
         throw std::domain_error("Unknown Destination mode");
         break;
