@@ -1,0 +1,17 @@
+{
+    "rightLcd": [
+        {
+            "fontcolor_r": 0,
+            "fontcolor_g": 221,
+            "fontcolor_b": 136,
+            "fontcolor_a": 255,
+
+            "ghostcolor_r": 21,
+            "ghostcolor_g": 11,
+            "ghostcolor_b": 12,
+            "ghostcolor_a": 255,
+
+            "blinkperiod": 10
+        }
+    ]
+}
