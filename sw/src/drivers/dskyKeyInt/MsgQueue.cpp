@@ -2,6 +2,12 @@
 
 // STL
 #include <stdexcept>
+#include <iostream>
+
+// System
+#include <cerrno>
+#include <cstring>
+#include <sys/stat.h>
 
 // Common types
 #include "KeyIntMsgDef.h"
@@ -10,10 +16,23 @@ MsgQueue::MsgQueue(std::string queueFile, int queueId, MsgQueueDirection_e dir)
 {
     dir_ = dir;
 
+    // Check that the message queue marker file exists before calling ftok(),
+    // which requires an existing file to derive the IPC key from.
+    struct stat st;
+    if (stat(queueFile.c_str(), &st) != 0) {
+        std::cerr << "Error: message queue marker file '" << queueFile
+                  << "' does not exist. Create it with:"
+                  << std::endl
+                  << "    sudo touch " << queueFile << std::endl;
+        throw std::domain_error("ftok() Error");
+    }
+
     // Generate Unique Message queue key
     key_ = ftok(queueFile.c_str(), queueId);
     if (key_ == -1)
     {
+        std::cerr << "Error: ftok() failed for '" << queueFile
+                  << "' (" << strerror(errno) << ")" << std::endl;
         throw std::domain_error("ftok() Error");
     }
 

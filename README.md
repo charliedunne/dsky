@@ -60,6 +60,15 @@ cd sw
 LD_LIBRARY_PATH=build/lib ./build-app/dsky
 ```
 
+Before first run, create the IPC marker files that `ftok()` uses to derive the
+System V message-queue keys:
+
+```sh
+sudo touch /var/local/dskykeyint /var/local/dskycmd
+```
+
+The app prints a hint if either file is missing.
+
 Notes:
 
 - On x86_64 the window opens normally; on ARM targets CMake switches to
