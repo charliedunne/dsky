@@ -78,6 +78,80 @@ Notes:
 - The pigpio parts only function on Raspberry Pi hardware; on other machines
   the app still builds and runs, GPIO just won't work.
 
+## Cross-compiling for Raspberry Pi (aarch64)
+
+The Pi build is a separate rule from the native one: everything (the five
+third-party libraries *and* the app) is compiled with Arch's
+`aarch64-linux-gnu-gcc/g++` against a minimal arm64 Debian bookworm sysroot,
+so no ARM packages need to be installed on the host.
+
+- Libraries install into `sw/build-pi` (native stays in `sw/build`).
+- App binary lands at `sw/build-app-pi/dsky`.
+
+### 1. Host packages (Arch/CachyOS)
+
+```sh
+sudo pacman -S --needed debootstrap qemu-user-static qemu-user-static-binfmt \
+    aarch64-linux-gnu-gcc
+```
+
+`qemu-user-static-binfmt` lets `chroot`/`debootstrap` run arm64 binaries on the
+x86_64 host (the sysroot script registers the binfmt rule itself if needed).
+
+### 2. Create the sysroot (one-time, root)
+
+```sh
+sudo ./sw/3rdparty/setup-pi-sysroot.sh
+```
+
+This debootstraps an arm64 bookworm rootfs into `sw/pi-sysroot` and installs
+the SDL/X11/EGL/freetype dev packages inside it. It is idempotent (re-running
+is a no-op unless you pass `FORCE=1`) and respects `DSKY_PI_SYSROOT` to place
+the rootfs elsewhere.
+
+### 3. Build the third-party libraries for the Pi
+
+```sh
+cd sw/3rdparty
+./build.sh ALL pi       # "pi" selects cross mode; default is native
+```
+
+Every library accepts the mode argument (`SDL`, `GFX`, `SDL_image`, `SDL_ttf`,
+`PIGPIO`). Cross mode uses the CMake toolchain file `sw/cmake/pi-aarch64.cmake`
+for the CMake-based libs and `--host=aarch64-unknown-linux-gnu` for SDL2_gfx,
+and points pkg-config at `sw/build-pi/lib/pkgconfig` so the arm64 `.pc` files
+win over any host ones.
+
+### 4. Build the app for the Pi
+
+```sh
+cd sw
+cmake -S . -B build-app-pi \
+    -DCMAKE_TOOLCHAIN_FILE=cmake/pi-aarch64.cmake \
+    -DDSKY_DEPS_DIR=$PWD/build-pi
+cmake --build build-app-pi
+```
+
+`-DDSKY_DEPS_DIR` redirects the include/link directories from `./build` to
+`./build-pi`. The toolchain file also makes CMake search for programs on the
+host but for libraries/headers only inside the sysroot, so a host SDL2 install
+can never leak into the link line.
+
+### 5. Run on the Pi
+
+Copy `sw/build-app-pi/dsky` plus the shared libraries from `sw/build-pi/lib`
+(e.g. to `/usr/local/lib`) to the Pi running 64-bit Raspberry Pi OS, then:
+
+```sh
+sudo touch /var/local/dskykeyint /var/local/dskycmd   # same as native
+LD_LIBRARY_PATH=/usr/local/lib ./dsky
+```
+
+On ARM targets CMake sets `SDL_WINDOW_FULLSCREEN`, so the app starts full-screen.
+The sysroot is bookworm, which matches Raspberry Pi OS 64-bit (Debian-based);
+the runtime only needs the system X11/EGL libraries that ship with the desktop
+image.
+
 ## Dependencies
 
 ### Build tools
