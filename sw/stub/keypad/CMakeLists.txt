@@ -3,11 +3,11 @@ cmake_minimum_required(VERSION 3.18)
 # Project name
 project (keystub VERSION 0.1)
 
-# Exec rule
-add_executable(keystub "")
+# Exec rule (named 'keypad' to match the prebuilt binary)
+add_executable(keypad "")
 
 # Sources
-target_sources(keystub PRIVATE
+target_sources(keypad PRIVATE
     main.cpp
 )
 

@@ -1,23 +1,46 @@
 #include <iostream>
 #include <string>
+#include <cstring>
+#include <cerrno>
 
 // Message queues
 #include <sys/ipc.h>
 #include <sys/msg.h>
 
+// Signal handling
+#include <signal.h>
+
 // Message definition
 #include "KeyIntMsgDef.h"
 #include "Event.h"
+
+// volatile sig_atomic_t is the only type guaranteed safe to set in a signal
+// handler and read elsewhere. We must not call iostream from here.
+volatile sig_atomic_t running = 1;
+
+void handler(int s) {
+    (void)s;
+    running = 0;
+}
 
 int main()
 {
     KeyMsg_t msg;
 
+    // Capture SIGINT so the stub stops gracefully instead of being killed
+    struct sigaction sa;
+    sa.sa_handler = handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGINT, &sa, nullptr);
+
     // Generate Unique Message queue key
     key_t key_ = ftok("/var/local/dskykeyint", 10);
     if (key_ == -1)
     {
-        throw std::domain_error("ftok() Error");
+        std::cerr << "Error: message queue marker file '/var/local/dskykeyint' does not exist."
+                  << " Create it with: sudo touch /var/local/dskykeyint" << std::endl;
+        return 1;
     }
 
     // Create the message queue
@@ -27,11 +50,26 @@ int main()
         throw std::domain_error("msgget() Error");
     }
 
+    std::cout << "Keypad stub ready. Send keys: 1-9, 0, v(noun), n(noun), e(enter), r(reset),"
+              << " c(clear), p(program), k(key release), +, -" << std::endl;
+    std::cout << "Press Ctrl+C to quit." << std::endl;
+
     char press = 0;
 
-    while (press != 7)
+    while (running)
     {
-        std::cin >> press;
+        // Read one key command from stdin
+        if (!(std::cin >> press))
+        {
+            // EOF or read error
+            break;
+        }
+
+        // Re-check after the blocking read so Ctrl+C stops us at the next point
+        if (!running)
+        {
+            break;
+        }
 
         switch (press)
         {
@@ -108,12 +146,12 @@ int main()
             std::cout << "E_KEY_PRO" << std::endl;
             msg.mData.keyId = E_KEY_PRO;
             break;
-        
+
         case 'k':
             std::cout << "E_KEY_KEYREL" << std::endl;
             msg.mData.keyId = E_KEY_KEYREL;
             break;
-        
+
         case '+':
             std::cout << "E_KEY_PLUS" << std::endl;
             msg.mData.keyId = E_KEY_PLUS;
@@ -126,11 +164,9 @@ int main()
 
 
         default:
-            // Remove message queue
-            std::cout << "Quit app" << std::endl;
-            msgctl(msgId_, IPC_RMID, NULL);
-            
-            return 0;
+            // Unknown command: ignore and keep running
+            std::cout << "Unknown key '" << press << "', ignored." << std::endl;
+            continue;
         }
 
         msg.mData.keyModifier = KM_SHORT;
@@ -141,6 +177,10 @@ int main()
             std::cout << "Sending key ERROR!" << std::endl;
         }
     }
+
+    // Leave the queue in place: dsky polls it with IPC_NOWAIT and recreates it
+    // if needed. Removing it here could race with a reader mid-poll.
+    std::cout << "Keypad stub shutting down cleanly." << std::endl;
 
     return 0;
 }
