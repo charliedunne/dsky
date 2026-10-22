@@ -15,7 +15,11 @@ function build_sdl() {
     echo "SDL Building..."
 
     cd SDL
-    cmake -S . -B ./build -DCMAKE_INSTALL_PREFIX:PATH=${ROOT}/../build
+    rm -rf build
+    cmake -S . -B ./build -DCMAKE_INSTALL_PREFIX:PATH=${ROOT}/../build \
+        -DBUILD_SHARED_LIBS=ON \
+        -DSDL_PIPEWIRE=OFF \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5
     cd build
     cmake --build  ./
     cmake --install .
@@ -80,7 +84,11 @@ function build_pigpio() {
     echo "PIGPIO Building..."
 
     cd pigpio
-    cmake -S . -B ./build -DCMAKE_INSTALL_PREFIX:PATH=${ROOT}/../build
+    # CMake >= 4 dropped support for cmake_minimum_required < 3.5 (pigpio declares 3.0)
+    # The callback struct fields in pigpio.c were patched to use the properly-typed
+    # function pointers from pigpio.h, so it now compiles cleanly under C23 (GCC >= 16).
+    cmake -S . -B ./build -DCMAKE_INSTALL_PREFIX:PATH=${ROOT}/../build \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5
     cd build
     cmake --build  ./
     cmake --install .
@@ -94,6 +102,7 @@ then
     build_sdl
     build_gfx
     build_sdl_image
+    build_sdl_ttf
     build_pigpio
 
 elif [ $1 == "SDL" ]

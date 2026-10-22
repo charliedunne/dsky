@@ -73,6 +73,9 @@ include_directories(src/actions)
 include_directories(3rdparty/simple-cpp-logger/include)
 include_directories(src/drivers/dskyKeyInt)
 
+# Generated config.h lives in the build directory
+target_include_directories(dsky PRIVATE ${CMAKE_BINARY_DIR})
+
 # Logger definitions
 add_definitions( -D LOGGER_MAX_LOG_LEVEL_PRINTED=7 )
 add_definitions( -D LOGGER_PREFIX_LEVEL=2 )
@@ -82,7 +85,7 @@ add_definitions( -D LOGGER_ENABLE_COLORS_ON_USER_HEADER=0 )
 # Libraries
 target_link_directories(dsky PUBLIC ./build/lib)
 target_link_libraries(dsky SDL2)
-#target_link_libraries(dsky SDL2_ttf)
+target_link_libraries(dsky SDL2_ttf)
 target_link_libraries(dsky SDL2_image)
 target_link_libraries(dsky SDL2_gfx)
 target_link_libraries(dsky pthread)
