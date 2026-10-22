@@ -1,6 +1,74 @@
 # dsky
 DSKY Home assistant
 
+## Building
+
+### 1. Get the sources
+
+```sh
+git clone --recurse-submodules <repo-url> dsky
+cd dsky
+```
+
+(`--recurse-submodules` fetches SDL, SDL_image, SDL_ttf and pigpio under
+`sw/3rdparty`. If you cloned without it, run
+`git submodule update --init --recursive` first.)
+
+### 2. Install system dependencies
+
+Install the build tools and system libraries listed in [Dependencies](#dependencies).
+On an Arch-based system (e.g. CachyOS):
+
+```sh
+sudo pacman -S --needed git cmake make pkgconf \
+    libx11 libxext libxcursor libxi libxfixes libxrandr libxrender \
+    wayland wayland-protocols libxkbcommon mesa \
+    zlib libjpeg-turbo libpng freetype2
+```
+
+### 3. Build the third-party libraries
+
+This compiles SDL, SDL2_gfx, SDL_image, SDL_ttf and pigpio from source and
+installs them all into `sw/build` (headers in `sw/build/include`, libraries in
+`sw/build/lib`). The app build expects exactly this layout:
+
+```sh
+cd sw/3rdparty
+./build.sh ALL          # or a single lib: SDL, GFX, SDL_image, SDL_ttf, PIGPIO
+```
+
+### 4. Build the app
+
+Configure and compile from `sw/` (the CMakeLists links against `./build/lib`,
+so the third-party step above must be done first):
+
+```sh
+cd sw
+cmake -S . -B build-app
+cmake --build build-app
+```
+
+The binary is produced at `sw/build-app/dsky`.
+
+### 5. Run
+
+The app links against the libraries in `sw/build/lib`, so point the loader at
+that directory (or copy the `.so` files into a system library path):
+
+```sh
+cd sw
+LD_LIBRARY_PATH=build/lib ./build-app/dsky
+```
+
+Notes:
+
+- On x86_64 the window opens normally; on ARM targets CMake switches to
+  `SDL_WINDOW_FULLSCREEN` automatically.
+- A working display server (X11 or Wayland) and an EGL-capable GPU driver are
+  required at runtime (`SDL_RENDERER_ACCELERATED`).
+- The pigpio parts only function on Raspberry Pi hardware; on other machines
+  the app still builds and runs, GPIO just won't work.
+
 ## Dependencies
 
 ### Build tools
