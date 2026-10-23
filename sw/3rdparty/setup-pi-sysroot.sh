@@ -28,6 +28,12 @@ APT_PACKAGES=(
     libegl1-mesa-dev libgles2-mesa-dev
     zlib1g-dev libjpeg62-turbo-dev libpng-dev libfreetype-dev
     libasound2-dev
+    # Dev symlink for the C++ runtime (bookworm = gcc-12; the virtual
+    # libstdc++-dev has no install candidate in a minimal rootfs). The
+    # cross-gcc hardcodes its OWN libstdc++.so (built against Arch's newer
+    # glibc), which cannot link against bookworm's glibc 2.36; providing this
+    # in the sysroot lets our -L flags shadow it (see cmake/pi-aarch64.cmake).
+    libstdc++-12-dev
 )
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -62,12 +68,36 @@ if [ -d "$ROOTFS" ]; then
     rm -rf "$ROOTFS"
 fi
 
+# --- debootstrap host-arch shim (needed on Arch hosts) ----------------------
+# debootstrap detects the HOST arch via dpkg/udpkg, then a $DEBOOTSTRAP_DIR/arch
+# file, then `pacman-conf Architecture`. On Arch with `Architecture = auto` in
+# /etc/pacman.conf that last one prints two lines ("x86_64" + "x86_64_v2"), the
+# exact-match case fails and debootstrap aborts before --arch is even read.
+# Point DEBOOTSTRAP_DIR at a shim dir with an explicit `arch` file; functions/
+# and scripts/ are symlinked to the real /usr/share/debootstrap.
+DEBOOTSTRAP_SHARE=/usr/share/debootstrap
+[ -f "$DEBOOTSTRAP_SHARE/functions" ] || { echo "ERROR: $DEBOOTSTRAP_SHARE/functions not found (debootstrap install broken?)" >&2; exit 1; }
+SHIM_DIR=$(mktemp -d)
+trap 'rm -rf "$SHIM_DIR"' EXIT
+ln -s "$DEBOOTSTRAP_SHARE/functions" "$SHIM_DIR/functions"
+ln -s "$DEBOOTSTRAP_SHARE/scripts" "$SHIM_DIR/scripts"
+case "$(uname -m)" in
+    x86_64)  echo amd64 > "$SHIM_DIR/arch" ;;
+    aarch64) echo arm64 > "$SHIM_DIR/arch" ;;
+    *) echo "ERROR: unsupported host architecture for debootstrap shim: $(uname -m)" >&2; exit 1 ;;
+esac
+export DEBOOTSTRAP_DIR="$SHIM_DIR"
+
 echo "Running debootstrap (arm64 minbase) into ${ROOTFS}..."
-debootstrap --variant=minbase --foreign arm64 "$ROOTFS" "$MIRROR"
+debootstrap --variant=minbase --foreign --arch=arm64 bookworm "$ROOTFS" "$MIRROR"
 
 # --- second stage: runs arm64 dpkg via qemu/binfmt --------------------------
+# The host-side DEBOOTSTRAP_DIR shim must NOT leak into the chroot: inside the
+# rootfs, debootstrap defaults to /debootstrap (where first stage copied its
+# own script + functions) when the var is unset. Pass it explicitly rather
+# than relying on detection.
 echo "Running debootstrap second stage (via qemu-aarch64-static)..."
-chroot "$ROOTFS" /debootstrap/debootstrap --second-stage
+chroot "$ROOTFS" env DEBOOTSTRAP_DIR=/debootstrap /debootstrap/debootstrap --second-stage
 
 # apt needs DNS resolution inside the chroot
 cp /etc/resolv.conf "${ROOTFS}/etc/resolv.conf"
@@ -75,7 +105,9 @@ cp /etc/resolv.conf "${ROOTFS}/etc/resolv.conf"
 # --- install arm64 dev packages ---------------------------------------------
 echo "Installing arm64 dev packages into sysroot..."
 chroot "$ROOTFS" apt-get update
-chroot "$ROOTFS" DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "${APT_PACKAGES[@]}"
+# chroot execvp's its command arg directly, so VAR=val prefixes are not
+# parsed by the shell — use `env` inside the rootfs instead.
+chroot "$ROOTFS" env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "${APT_PACKAGES[@]}"
 chroot "$ROOTFS" apt-get clean
 rm -rf "${ROOTFS}/var/lib/apt/lists/"*
 

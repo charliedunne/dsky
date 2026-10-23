@@ -42,9 +42,12 @@ target_sources(dsky PRIVATE
 )
 
 # CFLAGS
+# Append to the existing flags instead of overwriting them: when cross-compiling,
+# the toolchain file (cmake/pi-aarch64.cmake) injects -I/-L isolation flags via
+# CMAKE_CXX_FLAGS_INIT, and clobbering them here breaks linking against the sysroot.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_REENTRANT")
 set(CMAKE_BUILD_TYPE Release)
-SET(CMAKE_CXX_FLAGS "-std=c++20")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
 
 # Set-up System
 # Detect the *target* architecture, not the host: CMAKE_SYSTEM_PROCESSOR is

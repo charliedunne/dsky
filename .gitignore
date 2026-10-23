@@ -1,0 +1,5 @@
+sw/build-app/*
+sw/pi-sysroot/*
+sw/build/*
+sw/build-app-pi/*
+sw/build-pi/*
