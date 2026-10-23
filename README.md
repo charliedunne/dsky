@@ -1,7 +1,18 @@
 # dsky
 DSKY Home assistant
 
-## Building
+dsky can be built for two targets; both are documented below:
+
+| | Native (x86_64) | Raspberry Pi (aarch64) |
+|---|---|---|
+| How | native build on the x86_64 host | cross-compiled from an x86_64 host (`aarch64-linux-gnu-gcc` + arm64 bookworm sysroot) |
+| 3rd-party libraries | `sw/build` | `sw/build-pi` |
+| App binary | `sw/build-app/dsky` | `sw/build-app-pi/dsky` |
+
+- [Building (native, x86_64)](#building-native-x86_64)
+- [Cross-compiling for Raspberry Pi (aarch64)](#cross-compiling-for-raspberry-pi-aarch64)
+
+## Building (native, x86_64)
 
 ### 1. Get the sources
 
