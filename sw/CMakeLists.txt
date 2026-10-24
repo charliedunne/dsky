@@ -38,6 +38,7 @@ target_sources(dsky PRIVATE
   src/actions/ActionClock.cpp
   src/actions/EnableKeypadLight.cpp
   src/actions/DisableKeypadLight.cpp
+  src/actions/ActionVerbList.cpp
   src/drivers/dskyKeyInt/MsgQueue.cpp
 )
 

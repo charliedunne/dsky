@@ -11,6 +11,7 @@
 #include "ActionClock.h"
 #include "EnableKeypadLight.h"
 #include "DisableKeypadLight.h"
+#include "ActionVerbList.h"
 
 // HMI
 #include "Hmi.h"
@@ -81,6 +82,11 @@ int main( int argc, char * argv[], char *envp[] ) {
   logic.registerAction(a_Clock);
   logic.registerAction(a_EnableKeypadLight);
   logic.registerAction(a_DisableKeypadLight);
+
+  // VERB 0: list all implemented verb/noun combos on the left panel.
+  // Registered last so its menu can describe every other action.
+  ActionVerbList a_VerbList(data, logic.getActions());
+  logic.registerAction(a_VerbList);
 
   // Initialize FPS Manager
   SDL_initFramerate(&fpsManager);

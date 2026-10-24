@@ -269,6 +269,12 @@ void HmiLogic::run(HmiData &data)
   if (!actions_(data).isRunning())
   {
     LogTrace << "Running action..." << std::endl;
+
+    // A new (non-VERB 0) command dismisses the VERB 0 menu
+    if (verb != 0) {
+      data.clearVerbList();
+    }
+
     actions_(data).run();
   }
 
@@ -305,6 +311,11 @@ void HmiLogic::error(HmiData &data)
 void HmiLogic::registerAction(Action &action)
 {
   actions_.registerAction(action);
+}
+
+ListOfActions &HmiLogic::getActions()
+{
+  return actions_;
 }
 
 int key(EventId_t id)
