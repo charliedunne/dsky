@@ -10,7 +10,7 @@
 set -u
 cd "$(dirname "$0")"
 
-suites=(StatusMachine HmiData Event clockAction ListOfActions)
+suites=(StatusMachine HmiData Event clockAction ListOfActions HmiLogic)
 
 overall=0
 for s in "${suites[@]}"; do
