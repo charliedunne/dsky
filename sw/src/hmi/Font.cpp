@@ -170,7 +170,7 @@ void Font::setColor(Color c)
     color_ = c;
 }
 
-void Font::drawText(std::string text, int x, int y)
+void Font::drawText(std::string text, int x, int y, float scale)
 {
     int xPos = x;
     int yPos = y;
@@ -209,6 +209,10 @@ void Font::drawText(std::string text, int x, int y)
                 dest.h = pixelHeight_;
             }
 
+            // Apply optional scaling to the destination size (round to int)
+            dest.w = (int)(dest.w * scale + 0.5f);
+            dest.h = (int)(dest.h * scale + 0.5f);
+
             // Source coordinates
             SDL_Rect src = {xCoord, yCoord, width, height};
 
@@ -218,22 +222,22 @@ void Font::drawText(std::string text, int x, int y)
 
             SDL_RenderCopy(r_, texture_, &src, &dest);
 
-            // Update position for next character
+            // Update position for next character (advance by scaled width)
             xPos += dest.w;
         }
 
         if (text[i] == '\n')
         {
             xPos = x;
-            yPos += pixelHeight_;
+            yPos += (int)(pixelHeight_ * scale + 0.5f);
         }
     }
 }
 
-void Font::drawText(std::string text, int x, int y, Color c)
+void Font::drawText(std::string text, int x, int y, Color c, float scale)
 {
     color_ = c;
-    drawText(text, x, y);
+    drawText(text, x, y, scale);
 }
 
 int Font::getX(char c)
