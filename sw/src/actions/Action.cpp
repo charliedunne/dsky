@@ -87,6 +87,13 @@ void Action::loop()
 
 void Action::run()
 {
+  /* Reap a previous completed thread so the assignment below never
+   * targets a joinable thread (which would call std::terminate) */
+  if (thread_.joinable())
+  {
+    thread_.join();
+  }
+
   /* Set flag to running */
   running_ = true;
   finished_ = false;
@@ -103,11 +110,16 @@ void Action::stop()
    * @todo In case of an error there must be a way to also
    * abort the thread
    */
-  thread_.join();
+  /* Join only if a thread was actually started: joining a
+   * non-joinable thread is undefined behaviour */
+  if (thread_.joinable())
+  {
+    thread_.join();
+    thread_.~thread();
+  }
 
-  thread_.~thread();
-  
-  finished_ = true;
+  /* Back to the fresh state so the action can be run again */
+  finished_ = false;
 }
 
 bool Action::isRunning() 

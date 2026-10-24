@@ -266,6 +266,18 @@ void HmiLogic::run(HmiData &data)
     }
   }
 
+  /* A finished single-shot action: reap its thread and go back to IDLE.
+   * Checked first so a completed action is never restarted on the next
+   * frame (it would otherwise be re-run forever) */
+  if (actions_(data).finished())
+  {
+    LogTrace << "Action finished move to IDLE" << std::endl;
+    actions_(data).stop();
+    data.resetRightLcdData();
+    status_.transit(MODE_IDLE);
+    return;
+  }
+
   if (!actions_(data).isRunning())
   {
     LogTrace << "Running action..." << std::endl;
@@ -276,13 +288,6 @@ void HmiLogic::run(HmiData &data)
     }
 
     actions_(data).run();
-  }
-
-  if (actions_(data).finished())
-  {
-    LogTrace << "Action finished move to IDLE" << std::endl;
-    data.resetRightLcdData();
-    status_.transit(MODE_IDLE);
   }
 }
 
