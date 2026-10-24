@@ -5,7 +5,7 @@ dsky can be built for two targets; both are documented below:
 
 | | Native (x86_64) | Raspberry Pi (aarch64) |
 |---|---|---|
-| How | native build on the x86_64 host | cross-compiled from an x86_64 host (`aarch64-linux-gnu-gcc` + arm64 bookworm sysroot) |
+| How | native build on the x86_64 host | cross-compiled from an x86_64 host (self-contained GCC 10 cross prefix + arm64 bullseye sysroot) |
 | 3rd-party libraries | `sw/build` | `sw/build-pi` |
 | App binary | `sw/build-app/dsky` | `sw/build-app-pi/dsky` |
 
@@ -92,33 +92,41 @@ Notes:
 ## Cross-compiling for Raspberry Pi (aarch64)
 
 The Pi build is a separate rule from the native one: everything (the five
-third-party libraries *and* the app) is compiled with Arch's
-`aarch64-linux-gnu-gcc/g++` against a minimal arm64 Debian bookworm sysroot,
-so no ARM packages need to be installed on the host.
+third-party libraries *and* the app) is cross-compiled with a self-contained
+**GCC 10** toolchain (default `~/bullseye-cross`) against a minimal arm64
+Debian bullseye sysroot, so no ARM packages need to be installed on the host.
 
 - Libraries install into `sw/build-pi` (native stays in `sw/build`).
 - App binary lands at `sw/build-app-pi/dsky`.
 
-### 1. Host packages (Arch/CachyOS)
+### 1. Host prerequisites (Arch/CachyOS)
+
+Just the usual `ssh`/`scp`/`tar`. No ARM userland and no host cross-gcc
+package are needed: all compilation happens with a self-contained **GCC 10**
+cross prefix, and the sysroot is built by copying files from the Pi itself.
+
+The compiler must be GCC 10.x to match the Pi's own libstdc++ (GLIBCXX <=
+3.4.28): a newer host cross-gcc emits inlined C++ that bullseye's runtime
+cannot serve, and the app crashes at startup on the Pi. The default prefix
+lives at `~/bullseye-cross`; point `DSKY_PI_CROSS_PREFIX` at another location
+if yours does not. `.diag-notes.md` documents how the prefix was built:
+Ubuntu jammy `gcc-10-aarch64-linux-gnu` / `g++-10-aarch64-linux-gnu` +
+`binutils-aarch64-linux-gnu` debs, extracted with `ar`/`tar` and made
+relocatable with patchelf.
+
+### 2. Create the sysroot (one-time, no root)
 
 ```sh
-sudo pacman -S --needed debootstrap qemu-user-static qemu-user-static-binfmt \
-    aarch64-linux-gnu-gcc
+./sw/3rdparty/setup-pi-sysroot.sh
 ```
 
-`qemu-user-static-binfmt` lets `chroot`/`debootstrap` run arm64 binaries on the
-x86_64 host (the sysroot script registers the binfmt rule itself if needed).
-
-### 2. Create the sysroot (one-time, root)
-
-```sh
-sudo ./sw/3rdparty/setup-pi-sysroot.sh
-```
-
-This debootstraps an arm64 bookworm rootfs into `sw/pi-sysroot` and installs
-the SDL/X11/EGL/freetype dev packages inside it. It is idempotent (re-running
-is a no-op unless you pass `FORCE=1`) and respects `DSKY_PI_SYSROOT` to place
-the rootfs elsewhere.
+The target Pi must have the SDL/X11/EGL/freetype dev packages installed
+(`sudo apt-get install ...` *on the Pi* — the script checks and lists anything
+missing). The script then copies the Pi's own installed headers and libraries
+over ssh into `sw/pi-sysroot`, which guarantees exact version parity with what
+the app runs against. It is idempotent (re-running is a no-op unless you pass
+`FORCE=1`) and respects `DSKY_PI_HOST` / `DSKY_PI_SYSROOT` to point at a
+different Pi or rootfs location.
 
 ### 3. Build the third-party libraries for the Pi
 
@@ -150,16 +158,34 @@ can never leak into the link line.
 
 ### 5. Run on the Pi
 
-Copy `sw/build-app-pi/dsky` plus the shared libraries from `sw/build-pi/lib`
-(e.g. to `/usr/local/lib`) to the Pi running 64-bit Raspberry Pi OS, then:
+Copy the binary and the shared libraries from `sw/build-pi/lib` to a directory
+on the Pi (here: `~/run`):
 
 ```sh
-sudo touch /var/local/dskykeyint /var/local/dskycmd   # same as native
-LD_LIBRARY_PATH=/usr/local/lib ./dsky
+scp sw/build-app-pi/dsky pi@dsky.local:~/run/
+scp sw/build-pi/lib/*.so* pi@dsky.local:~/run/
 ```
 
+The app needs two marker files in `/var/local` (created once, same as native):
+
+```sh
+sudo touch /var/local/dskykeyint /var/local/dskycmd   # on the Pi
+```
+
+An interactive ssh shell has no display, so launch detached against the
+logged-in desktop session's X server (display `:0` under lightdm), pointing
+`DISPLAY`/`XAUTHORITY` at that session and detaching with `setsid`:
+
+```sh
+ssh pi@dsky.local 'cd ~/run && setsid env DISPLAY=:0 \
+    XAUTHORITY=/home/pi/.Xauthority LD_LIBRARY_PATH=$HOME/run \
+    ./dsky > dsky.log 2>&1 < /dev/null &'
+```
+
+Stop it again with `ssh pi@dsky.local pkill dsky`.
+
 On ARM targets CMake sets `SDL_WINDOW_FULLSCREEN`, so the app starts full-screen.
-The sysroot is bookworm, which matches Raspberry Pi OS 64-bit (Debian-based);
+The sysroot is bullseye, which matches the Pi's OS (Raspberry Pi OS 64-bit, Debian 11 based);
 the runtime only needs the system X11/EGL libraries that ship with the desktop
 image.
 

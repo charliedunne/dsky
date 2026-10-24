@@ -43,11 +43,14 @@ target_sources(dsky PRIVATE
 
 # CFLAGS
 # Append to the existing flags instead of overwriting them: when cross-compiling,
-# the toolchain file (cmake/pi-aarch64.cmake) injects -I/-L isolation flags via
-# CMAKE_CXX_FLAGS_INIT, and clobbering them here breaks linking against the sysroot.
+# the toolchain file (cmake/pi-aarch64.cmake) injects the sysroot -L flag via
+# CMAKE_CXX_FLAGS_INIT, and clobbering it here breaks linking against the sysroot.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_REENTRANT")
 set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
+# Keep this at or below c++17: the cross toolchain is GCC 10 (matching the Pi's
+# libstdc++, GLIBCXX <= 3.4.28), and c++20 pulls in newer libstdc++ internals
+# that bullseye's runtime does not provide. See .diag-notes.md.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 
 # Set-up System
 # Detect the *target* architecture, not the host: CMAKE_SYSTEM_PROCESSOR is
@@ -59,6 +62,11 @@ else()
   set(SDL_WINDOW_FLAGS SDL_WINDOW_FULLSCREEN)
   message("Using arm (${CMAKE_SYSTEM_PROCESSOR})")
 endif()
+
+# Directory containing the runtime resources (fonts/, images/). Defaults to
+# the in-tree copy; deployment builds point this at the install location
+# (e.g. -DDSKY_RESOURCE_DIR=/home/pi/run/resources for the Pi).
+set(DSKY_RESOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/resources" CACHE PATH "Directory containing runtime resources (fonts/, images/)")
 
 # Configuration file
 configure_file(config.h.in config.h)
@@ -91,10 +99,19 @@ add_definitions( -D LOGGER_ENABLE_COLORS=1 )
 add_definitions( -D LOGGER_ENABLE_COLORS_ON_USER_HEADER=0 )
 
 # Libraries
+# The SDL libs are linked by FULL PATH, not by name: the cross toolchain puts
+# the sysroot's multiarch dir on -L before ${DSKY_DEPS_DIR}/lib, and the Pi's
+# bullseye libSDL2 (2.0.14) sits there too. Name-based -lSDL2 would resolve to
+# it, but the 3rdparty sublibs (ttf/image/gfx) are built against our from-source
+# SDL 2.70 and need symbols bullseye's copy does not export (e.g. SDL_roundf is
+# a macro in 2.0.14, a real function since 2.0.something). The consequence: the
+# whole libSDL2*.so.0 set from ${DSKY_DEPS_DIR}/lib must be DEPLOYED next to
+# the binary (e.g. ~/run on the Pi) and found at runtime via LD_LIBRARY_PATH —
+# the Pi's system SDL2 cannot substitute for it.
 target_link_directories(dsky PUBLIC ${DSKY_DEPS_DIR}/lib)
-target_link_libraries(dsky SDL2)
-target_link_libraries(dsky SDL2_ttf)
-target_link_libraries(dsky SDL2_image)
-target_link_libraries(dsky SDL2_gfx)
+target_link_libraries(dsky ${DSKY_DEPS_DIR}/lib/libSDL2.so)
+target_link_libraries(dsky ${DSKY_DEPS_DIR}/lib/libSDL2_ttf.so)
+target_link_libraries(dsky ${DSKY_DEPS_DIR}/lib/libSDL2_image.so)
+target_link_libraries(dsky ${DSKY_DEPS_DIR}/lib/libSDL2_gfx.so)
 target_link_libraries(dsky pthread)
 
