@@ -3,6 +3,8 @@
 
 // STL
 #include <mutex>
+#include <string>
+#include <vector>
 
 /**
  * @brief Draw mode for HMI Elements
@@ -58,6 +60,11 @@ typedef struct
     DrawMode lKeyErr;
     DrawMode lOpErr;
 
+    // VERB 0 menu: human-readable list of implemented verb/noun combos
+    DrawMode lVerbList;                 // DRAW_ON while the list is shown
+    char     lVerbListLines[20][28];    // up to 20 lines, each max 27 chars + NUL
+    int      lVerbListCount;            // number of valid lines (0..20)
+
 } LeftLcdData;
 
 class HmiData
@@ -91,6 +98,17 @@ public:
 
     void resetRightLcdData();
     void resetLeftLcdData();
+
+    /**
+     * @brief Fill the VERB 0 menu with the given lines and show it.
+     *        Caps at 20 lines / 27 chars per line.
+     */
+    void lSetVerbList(const std::vector<std::string> &lines);
+
+    /**
+     * @brief Hide/clear the VERB 0 menu (does not touch alarm flags).
+     */
+    void clearVerbList();
 
     /*     HmiData& operator=(const HmiData &); */
 
