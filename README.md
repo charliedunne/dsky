@@ -11,6 +11,7 @@ dsky can be built for two targets; both are documented below:
 
 - [Building (native, x86_64)](#building-native-x86_64)
 - [Cross-compiling for Raspberry Pi (aarch64)](#cross-compiling-for-raspberry-pi-aarch64)
+- [Unit tests](#unit-tests)
 
 ## Building (native, x86_64)
 
@@ -188,6 +189,57 @@ On ARM targets CMake sets `SDL_WINDOW_FULLSCREEN`, so the app starts full-screen
 The sysroot is bullseye, which matches the Pi's OS (Raspberry Pi OS 64-bit, Debian 11 based);
 the runtime only needs the system X11/EGL libraries that ship with the desktop
 image.
+
+## Unit tests
+
+The regression suite lives in `sw/tests/`. Each suite is a standalone CMake
+project — the main app build is untouched — using a minimal custom harness
+(`sw/tests/common/test.h`; no vendored framework). The suites pin *current*
+behavior, including known quirks (marked with `KNOWN QUIRK` /
+`KNOWN INCONSISTENCY` comments in the tests), so a change that breaks a test is
+either a regression or a deliberate behavior change that must update the test.
+
+### 1. Prerequisites
+
+The suites link against the third-party libraries in `sw/build`, so build those
+first (see [Building](#building-native-x86_64), step 3). No app build and no
+display server are needed: the Font suite runs headless through SDL's `dummy`
+video driver.
+
+### 2. Run
+
+```sh
+cd sw/tests
+bash run_all.sh
+```
+
+The runner configures and builds each suite into `<suite>/build`, runs the
+binary, and prints `PASS <suite>` or `FAIL <suite>` per suite; it exits non-zero
+if any suite fails. Per-suite logs land in `<suite>/build/cmake-configure.log`,
+`<suite>/build/build.log` and `<suite>/build/run.log`.
+
+### 3. Suites
+
+| Suite | Covers |
+|---|---|
+| `StatusMachine` | mode transitions, illegal-transition errors |
+| `HmiData` | HMI data model defaults and mutation behavior |
+| `Event` | event queue semantics |
+| `clockAction` | periodic action timing |
+| `ListOfActions` | action list add/remove/iteration |
+| `HmiLogic` | the state machine: VERB/NOUN input, digit accumulation, CLR, error recovery, VERB 0 menu end-to-end, RSET |
+| `Font` | bitmap-font parser/renderer: `estimateSize` oracles, `drawText` pixel readback, error paths |
+
+### 4. Adding a suite for new functionality
+
+1. Create `sw/tests/<Name>/` with a `CMakeLists.txt` and a `main.cpp`. Use
+   `#include "../common/test.h"` for the harness (`TEST`, `CHECK`, `CHECK_EQ`,
+   `CHECK_THROWS`, `TESTS_MAIN`) and copy an existing suite (e.g. `HmiLogic/`)
+   as a template. Add a `.gitignore` containing `build/*`.
+2. The built binary must be the only executable at the build dir root — that is
+   how the runner finds it. If you convert an existing demo project, delete its
+   stale `build/` directory first or the runner may pick the old binary.
+3. Add `<Name>` to the explicit `suites=(...)` list in `run_all.sh`.
 
 ## Dependencies
 
