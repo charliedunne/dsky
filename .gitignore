@@ -1,6 +1,8 @@
 sw/build-app/*
 sw/pi-sysroot/*
 sw/build/*
+sw/build-dbg/*
+sw/build-dbg3/*
 sw/build-app-pi/*
 sw/build-pi/*
 sw/pi-sysroot.bookworm-old/*
