@@ -10,7 +10,7 @@
 set -u
 cd "$(dirname "$0")"
 
-suites=(StatusMachine)
+suites=(StatusMachine HmiData Event)
 
 overall=0
 for s in "${suites[@]}"; do
