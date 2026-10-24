@@ -10,18 +10,18 @@
 #define SDL_WINDOW_FLAGS @SDL_WINDOW_FLAGS@
 
 // FOnts
-#define ZERLINA_FONT "@CMAKE_SOURCE_DIR@/resources/fonts/Zerlina.ttf"
+#define ZERLINA_FONT "@DSKY_RESOURCE_DIR@/fonts/Zerlina.ttf"
 
 // Textures
-#define DIGIT_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/DigitsSpriteTemplate.png"
-#define DIGIT_GLOW_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/DigitsSpriteTemplate_glow.png"
-#define SIGN_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/SignsSpriteTemplate.png"
-#define SIGN_GLOW_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/SignsSpriteTemplate_glow.png"
-#define GORTON_FONT_BITMAP "@CMAKE_SOURCE_DIR@/resources/fonts/Gorton-Condensed_32px.png"
-#define GORTON_FONT_FNT "@CMAKE_SOURCE_DIR@/resources/fonts/Gorton-Condensed_32px.fnt"
-#define LABEL_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/LabelsTemplateLGC.png"
-#define GRID_HALF_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/Grid_half.png"
-#define GRID_FULL_TXT_FILE "@CMAKE_SOURCE_DIR@/resources/images/Grid_full.png"
+#define DIGIT_TXT_FILE "@DSKY_RESOURCE_DIR@/images/DigitsSpriteTemplate.png"
+#define DIGIT_GLOW_TXT_FILE "@DSKY_RESOURCE_DIR@/images/DigitsSpriteTemplate_glow.png"
+#define SIGN_TXT_FILE "@DSKY_RESOURCE_DIR@/images/SignsSpriteTemplate.png"
+#define SIGN_GLOW_TXT_FILE "@DSKY_RESOURCE_DIR@/images/SignsSpriteTemplate_glow.png"
+#define GORTON_FONT_BITMAP "@DSKY_RESOURCE_DIR@/fonts/Gorton-Condensed_32px.png"
+#define GORTON_FONT_FNT "@DSKY_RESOURCE_DIR@/fonts/Gorton-Condensed_32px.fnt"
+#define LABEL_TXT_FILE "@DSKY_RESOURCE_DIR@/images/LabelsTemplateLGC.png"
+#define GRID_HALF_TXT_FILE "@DSKY_RESOURCE_DIR@/images/Grid_half.png"
+#define GRID_FULL_TXT_FILE "@DSKY_RESOURCE_DIR@/images/Grid_full.png"
 
 
 // Default colors

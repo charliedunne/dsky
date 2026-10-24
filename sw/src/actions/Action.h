@@ -5,6 +5,7 @@
 #include "HmiData.h"
 
 /* STL */
+#include <atomic>
 #include <thread>
 #include <functional>
 
@@ -49,13 +50,13 @@ private:
    * @brief Flag to determine if the thread must continue its execution
    *
    */
-  std::atomic_bool running_;
+  std::atomic<bool> running_;
 
   /**
    * @brief Flag to determine if the operation has finished.
    * 
    */
-  std::atomic_bool finished_;
+  std::atomic<bool> finished_;
 
 protected:
   HmiData &hmiData_;

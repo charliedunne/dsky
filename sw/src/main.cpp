@@ -29,11 +29,14 @@
 // GFX
 #include "SDL2_framerate.h"
 
-bool running = true;
+// volatile sig_atomic_t is the only type guaranteed safe to set in a signal
+// handler and read elsewhere. The logger is NOT async-signal-safe (it takes a
+// mutex and allocates memory), so we must not call it from here.
+volatile sig_atomic_t running = 1;
 
 void handler(int s) {
-  LogInfo << "SIGINT detected" << std::endl;
-  running = false;
+  (void)s;
+  running = 0;
 }
 
 int main( int argc, char * argv[], char *envp[] ) {
@@ -48,8 +51,12 @@ int main( int argc, char * argv[], char *envp[] ) {
   // Initialize HMI
   std::srand(std::time(0));
 
-  // Capture signals
-  signal(SIGINT, handler);
+  // Capture signals (sigaction is preferred over signal for portable semantics)
+  struct sigaction sa;
+  sa.sa_handler = handler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sigaction(SIGINT, &sa, nullptr);
 
   // Instanciation of the HMI
   Hmi hmi = Hmi(800, 480);
@@ -82,9 +89,12 @@ int main( int argc, char * argv[], char *envp[] ) {
 
   while (running) {
     //while(SDL_PollEvent(&PingStop)) {
-  
+
     /* Array to register all the keypad events (normally only one per cycle) */
     std::vector<Event> events = keypad.getEvents();
+
+    // Re-check after a blocking call so Ctrl+C stops us at the next point
+    if (!running) break;
 
     /* Parse the key events in the logic */
     logic.parseKeyEvents(events);
@@ -109,4 +119,6 @@ int main( int argc, char * argv[], char *envp[] ) {
     }
 
   }
+
+  LogInfo << "Shutting down cleanly." << std::endl;
 }

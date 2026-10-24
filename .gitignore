@@ -1,0 +1,9 @@
+sw/build-app/*
+sw/pi-sysroot/*
+sw/build/*
+sw/build-app-pi/*
+sw/build-pi/*
+sw/pi-sysroot.bookworm-old/*
+sw/3rdparty/tools/wayland-scanner-1.18/wayland-scanner
+*.core
+

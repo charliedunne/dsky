@@ -5,6 +5,11 @@
 #include <stdexcept>
 #include <iostream>
 
+// System
+#include <cerrno>
+#include <cstring>
+#include <sys/stat.h>
+
 // Configuration
 #include "config.h"
 
@@ -13,9 +18,22 @@
 
 Keypad::Keypad() {
 
+    // Check that the message queue marker file exists before calling ftok(),
+    // which requires an existing file to derive the IPC key from.
+    struct stat st;
+    if (stat(KEY_INT_MSG_QUEUE_FILE, &st) != 0) {
+        std::cerr << "Error: message queue marker file '" << KEY_INT_MSG_QUEUE_FILE
+                  << "' does not exist. Create it with:"
+                  << std::endl
+                  << "    sudo touch " << KEY_INT_MSG_QUEUE_FILE << std::endl;
+        throw std::domain_error("ftok() Error");
+    }
+
     // Generate Unique Message queue key
     key_ = ftok(KEY_INT_MSG_QUEUE_FILE, KEY_INT_MSG_QUEUE_ID);
     if (key_ == -1) {
+        std::cerr << "Error: ftok() failed for '" << KEY_INT_MSG_QUEUE_FILE
+                  << "' (" << strerror(errno) << ")" << std::endl;
         throw std::domain_error("ftok() Error");
     }
 
