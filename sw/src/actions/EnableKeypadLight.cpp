@@ -10,7 +10,7 @@
 // Logging
 #include "Logger.h"
 
-EnableKeypadLight::EnableKeypadLight(HmiData &data) : Action(2, 1, data, ACTION_SINGLE)
+EnableKeypadLight::EnableKeypadLight(HmiData &data) : Action(2, 1, data, ACTION_SINGLE, "KEYPAD ON")
 {
 }
 

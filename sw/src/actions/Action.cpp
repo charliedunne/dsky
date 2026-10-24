@@ -11,18 +11,16 @@
 // Logging
 #include "Logger.h"
 
-Action::Action(int verb, int noun, HmiData &data, ActionSchedule_e actionSchedule) 
-: hmiData_(data)
+Action::Action(int verb, int noun, HmiData &data, ActionSchedule_e actionSchedule, const std::string& label)
+: hmiData_(data), label_(label)
 {
 
   /* Set internal configuration */
   verb_ = verb;
   noun_ = noun;
-  actionSchedule_ = actionSchedule_;
+  actionSchedule_ = actionSchedule;   // was a self-assignment bug
   running_ = false;
   finished_ = false;
-
-  //std::cout << "hmiDataPtr = 0x" << std::hex << hmiData_ << std::endl;
 }
 
 Action::~Action()
@@ -39,16 +37,21 @@ void Action::setPeriod(int period)
   actionSchedule_ = ACTION_PERIODIC;
 }
 
-int Action::getVerb()
+int Action::getVerb() const
 {
 
   return verb_;
 }
 
-int Action::getNoun()
+int Action::getNoun() const
 {
 
   return noun_;
+}
+
+const std::string& Action::getLabel() const
+{
+  return label_;
 }
 
 ActionSchedule_e Action::getSchedule()
