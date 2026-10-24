@@ -87,8 +87,10 @@ void FrameLeftLcd::render()
         drawLabels();
     }
 
-    // Draw the separation lines (grid background)
-    drawLines();
+    // Draw the separation lines (grid background), hidden while the VERB 0 menu is shown
+    if (verbListMode_ != DRAW_ON) {
+        drawLines();
+    }
 
     // Draw the VERB 0 menu on top of the grid, if active
     if (verbListMode_ == DRAW_ON) {
@@ -155,7 +157,7 @@ void FrameLeftLcd::drawVerbList()
     int y = y_ + 8;                                  // top margin (tune later)
 
     for (const std::string &line : verbListLines_) {
-        verbListFont_->drawText(line, x_ + 10, y, Color(255, 255, 255), scale);
+        verbListFont_->drawText(line, x_ + 10, y, Color(0, 255, 0, 255), scale);
         y += lineHeight;
     }
 }

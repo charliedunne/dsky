@@ -18,7 +18,7 @@ class FrameLeftLcd : public Frame
 {
 
 private:
-  const bool debug_ = true;
+  const bool debug_ = false;
 
   int lineThickness_ = 15;
 
