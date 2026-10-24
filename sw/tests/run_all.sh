@@ -4,13 +4,12 @@
 # is built into <suite>/build and must be the only executable at the build
 # dir root. Prints PASS/FAIL per suite; exits non-zero if any suite fails.
 #
-# Suites are listed explicitly below (not auto-discovered) so that legacy
-# demo projects (Font) stay out of the runner until they are converted into
-# real tests. Add a suite here when its step lands.
+# Suites are listed explicitly below (not auto-discovered); a suite is
+# added here when its step lands.
 set -u
 cd "$(dirname "$0")"
 
-suites=(StatusMachine HmiData Event clockAction ListOfActions HmiLogic)
+suites=(StatusMachine HmiData Event clockAction ListOfActions HmiLogic Font)
 
 overall=0
 for s in "${suites[@]}"; do
