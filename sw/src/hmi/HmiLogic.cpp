@@ -89,6 +89,12 @@ void HmiLogic::idle(HmiData &data)
 
     status_.transit(MODE_V_INPUT);
   }
+  else if (data.getLeftLcdData().lVerbList == DRAW_ON)
+  {
+    /* Any other key returns to the clean boot screen */
+    LogTrace << "Key pressed in IDLE, clear verb list" << std::endl;
+    data.clearVerbList();
+  }
 }
 
 void HmiLogic::verbInput(HmiData &data)
@@ -163,7 +169,10 @@ void HmiLogic::verbInput(HmiData &data)
     break;
 
   default:
-    LogWarning << "Not available operation" << std::endl;
+    /* Keys not part of the input flow cancel back to IDLE */
+    LogTrace << "Cancel verb input, move to IDLE" << std::endl;
+    data.resetRightLcdData();
+    status_.transit(MODE_IDLE);
     break;
   }
 }
@@ -234,7 +243,10 @@ void HmiLogic::nounInput(HmiData &data)
     break;
 
   default:
-    LogWarning << "Not available operation" << std::endl;
+    /* Keys not part of the input flow cancel back to IDLE */
+    LogTrace << "Cancel noun input, move to IDLE" << std::endl;
+    data.resetRightLcdData();
+    status_.transit(MODE_IDLE);
     break;
   }
 }
@@ -293,24 +305,11 @@ void HmiLogic::run(HmiData &data)
 
 void HmiLogic::error(HmiData &data)
 {
-  /* Copy the Event key received */
-  EventId_t eventKey = keyEvents_[0].getEvent();
-
-  switch (eventKey)
-  {
-
-  case E_KEY_RSET:
-    LogTrace << "Key RESET Pressed" << std::endl;
-    data.resetRightLcdData();
-    data.resetLeftLcdData();
-    status_.transit(MODE_IDLE);
-    break;
-
-  default:
-    break;
-  }
-
-  LogError << "Error state" << std::endl;
+  /* Any key press clears the error and returns to the clean IDLE state */
+  LogTrace << "Error cleared, move to IDLE" << std::endl;
+  data.resetRightLcdData();
+  data.resetLeftLcdData();
+  status_.transit(MODE_IDLE);
 }
 
 void HmiLogic::registerAction(Action &action)
