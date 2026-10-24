@@ -8,7 +8,7 @@
 // Logging
 #include "Logger.h"
 
-ActionClock::ActionClock(HmiData &data) : Action(1, -1, data, ACTION_PERIODIC)
+ActionClock::ActionClock(HmiData &data) : Action(1, -1, data, ACTION_PERIODIC, "CLOCK")
 {
   setPeriod(1000);
 }

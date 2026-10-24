@@ -58,6 +58,11 @@ class HmiLogic {
    */
   void registerAction(Action & action);
 
+  /**
+   * @brief Access the registered actions (used by VERB 0 to list them)
+   */
+  ListOfActions &getActions();
+
  private:
 
   void idle(HmiData &data);

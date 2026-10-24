@@ -8,6 +8,7 @@
 #include <atomic>
 #include <thread>
 #include <functional>
+#include <string>
 
 typedef enum
 {
@@ -47,6 +48,11 @@ private:
   int noun_ = -1;
 
   /**
+   * @brief Human-readable label for this action (used by the VERB 0 menu)
+   */
+  std::string label_;
+
+  /**
    * @brief Flag to determine if the thread must continue its execution
    *
    */
@@ -62,7 +68,7 @@ protected:
   HmiData &hmiData_;
 
 public:
-  Action(int verb, int noun, HmiData &data, ActionSchedule_e actionSchedule = ACTION_SINGLE);
+  Action(int verb, int noun, HmiData &data, ActionSchedule_e actionSchedule = ACTION_SINGLE, const std::string& label = "");
 
   virtual ~Action();
 
@@ -78,14 +84,21 @@ public:
    *
    * @return Verb
    */
-  int getVerb();
+  int getVerb() const;
 
   /**
    * @brief Getter for Noun
    *
    * @return Noun
    */
-  int getNoun();
+  int getNoun() const;
+
+  /**
+   * @brief Getter for the human-readable label
+   *
+   * @return Label
+   */
+  const std::string& getLabel() const;
 
   /**
    * @brief Getter for Action Schedule type

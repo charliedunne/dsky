@@ -41,6 +41,10 @@ void HmiData::resetLeftLcdData()
     lLcdData_.lTemp = DRAW_OFF;
     lLcdData_.lKeyErr = DRAW_OFF;
     lLcdData_.lOpErr = DRAW_OFF;
+
+    // Clear the VERB 0 menu
+    lLcdData_.lVerbList = DRAW_OFF;
+    lLcdData_.lVerbListCount = 0;
 }
 
 HmiData::HmiData()
@@ -299,6 +303,37 @@ void HmiData::lSetOpErr(DrawMode mode)
     mutex_.lock();
 
     lLcdData_.lOpErr = mode;
+
+    mutex_.unlock();
+}
+
+void HmiData::lSetVerbList(const std::vector<std::string> &lines)
+{
+    mutex_.lock();
+
+    const int maxLines = 20;
+    const int lineLen  = 28;   // 27 chars + NUL
+
+    int n = (int)lines.size();
+    if (n > maxLines) n = maxLines;
+
+    for (int i = 0; i < n; ++i) {
+        std::strncpy(lLcdData_.lVerbListLines[i], lines[i].c_str(), lineLen - 1);
+        lLcdData_.lVerbListLines[i][lineLen - 1] = '\0';
+    }
+
+    lLcdData_.lVerbListCount = n;
+    lLcdData_.lVerbList = DRAW_ON;
+
+    mutex_.unlock();
+}
+
+void HmiData::clearVerbList()
+{
+    mutex_.lock();
+
+    lLcdData_.lVerbList = DRAW_OFF;
+    lLcdData_.lVerbListCount = 0;
 
     mutex_.unlock();
 }

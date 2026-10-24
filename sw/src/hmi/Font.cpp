@@ -5,6 +5,7 @@
 #include <fstream>
 #include <regex>
 #include <algorithm>
+#include <sstream>
 
 // SDL
 #include "SDL2/SDL_image.h"
@@ -52,18 +53,19 @@ Font::~Font()
 void Font::parseFnt()
 {
 
-    // FIle to parse
+    // File to parse
     std::ifstream infile(fnt_.c_str());
+    if (!infile.is_open())
+    {
+        throw std::runtime_error("Font::parseFnt: cannot open " + fnt_);
+    }
 
     // Container for line
     std::string line;
 
     while (std::getline(infile, line))
     {
-        charCoords_t coords;
-
-        std::vector<std::string> elements;
-        const char delim = ' ';
+        charCoords_t coords{};
 
         // Report that element was found
         bool fId = false;
@@ -75,11 +77,13 @@ void Font::parseFnt()
         bool fYoffset = false;
         bool fXadvance = false;
 
-        char *token = std::strtok(const_cast<char *>(line.c_str()), &delim);
-        while (token != nullptr)
+        // Split the line on whitespace. strtok() is deliberately avoided: it
+        // requires a mutable buffer and a null-terminated delimiter string, and
+        // passing a single-char "delim" made it read past its bounds (UB).
+        std::istringstream iss(line);
+        std::string s;
+        while (iss >> s)
         {
-            std::string s = std::string(token);
-
             // ID
             if (std::regex_match(s, std::regex("^id=.*")))
             {
@@ -132,7 +136,7 @@ void Font::parseFnt()
             // xadvance
             if (std::regex_match(s, std::regex("^xadvance=.*")))
             {
-                coords.yoffset = std::stoi(s.substr(9));
+                coords.xadvance = std::stoi(s.substr(9));
                 fXadvance = true;
             }
 
@@ -145,10 +149,14 @@ void Font::parseFnt()
                 // parsed in the line
                 fId = false;
             }
-
-            // Move to next sub-line element
-            token = std::strtok(nullptr, &delim);
         }
+    }
+
+    // Guard against an empty glyph set so max_element() never dereferences a
+    // null iterator.
+    if (coords_.empty())
+    {
+        throw std::runtime_error("Font::parseFnt: no glyphs parsed from " + fnt_);
     }
 
     // Get the pixelHeight
@@ -170,7 +178,7 @@ void Font::setColor(Color c)
     color_ = c;
 }
 
-void Font::drawText(std::string text, int x, int y)
+void Font::drawText(std::string text, int x, int y, float scale)
 {
     int xPos = x;
     int yPos = y;
@@ -209,6 +217,10 @@ void Font::drawText(std::string text, int x, int y)
                 dest.h = pixelHeight_;
             }
 
+            // Apply optional scaling to the destination size (round to int)
+            dest.w = (int)(dest.w * scale + 0.5f);
+            dest.h = (int)(dest.h * scale + 0.5f);
+
             // Source coordinates
             SDL_Rect src = {xCoord, yCoord, width, height};
 
@@ -218,22 +230,22 @@ void Font::drawText(std::string text, int x, int y)
 
             SDL_RenderCopy(r_, texture_, &src, &dest);
 
-            // Update position for next character
+            // Update position for next character (advance by scaled width)
             xPos += dest.w;
         }
 
         if (text[i] == '\n')
         {
             xPos = x;
-            yPos += pixelHeight_;
+            yPos += (int)(pixelHeight_ * scale + 0.5f);
         }
     }
 }
 
-void Font::drawText(std::string text, int x, int y, Color c)
+void Font::drawText(std::string text, int x, int y, Color c, float scale)
 {
     color_ = c;
-    drawText(text, x, y);
+    drawText(text, x, y, scale);
 }
 
 int Font::getX(char c)

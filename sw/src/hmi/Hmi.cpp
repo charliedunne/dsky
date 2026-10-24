@@ -88,6 +88,9 @@ void Hmi::update(HmiData &data) {
   leftLcd_->setKeyErr(data.getLeftLcdData().lKeyErr);
   leftLcd_->setOpErr(data.getLeftLcdData().lOpErr);
 
+  // VERB 0 menu
+  leftLcd_->setVerbList(data.getLeftLcdData());
+
 
   // Right LCD
 

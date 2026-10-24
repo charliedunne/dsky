@@ -39,6 +39,9 @@ FrameLeftLcd::FrameLeftLcd(SDL_Renderer *r, int x, int y, int w, int h, Color bg
     spare2 = new AlarmLabel(r_, w_ / 2 + 1, 2 * (h_ / 2) / 3 + 2,
                             w_ / 2, (h_ / 2) / 3, std::string("NONE"));
 
+    // VERB 0 menu font (Gorton bitmap, scaled down at draw time)
+    verbListFont_ = new Font(r_, GORTON_FONT_BITMAP, GORTON_FONT_FNT);
+
     // Create the Grid object
     SDL_Surface *surface = IMG_Load(GRID_FULL_TXT_FILE);
     if (surface == NULL)
@@ -63,6 +66,7 @@ FrameLeftLcd::~FrameLeftLcd()
     delete spare1;
     delete opErr;
     delete spare2;
+    delete verbListFont_;
 }
 
 void FrameLeftLcd::render()
@@ -78,11 +82,20 @@ void FrameLeftLcd::render()
                               M_PI * 8, Color(255, 255, 0));
     }
 
-    // Draw Labels
-    drawLabels();
+    // Draw alarm labels only when the VERB 0 menu is not shown
+    if (verbListMode_ != DRAW_ON) {
+        drawLabels();
+    }
 
-    // Draw the separation lines
-    drawLines();
+    // Draw the separation lines (grid background), hidden while the VERB 0 menu is shown
+    if (verbListMode_ != DRAW_ON) {
+        drawLines();
+    }
+
+    // Draw the VERB 0 menu on top of the grid, if active
+    if (verbListMode_ == DRAW_ON) {
+        drawVerbList();
+    }
 }
 
 void FrameLeftLcd::drawLines()
@@ -123,4 +136,29 @@ void FrameLeftLcd::drawLabels()
   {
     opErr->setMode(mode);
   }
+
+void FrameLeftLcd::setVerbList(const LeftLcdData &d)
+{
+    verbListMode_ = d.lVerbList;
+    verbListLines_.clear();
+    for (int i = 0; i < d.lVerbListCount && i < 20; ++i) {
+        verbListLines_.push_back(std::string(d.lVerbListLines[i]));
+    }
+}
+
+void FrameLeftLcd::drawVerbList()
+{
+    if (verbListMode_ != DRAW_ON || verbListLines_.empty()) return;
+
+    // Draw over the grid background, stacked from the top.
+    // scale ~0.5 fits the ~32px Gorton bitmap into the 335px-wide panel.
+    const float scale = 0.5f;
+    const int lineHeight = (int)(32 * scale) + 6;   // glyph height + gap (tune later)
+    int y = y_ + 8;                                  // top margin (tune later)
+
+    for (const std::string &line : verbListLines_) {
+        verbListFont_->drawText(line, x_ + 10, y, Color(0, 255, 0, 255), scale);
+        y += lineHeight;
+    }
+}
   

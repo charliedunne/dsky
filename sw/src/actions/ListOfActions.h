@@ -6,6 +6,7 @@
 
 // STL
 #include <vector>
+#include <string>
 
 class ListOfActions {
 
@@ -46,6 +47,14 @@ class ListOfActions {
      * @return false If any Noun is expected
      */
     bool needNoun(int verb);
+
+    /**
+     * @brief Human-readable description of every registered action,
+     *        sorted by (verb, noun) ascending. Used to build the VERB 0 menu.
+     *
+     * @return One string per action, e.g. "V01 CLOCK" or "V02 N00 KEYPAD OFF"
+     */
+    std::vector<std::string> describe() const;
 
 };
 

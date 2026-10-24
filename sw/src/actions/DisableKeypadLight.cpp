@@ -10,7 +10,7 @@
 // Logging
 #include "Logger.h"
 
-DisableKeypadLight::DisableKeypadLight(HmiData &data) : Action(2, 0, data, ACTION_SINGLE)
+DisableKeypadLight::DisableKeypadLight(HmiData &data) : Action(2, 0, data, ACTION_SINGLE, "KEYPAD OFF")
 {
 }
 

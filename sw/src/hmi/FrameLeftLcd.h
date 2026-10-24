@@ -1,19 +1,24 @@
 #ifndef FRAMELEFTLCD_H
 #define FRAMELEFTLCD_H
 
+#include <string>
+#include <vector>
+
 #include "SDL2/SDL.h"
 #include "Frame.h"
 #include "Color.h"
 #include "Label.h"
+#include "Font.h"
 
 // HMI
 #include "AlarmLabel.h"
+#include "HmiData.h"
 
 class FrameLeftLcd : public Frame
 {
 
 private:
-  const bool debug_ = true;
+  const bool debug_ = false;
 
   int lineThickness_ = 15;
 
@@ -42,8 +47,18 @@ public:
   void setKeyErr(DrawMode);
   void setOpErr(DrawMode);
 
+  /**
+   * @brief Update the VERB 0 menu content from the left LCD data.
+   */
+  void setVerbList(const LeftLcdData &d);
+
 
 private:
+  // VERB 0 menu rendering
+  Font *verbListFont_ = nullptr;
+  std::vector<std::string> verbListLines_;
+  DrawMode verbListMode_ = DRAW_OFF;
+
   /**
    * @brief Draw the background lines (grid)
    *
@@ -55,6 +70,11 @@ private:
    * 
    */
   void drawLabels();
+
+  /**
+   * @brief Internal: draw the VERB 0 menu lines over the grid background
+   */
+  void drawVerbList();
 };
 
 #endif /* FRAMELEFTLCD_H */
