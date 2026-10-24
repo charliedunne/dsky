@@ -5,12 +5,12 @@
 # dir root. Prints PASS/FAIL per suite; exits non-zero if any suite fails.
 #
 # Suites are listed explicitly below (not auto-discovered) so that legacy
-# demo projects (clockAction, Font) stay out of the runner until they are
-# converted into real tests. Add a suite here when its step lands.
+# demo projects (Font) stay out of the runner until they are converted into
+# real tests. Add a suite here when its step lands.
 set -u
 cd "$(dirname "$0")"
 
-suites=(StatusMachine HmiData Event)
+suites=(StatusMachine HmiData Event clockAction ListOfActions)
 
 overall=0
 for s in "${suites[@]}"; do
