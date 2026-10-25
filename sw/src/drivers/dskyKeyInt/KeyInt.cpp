@@ -66,7 +66,10 @@ void KeyInt::intHandler(int gpio, int level, uint32_t tick)
         KeyMsg_t msg;
 
         msg.mType = 1;
-        msg.mData.keyId = leftData << 16 | rightData;
+        /* Cast to unsigned before shifting: a signed shift into the sign bit
+         * is undefined behavior (leftData can have bit 15 set). */
+        msg.mData.keyId = static_cast<unsigned int>(leftData) << 16 |
+                          static_cast<unsigned int>(rightData);
         msg.mData.keyModifier = KM_SHORT;
 
         std::cout << "KeyId: 0x" << std::hex << msg.mData.keyId << std::endl;

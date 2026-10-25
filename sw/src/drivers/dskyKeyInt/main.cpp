@@ -5,7 +5,7 @@
 
 // System tools
 #include <unistd.h>
-#include <signal.h>
+#include <csignal>
 
 // KeyInt library
 #include "KeyInt.h"
@@ -15,21 +15,32 @@
 /* PiGpio */
 #include "pigpio.h"
 
+/** @brief Signal number received, set by the handler and read by the main loop. */
+static volatile sig_atomic_t g_signalReceived = 0;
+
+/**
+ * @brief Signal handler for SIGINT/SIGTERM.
+ *
+ * Async-signal-safe: only sets the flag. All cleanup (gpioTerminate, exit)
+ * happens in the main thread once it observes the flag.
+ */
 void signal_callback_handler(int signum)
 {
-    std::cout << "System Signal received (" << signum << ")." << std::endl;
-
-    // Terminate GPIO Library
-    gpioTerminate();
-
-    exit(signum);
+    g_signalReceived = signum;
 }
 
-int main(int arg, char *argv[], char *envp[])
+int main(int argc, char *argv[])
 {
 
-    // Register handler for SIGNING
-    signal(SIGINT, signal_callback_handler);
+    // Register handlers for SIGINT/SIGTERM with portable sigaction semantics.
+    // SA_RESTART is deliberately not set so a blocked msgrcv returns EINTR
+    // and the main loop can observe the flag promptly.
+    struct sigaction sa = {};
+    sa.sa_handler = signal_callback_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGINT, &sa, nullptr);
+    sigaction(SIGTERM, &sa, nullptr);
 
     // Initialize piGpio Library
     gpioInitialise();
@@ -40,7 +51,8 @@ int main(int arg, char *argv[], char *envp[])
         CmdManager cmdManager;
         KeypadLed keypadLed;
 
-        while (true)
+        /* Exit the loop as soon as a shutdown signal has been received */
+        while (g_signalReceived == 0)
         {
             cmdManager.waitForCommand();
 
@@ -73,8 +85,22 @@ int main(int arg, char *argv[], char *envp[])
     }
     catch (const std::exception &e)
     {
-        std::cerr << "Some error occurr!: " << e.what() << std::endl;
-        std::cerr << "Type: " << typeid(e).name() << std::endl;
+        /* A shutdown signal interrupts the blocking msgrcv with EINTR, which
+         * surfaces here as an exception. Only report it if no signal was
+         * received (i.e. it is a genuine error). */
+        if (g_signalReceived == 0)
+        {
+            std::cerr << "Some error occurr!: " << e.what() << std::endl;
+            std::cerr << "Type: " << typeid(e).name() << std::endl;
+        }
+    }
+
+    // Terminate the GPIO library from the main thread, not the signal handler
+    gpioTerminate();
+
+    if (g_signalReceived != 0)
+    {
+        std::cout << "System Signal received (" << g_signalReceived << ")." << std::endl;
     }
 
     return EXIT_SUCCESS;
