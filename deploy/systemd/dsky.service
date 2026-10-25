@@ -19,6 +19,9 @@ Type=simple
 User=pi
 Group=pi
 WorkingDirectory=/home/pi/run
+# Cosmetic: silences SDL's "XDG_RUNTIME_DIR not set" error. The app renders
+# via KMS/DRM and does not actually need the user runtime dir to exist.
+Environment=XDG_RUNTIME_DIR=/run/user/1000
 ExecStart=/home/pi/run/dsky
 Restart=on-failure
 RestartSec=3

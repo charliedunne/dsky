@@ -21,22 +21,25 @@ usage() {
   exit "${1:-0}"
 }
 
-ssh_pi() { ssh "$PI_HOST" "$@"; }
+# -n: never read stdin. Inside `while read` loops a plain ssh would swallow
+# the remaining pipe lines and silently skip units.
+ssh_pi() { ssh -n "$PI_HOST" "$@"; }
 
-# Units in dependency order (daemon first). "all" expands to both.
+# Units in dependency order (daemon first), one per line. "all" expands to both.
 ordered_units() {
   case "${1:-all}" in
     dsky)   echo "dsky.service" ;;
     keyint) echo "dskyKeyInt.service" ;;
-    all)    echo "dskyKeyInt.service dsky.service" ;;
+    all)    printf 'dskyKeyInt.service\ndsky.service\n' ;;
     *)      echo "ERROR: unknown service '$1' (use dsky, keyint or all)" >&2; exit 1 ;;
   esac
 }
 
 # Reverse order for stopping (app first, then daemon).
 reversed_units() {
-  local u
-  read -r -a units <<< "$(ordered_units "${1:-all}")"
+  local units=() u
+  # read -a only consumes the FIRST line of a here-string; loop to get all.
+  while IFS= read -r u; do units+=("$u"); done <<< "$(ordered_units "${1:-all}")"
   for (( i=${#units[@]}-1; i>=0; i-- )); do echo "${units[$i]}"; done
 }
 

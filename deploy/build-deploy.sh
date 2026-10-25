@@ -85,7 +85,7 @@ deploy_app() {
   ssh_pi 'install -m 755 /tmp/dsky-deploy-dsky /home/pi/run/dsky.new
 mv -f /home/pi/run/dsky.new /home/pi/run/dsky
 rm -f /tmp/dsky-deploy-dsky
-if systemctl is-active --quiet dsky.service; then systemctl restart dsky && echo "dsky restarted"; else echo "WARN: dsky service not active (run install-services.sh)"; fi'
+if systemctl is-active --quiet dsky.service; then sudo systemctl restart dsky && echo "dsky restarted"; else echo "WARN: dsky service not active (run install-services.sh)"; fi'
 }
 
 deploy_resources() {

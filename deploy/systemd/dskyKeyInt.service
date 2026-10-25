@@ -9,15 +9,16 @@
 [Unit]
 Description=dsky keypad interrupt daemon (i2c PCF8575 + GPIO)
 After=multi-user.target
-# SysV IPC queue keys derive from ftok() of these marker files (IDs 10 and 12).
-# They persist on disk; the touch is boot robustness for a fresh filesystem.
-ExecStartPre=/usr/bin/touch /var/local/dskykeyint /var/local/dskycmd
 # Give up after repeated crash-looping instead of restarting forever.
 StartLimitIntervalSec=300
 StartLimitBurst=10
 
 [Service]
 Type=simple
+# SysV IPC queue keys derive from ftok() of these marker files (IDs 10 and 12).
+# They persist on disk; the mkdir+touch is boot robustness for a fresh filesystem.
+ExecStartPre=/usr/bin/install -d /var/local
+ExecStartPre=/usr/bin/touch /var/local/dskykeyint /var/local/dskycmd
 ExecStart=/home/pi/run/dskyKeyInt
 WorkingDirectory=/home/pi/run
 Environment=LD_LIBRARY_PATH=/home/pi/run

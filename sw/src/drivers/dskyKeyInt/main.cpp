@@ -42,6 +42,16 @@ int main(int argc, char *argv[])
     sigaction(SIGINT, &sa, nullptr);
     sigaction(SIGTERM, &sa, nullptr);
 
+    /* libpigpio installs its own handlers for all signals (0..63) during
+     * gpioInitialise(), which would clobber the registrations above and turn
+     * a clean shutdown into a non-async-signal-safe gpioTerminate()+exit()
+     * from signal-handler context. Disable it, as recommended in pigpio.h:
+     * "If you intend to rely on signals sent to your application, you should
+     * turn off the internal signal handling." */
+    int cfg = gpioCfgGetInternals();
+    cfg |= PI_CFG_NOSIGHANDLER;
+    gpioCfgSetInternals(cfg);
+
     // Initialize piGpio Library
     gpioInitialise();
 
