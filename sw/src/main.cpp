@@ -52,12 +52,14 @@ int main( int argc, char * argv[], char *envp[] ) {
   // Initialize HMI
   std::srand(std::time(0));
 
-  // Capture signals (sigaction is preferred over signal for portable semantics)
+  // Capture signals (sigaction is preferred over signal for portable semantics).
+  // SIGTERM as well so `systemctl stop` exits cleanly and flushes the log.
   struct sigaction sa;
   sa.sa_handler = handler;
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = 0;
   sigaction(SIGINT, &sa, nullptr);
+  sigaction(SIGTERM, &sa, nullptr);
 
   // Instanciation of the HMI
   Hmi hmi = Hmi(800, 480);

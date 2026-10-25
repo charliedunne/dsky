@@ -1,0 +1,27 @@
+# dsky — HMI application (renders directly to the LCD via KMS/DRM, /dev/dri/card0)
+#
+# Runs as user pi. No DISPLAY/XAUTHORITY needed: the app opens the DRM device
+# directly and does not use X11 (verified on the Pi while Xorg is running).
+# It uses the system SDL2 libraries; only the daemon needs bundled .so files.
+#
+# Wants/After dskyKeyInt so the command queue exists before the app starts,
+# but is otherwise independent of the display manager (lightdm autologin).
+#
+# Install with deploy/systemd/install-services.sh.
+
+[Unit]
+Description=dsky HMI application (KMS/DRM direct render)
+After=dskyKeyInt.service multi-user.target
+Wants=dskyKeyInt.service
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/run
+ExecStart=/home/pi/run/dsky
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
