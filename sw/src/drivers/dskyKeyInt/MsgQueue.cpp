@@ -46,8 +46,10 @@ MsgQueue::MsgQueue(std::string queueFile, int queueId, MsgQueueDirection_e dir)
 
 MsgQueue::~MsgQueue()
 {
-    // Remove message queue
-    msgctl(msgId_, IPC_RMID, NULL);
+    /* Message queues are system resources shared across processes.
+     * Do NOT remove them here — doing so would destroy the queue
+     * for all other users (e.g. the daemon blocking in msgrcv).
+     * Queues persist until explicitly removed or system reboot. */
 }
 
 template <class T>
