@@ -4,8 +4,10 @@
 # Usage: ./deploy/systemd/install-services.sh [--no-start]
 #
 # Copies dskyKeyInt.service and dsky.service to /etc/systemd/system, runs
-# systemctl daemon-reload, and enables + starts both units (omit start with
-# --no-start). Safe to re-run after editing a unit file.
+# systemctl daemon-reload, disables lightdm (the HMI must own /dev/dri/card0;
+# an X server would become DRM master and black out the display), and enables
+# + starts both units (omit start with --no-start). Safe to re-run after
+# editing a unit file.
 #
 # Host: pi@dsky.local by default; override with DSKY_PI_HOST.
 
@@ -33,6 +35,9 @@ sudo systemctl daemon-reload
 rm -rf /tmp/dsky-units'
 
 if [ "$START" = 1 ]; then
+  echo "==> Disabling lightdm (kiosk: dsky must own /dev/dri/card0)..."
+  # Stop X first so the dsky restart below can acquire DRM master cleanly.
+  ssh_pi 'sudo systemctl disable --now lightdm'
   echo "==> Enabling + starting services..."
   # enable --now is a no-op for units that are already active, so restart any
   # active unit to make the freshly installed file take effect.
@@ -43,7 +48,11 @@ for u in dskyKeyInt.service dsky.service; do
 done'
 else
   echo "==> Enabling services (not starting; --no-start)..."
-  ssh_pi 'sudo systemctl enable dskyKeyInt.service dsky.service'
+  # Disable lightdm too, but leave it running: --no-start means the caller
+  # wants no service state changes beyond enabling.
+  ssh_pi 'set -e
+sudo systemctl disable lightdm
+sudo systemctl enable dskyKeyInt.service dsky.service'
 fi
 
 echo "==> Status:"
