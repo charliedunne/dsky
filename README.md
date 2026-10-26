@@ -247,6 +247,12 @@ owns the scanout and the HMI can no longer present frames (black screen).
 The service argument defaults to `all`. Start order is keyint -> dsky, stop is
 reversed. `tail` follows the journal (`journalctl -f`).
 
+To exercise the keypad daemon without pressing keys, use the `cmdsend` test
+tool (source: `sw/src/drivers/dskyKeyInt/test/cmdsend.cpp`, deployed to
+`/home/pi/run/cmdsend` on the Pi). It injects commands directly into the
+daemon's queue, bypassing the HMI app: `cmdsend on [brightness]`,
+`cmdsend off`, `cmdsend status`.
+
 ### Display / kiosk behavior
 
 - lightdm is disabled, so no desktop or X server runs; the app owns the
@@ -256,7 +262,10 @@ reversed. `tail` follows the journal (`journalctl -f`).
   dsky (the units conflict) and brings up X; restore the HMI with
   `sudo systemctl stop lightdm && sudo systemctl start dsky`.
 - Logs live in the journal: `journalctl -u dsky` / `journalctl -u dskyKeyInt`
-  on the Pi, or `./dsky-remote.sh tail` from a dev machine.
+  on the Pi, or `./dsky-remote.sh tail` from a dev machine. Note that both
+  processes block-buffer stdout, so individual lines can lag behind until the
+  buffer fills (~4 KB) or the process exits; `systemctl restart <unit>` forces
+  an immediate flush. Do not rely on the journal for real-time verification.
 
 ## Unit tests
 
