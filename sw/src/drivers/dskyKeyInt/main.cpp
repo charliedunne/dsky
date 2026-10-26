@@ -30,19 +30,27 @@ static pthread_t g_mainThreadId = 0;
 /**
  * @brief Signal handler for SIGINT/SIGTERM.
  *
- * Async-signal-safe: sets the flag and re-targets the signal at the main
- * thread (pthread_kill is async-signal-safe). A process-directed signal may
- * be delivered to any non-blocking thread; only a signal received by the main
- * thread itself can interrupt its blocking msgrcv() with EINTR. If this
- * handler already runs on the main thread, the self-kill is a no-op because
- * the signal is masked in that thread while its own handler is executing.
+ * Async-signal-safe: sets the flag and, when running on a non-main thread,
+ * re-targets the signal at the main thread (pthread_self/pthread_kill are
+ * async-signal-safe). A process-directed signal may be delivered to any
+ * unblocked thread; only a signal received by the main thread itself can
+ * interrupt its blocking msgrcv() with EINTR.
+ *
+ * IMPORTANT: the re-target must NOT happen when this handler already runs on
+ * the main thread. A self-directed pthread_kill from inside the handler is
+ * not a no-op: the signal is blocked in the running thread while its own
+ * handler executes, so the kill merely pends it and the kernel re-invokes
+ * this handler forever once the handler returns (infinite re-entrancy; the
+ * main thread spins at 100% CPU and msgrcv never resumes).
  * All cleanup (gpioTerminate, exit) happens in the main thread once it
  * observes the flag.
  */
 void signal_callback_handler(int signum)
 {
     g_signalReceived = signum;
-    pthread_kill(g_mainThreadId, signum);
+    if (!pthread_equal(pthread_self(), g_mainThreadId)) {
+        pthread_kill(g_mainThreadId, signum);
+    }
 }
 
 int main(int argc, char *argv[])
