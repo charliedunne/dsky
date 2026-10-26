@@ -6,6 +6,7 @@
 // System tools
 #include <unistd.h>
 #include <csignal>
+#include <pthread.h>
 
 // KeyInt library
 #include "KeyInt.h"
@@ -19,18 +20,37 @@
 static volatile sig_atomic_t g_signalReceived = 0;
 
 /**
+ * @brief Native ID of the main thread, captured at startup.
+ *
+ * Used by the signal handler to re-target the signal at the main thread so
+ * that its blocking msgrcv() is interrupted with EINTR.
+ */
+static pthread_t g_mainThreadId = 0;
+
+/**
  * @brief Signal handler for SIGINT/SIGTERM.
  *
- * Async-signal-safe: only sets the flag. All cleanup (gpioTerminate, exit)
- * happens in the main thread once it observes the flag.
+ * Async-signal-safe: sets the flag and re-targets the signal at the main
+ * thread (pthread_kill is async-signal-safe). A process-directed signal may
+ * be delivered to any non-blocking thread; only a signal received by the main
+ * thread itself can interrupt its blocking msgrcv() with EINTR. If this
+ * handler already runs on the main thread, the self-kill is a no-op because
+ * the signal is masked in that thread while its own handler is executing.
+ * All cleanup (gpioTerminate, exit) happens in the main thread once it
+ * observes the flag.
  */
 void signal_callback_handler(int signum)
 {
     g_signalReceived = signum;
+    pthread_kill(g_mainThreadId, signum);
 }
 
 int main(int argc, char *argv[])
 {
+    // Capture the main thread ID before any handler can fire (sigaction is
+    // installed below), so the handler always has a valid target.
+    g_mainThreadId = pthread_self();
+
     // Make stdout unit-buffered: under journald (pipe) std::cout would be
     // block-buffered and KeyId lines would only appear on process exit,
     // making live journal verification impossible.
