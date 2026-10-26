@@ -46,8 +46,9 @@ Keypad::Keypad() {
 }
 
 Keypad::~Keypad() {
-
-    msgctl(msgId_, IPC_RMID, NULL);
+    /* Message queues are system resources shared across processes.
+     * Do NOT remove them here — doing so would destroy the queue
+     * for all other users (e.g. the daemon sending key events). */
 }
 
 std::vector<Event> Keypad::getEvents() {

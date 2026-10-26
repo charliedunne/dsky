@@ -1,0 +1,41 @@
+# dsky — HMI application (renders directly to the LCD via KMS/DRM, /dev/dri/card0)
+#
+# Runs as user pi. No DISPLAY/XAUTHORITY needed: the app opens the DRM device
+# directly and does not use X11. It uses the system SDL2 libraries; only the
+# daemon needs bundled .so files.
+#
+# The app must be the SOLE KMS client on /dev/dri/card0: if an X server
+# (lightdm autologin) becomes DRM master, it owns the scanout and the HMI can
+# no longer present frames — the process stays alive but the screen goes black.
+# Conflicts=lightdm.service below makes starting dsky stop lightdm; install-
+# services.sh also disables lightdm so no X server starts at boot.
+# Escape hatch to a desktop: `sudo systemctl start lightdm` (stops dsky);
+# `sudo systemctl stop lightdm && sudo systemctl start dsky` restores the HMI.
+#
+# Wants/After dskyKeyInt so the command queue exists before the app starts.
+#
+# Install with deploy/systemd/install-services.sh.
+
+[Unit]
+Description=dsky HMI application (KMS/DRM direct render)
+After=dskyKeyInt.service multi-user.target
+Wants=dskyKeyInt.service
+# Kiosk: dsky must own the display. If both units are ever requested, dsky
+# starts first and lightdm is dropped from the transaction.
+Conflicts=lightdm.service
+Before=lightdm.service
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/run
+# Cosmetic: silences SDL's "XDG_RUNTIME_DIR not set" error. The app renders
+# via KMS/DRM and does not actually need the user runtime dir to exist.
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+ExecStart=/home/pi/run/dsky
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

@@ -18,15 +18,20 @@ AlarmLabel::AlarmLabel(SDL_Renderer *r, const int x, const int y,
 
     fontBitmap_ = std::string(GORTON_FONT_BITMAP);
     fontFnt_ = std::string(GORTON_FONT_FNT);
+
+    // Cache the font: constructing it per draw decodes the glyph bitmap from
+    // disk on every frame (same pattern as FrameLeftLcd::verbListFont_)
+    font_ = new Font(r, fontBitmap_, fontFnt_);
 }
 
 AlarmLabel::~AlarmLabel()
 {
+    delete font_;
 }
 
 void AlarmLabel::drawLabel(const Color c)
 {
-    Font text = Font(r_, fontBitmap_, fontFnt_);
+    Font &text = *font_;
 
     int textSizeW = 0;
     int textSizeH = 0;

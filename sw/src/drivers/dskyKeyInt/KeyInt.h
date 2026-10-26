@@ -5,6 +5,9 @@
 
 #include "KeyIntMsgDef.h"
 
+// STL
+#include <mutex>
+
 // Message queues
 #include "MsgQueue.h"
 
@@ -36,6 +39,37 @@ private:
      *
      */
     static void intHandler(int gpio, int level, uint32_t tick);
+
+    /**
+     * @brief Periodic polling fallback handler.
+     * Called by a pigpio timer; detects key changes even when the INT line
+     * is open or intermittent (hardware fault on the shared INT net).
+     */
+    static void pollHandler(void);
+
+    /**
+     * @brief Process a freshly read keyboard state.
+     * Emits a KeyId message only if the state differs from the last
+     * processed one and at least one key is pressed. Shared by the INT
+     * edge path and the polling fallback so they cannot double-emit.
+     */
+    static void processState(int leftData, int rightData);
+
+    /**
+     * @brief Last processed left keyboard state (dedup between paths)
+     */
+    static int lastLeft_;
+
+    /**
+     * @brief Last processed right keyboard state (dedup between paths)
+     */
+    static int lastRight_;
+
+    /**
+     * @brief Mutex protecting the last-state pair and the emit path
+     * (INT alert thread and poll timer thread both call processState)
+     */
+    static std::mutex stateMutex_;
 
     /**
      * @brief Output Message queue for the output events

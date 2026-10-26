@@ -19,6 +19,12 @@ private:
     std::string fontBitmap_;
     std::string fontFnt_;
 
+    /**
+     * @brief Cached font, constructed once in the constructor.
+     * Building a Font per draw decodes the glyph bitmap from disk every frame.
+     */
+    Font *font_ = nullptr;
+
     int w_;
     int h_;
 

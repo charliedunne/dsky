@@ -159,6 +159,10 @@ can never leak into the link line.
 
 ### 5. Run on the Pi
 
+The recommended way to run the app is as a systemd service — see
+[Running as services](#running-as-services-systemd-recommended) below. The
+manual recipe here is kept for debugging.
+
 Copy the binary and the shared libraries from `sw/build-pi/lib` to a directory
 on the Pi (here: `~/run`):
 
@@ -173,9 +177,18 @@ The app needs two marker files in `/var/local` (created once, same as native):
 sudo touch /var/local/dskykeyint /var/local/dskycmd   # on the Pi
 ```
 
-An interactive ssh shell has no display, so launch detached against the
-logged-in desktop session's X server (display `:0` under lightdm), pointing
-`DISPLAY`/`XAUTHORITY` at that session and detaching with `setsid`:
+An interactive ssh shell has no display. With lightdm disabled (the service
+default) there is no X server at all, so launch detached without any X
+environment — the app renders directly via KMS/DRM:
+
+```sh
+ssh pi@dsky.local 'cd ~/run && setsid env LD_LIBRARY_PATH=$HOME/run \
+    ./dsky > dsky.log 2>&1 < /dev/null &'
+```
+
+If a desktop session is running instead (lightdm enabled), point
+`DISPLAY`/`XAUTHORITY` at it (display `:0`, `/home/pi/.Xauthority`) and detach
+with `setsid`:
 
 ```sh
 ssh pi@dsky.local 'cd ~/run && setsid env DISPLAY=:0 \
@@ -189,6 +202,70 @@ On ARM targets CMake sets `SDL_WINDOW_FULLSCREEN`, so the app starts full-screen
 The sysroot is bullseye, which matches the Pi's OS (Raspberry Pi OS 64-bit, Debian 11 based);
 the runtime only needs the system X11/EGL libraries that ship with the desktop
 image.
+
+## Running as services (systemd, recommended)
+
+The normal way to operate the Pi is with two systemd services that auto-start
+at boot. The unit files live in `deploy/systemd/`:
+
+| Unit | Runs as | What it does |
+|------|---------|--------------|
+| `dskyKeyInt.service` | root | Keypad daemon (i2c PCF8575 + GPIO via pigpio; pigpio requires euid 0) |
+| `dsky.service` | pi | HMI app, renders directly to the display via KMS/DRM (`/dev/dri/card0`) — no X11/DISPLAY needed |
+
+Both are `WantedBy=multi-user.target`; at boot the daemon starts first and the
+app follows (`After=`/`Wants=`). Both handle SIGTERM, so `systemctl stop` is a
+clean shutdown.
+
+### 1. Install (one-time)
+
+```sh
+./deploy/systemd/install-services.sh        # from a dev machine
+#   --no-start: install + enable only, do not start
+```
+
+This copies the units to `/etc/systemd/system`, runs `daemon-reload`, and
+enables + starts both services. It also **disables lightdm**: the app must be
+the sole KMS client on `/dev/dri/card0` — if an X server becomes DRM master it
+owns the scanout and the HMI can no longer present frames (black screen).
+
+### 2. Build & deploy
+
+```sh
+./deploy/build-deploy.sh                    # cross-compile both + deploy + restart
+#   --app / --daemon    build/deploy only one binary
+#   --resources         also rsync sw/resources/ to /home/pi/run/resources/
+#   --no-deploy         build only, do not touch the Pi
+```
+
+### 3. Service control from a dev machine
+
+```sh
+./dsky-remote.sh {start|stop|restart|status|tail|enable|disable} [dsky|keyint|all]
+```
+
+The service argument defaults to `all`. Start order is keyint -> dsky, stop is
+reversed. `tail` follows the journal (`journalctl -f`).
+
+To exercise the keypad daemon without pressing keys, use the `cmdsend` test
+tool (source: `sw/src/drivers/dskyKeyInt/test/cmdsend.cpp`, deployed to
+`/home/pi/run/cmdsend` on the Pi). It injects commands directly into the
+daemon's queue, bypassing the HMI app: `cmdsend on [brightness]`,
+`cmdsend off`, `cmdsend status`.
+
+### Display / kiosk behavior
+
+- lightdm is disabled, so no desktop or X server runs; the app owns the
+  display from boot. `getty@tty1` stays enabled for a local console
+  (Ctrl+Alt+F1).
+- Escape hatch to a desktop: on the Pi, `sudo systemctl start lightdm` stops
+  dsky (the units conflict) and brings up X; restore the HMI with
+  `sudo systemctl stop lightdm && sudo systemctl start dsky`.
+- Logs live in the journal: `journalctl -u dsky` / `journalctl -u dskyKeyInt`
+  on the Pi, or `./dsky-remote.sh tail` from a dev machine. Note that both
+  processes block-buffer stdout, so individual lines can lag behind until the
+  buffer fills (~4 KB) or the process exits; `systemctl restart <unit>` forces
+  an immediate flush. Do not rely on the journal for real-time verification.
 
 ## Unit tests
 

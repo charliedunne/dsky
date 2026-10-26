@@ -230,6 +230,7 @@ void HmiLogic::nounInput(HmiData &data)
     data.rSetnNoun(UNASIGNED, DRAW_OFF);
     data.rSetNounLabel(DRAW_OFF);
     status_.transit(MODE_V_INPUT);
+    break;
 
   case E_KEY_NOUN:
   case E_KEY_CLR:

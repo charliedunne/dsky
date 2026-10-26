@@ -28,17 +28,18 @@ int Pcf8575::read()
     // Read all GPIO data
     data = i2cReadWordData(handle, 1);
 
-    if (data < 0)
-    {
-
-        throw std::domain_error("i2cReadWordData() Error");
-    }
-
-    // Close i2c communication
+    // Close the i2c handle before any error reporting so the fd/slot is
+    // never leaked on the exception path
     if (i2cClose(handle) != 0)
     {
 
         throw std::domain_error("i2cClose() Error");
+    }
+
+    if (data < 0)
+    {
+
+        throw std::domain_error("i2cReadWordData() Error");
     }
 
     return data;
