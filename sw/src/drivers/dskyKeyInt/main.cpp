@@ -31,6 +31,10 @@ void signal_callback_handler(int signum)
 
 int main(int argc, char *argv[])
 {
+    // Make stdout unit-buffered: under journald (pipe) std::cout would be
+    // block-buffered and KeyId lines would only appear on process exit,
+    // making live journal verification impossible.
+    std::cout << std::unitbuf;
 
     // Register handlers for SIGINT/SIGTERM with portable sigaction semantics.
     // SA_RESTART is deliberately not set so a blocked msgrcv returns EINTR
