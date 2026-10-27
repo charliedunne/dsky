@@ -299,16 +299,26 @@ void HmiLogic::run(HmiData &data)
     }
   }
 
-  /* A finished single-shot action: reap its thread and go back to IDLE.
-   * Checked first so a completed action is never restarted on the next
-   * frame (it would otherwise be re-run forever) */
+  /* A finished single-shot action: always reap its thread, which resets
+   * the finished flag that a non-blocking cancel() leaves stale. Go back
+   * to IDLE unless this frame is starting a new command (ENTR/NOUN from
+   * the input states), in which case fall through and start it below so
+   * an immediate retry after a cancel is not swallowed by the reap */
   if (actions_(data).finished())
   {
-    LogTrace << "Action finished move to IDLE" << std::endl;
+    LogTrace << "Action finished, reaping" << std::endl;
     actions_(data).stop();
-    data.resetRightLcdData();
-    status_.transit(MODE_IDLE);
-    return;
+
+    bool newCommand = keyEvents_.size() == 1 &&
+        (keyEvents_[0].getEvent() == E_KEY_ENTR ||
+         keyEvents_[0].getEvent() == E_KEY_NOUN);
+
+    if (!newCommand)
+    {
+      data.resetRightLcdData();
+      status_.transit(MODE_IDLE);
+      return;
+    }
   }
 
   if (!actions_(data).isRunning())
