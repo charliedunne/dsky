@@ -69,6 +69,13 @@ void HmiLogic::updateHmiData(HmiData &data)
     LogWarning << "@TODO Handle more than one event at one" << std::endl;
   }
 
+  /* Each key event must be processed exactly once per frame. The state
+   * handlers above (verbInput/nounInput) may start an action in the same
+   * frame; if the event were still queued when the MODE_RUN check below
+   * calls run(), it would look like a "key press while a cancellable
+   * action is running" and immediately cancel the just-started action */
+  keyEvents_.clear();
+
   if (status_() == MODE_RUN)
   {
     run(data);
@@ -265,6 +272,19 @@ void HmiLogic::run(HmiData &data)
 
     LogTrace << "Key detected" << std::endl;
 
+    /* A running cancellable action is aborted by ANY key press (incl. RSET).
+     * cancel() is non-blocking, unlike stop(), so the HMI loop never freezes */
+    Action &action = actions_(data);
+    if (action.isRunning() && action.cancellable())
+    {
+      LogTrace << "Key detected while cancellable action running, cancelling" << std::endl;
+      action.cancel();
+      data.resetRightLcdData();
+      data.resetLeftLcdData();
+      status_.transit(MODE_IDLE);
+      return;
+    }
+
     switch (eventKey)
     {
     case E_KEY_RSET:
@@ -279,16 +299,26 @@ void HmiLogic::run(HmiData &data)
     }
   }
 
-  /* A finished single-shot action: reap its thread and go back to IDLE.
-   * Checked first so a completed action is never restarted on the next
-   * frame (it would otherwise be re-run forever) */
+  /* A finished single-shot action: always reap its thread, which resets
+   * the finished flag that a non-blocking cancel() leaves stale. Go back
+   * to IDLE unless this frame is starting a new command (ENTR/NOUN from
+   * the input states), in which case fall through and start it below so
+   * an immediate retry after a cancel is not swallowed by the reap */
   if (actions_(data).finished())
   {
-    LogTrace << "Action finished move to IDLE" << std::endl;
+    LogTrace << "Action finished, reaping" << std::endl;
     actions_(data).stop();
-    data.resetRightLcdData();
-    status_.transit(MODE_IDLE);
-    return;
+
+    bool newCommand = keyEvents_.size() == 1 &&
+        (keyEvents_[0].getEvent() == E_KEY_ENTR ||
+         keyEvents_[0].getEvent() == E_KEY_NOUN);
+
+    if (!newCommand)
+    {
+      data.resetRightLcdData();
+      status_.transit(MODE_IDLE);
+      return;
+    }
   }
 
   if (!actions_(data).isRunning())

@@ -59,6 +59,7 @@ typedef struct
     DrawMode lTemp;
     DrawMode lKeyErr;
     DrawMode lOpErr;
+    DrawMode lShutdown;
 
     // VERB 0 menu: human-readable list of implemented verb/noun combos
     DrawMode lVerbList;                 // DRAW_ON while the list is shown
@@ -132,6 +133,11 @@ public:
     void lSetTemp(DrawMode mode);
     void lSetKeyErr(DrawMode mode);
     void lSetOpErr(DrawMode mode);
+
+    /**
+     * @brief Set the SHUTDOWN alarm label draw mode (VERB 99 countdown).
+     */
+    void lSetShutdown(DrawMode mode);
 
     void _debugPrintLcdData();
 };

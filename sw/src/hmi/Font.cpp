@@ -336,3 +336,25 @@ void Font::estimateSize(std::string text, int *w, int *h)
         }
     }
 }
+
+int Font::maxGlyphHeight(std::string text)
+{
+    int maxH = 0;
+
+    for (int i = 0; i < text.size(); ++i)
+    {
+        /* Skip characters that carry no ink */
+        if ((text[i] == 32) || (text[i] == '\n'))
+        {
+            continue;
+        }
+
+        int height = getH(text[i]);
+        if ((height != -1) && (height > maxH))
+        {
+            maxH = height;
+        }
+    }
+
+    return maxH;
+}

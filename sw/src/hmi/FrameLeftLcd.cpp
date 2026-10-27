@@ -36,8 +36,21 @@ FrameLeftLcd::FrameLeftLcd(SDL_Renderer *r, int x, int y, int w, int h, Color bg
     opErr = new AlarmLabel(r_, extGridSize, 2 * (h_ / 2) / 3 + 2,
                              w_ / 2, (h_ / 2) / 3, std::string("OP ERR"));
 
-    spare2 = new AlarmLabel(r_, w_ / 2 + 1, 2 * (h_ / 2) / 3 + 2,
-                            w_ / 2, (h_ / 2) / 3, std::string("NONE"));
+    shutdown = new AlarmLabel(r_, w_ / 2 + 1, 2 * (h_ / 2) / 3 + 2,
+                            w_ / 2, (h_ / 2) / 3, std::string("SHTDWN"));
+
+    // Center the text ink on the measured grid-cell band centers
+    // (window-absolute). The yellow box geometry is left unchanged; only
+    // the text position moves.
+    uplinkAct->setTargetCenter(91, 49);
+    temp->setTargetCenter(248, 49);
+    keyErr->setTargetCenter(91, 123);
+    spare1->setTargetCenter(248, 123);
+    opErr->setTargetCenter(91, 202);
+    shutdown->setTargetCenter(248, 202);
+
+    // Set the Alarm colors
+    shutdown->setFgColor(Color(ALARM_YELLOW_COLOR_R, ALARM_YELLOW_COLOR_G, ALARM_YELLOW_COLOR_B, ALARM_YELLOW_COLOR_A));
 
     // VERB 0 menu font (Gorton bitmap, scaled down at draw time)
     verbListFont_ = new Font(r_, GORTON_FONT_BITMAP, GORTON_FONT_FNT);
@@ -65,7 +78,7 @@ FrameLeftLcd::~FrameLeftLcd()
     delete keyErr;
     delete spare1;
     delete opErr;
-    delete spare2;
+    delete shutdown;
     delete verbListFont_;
 }
 
@@ -114,7 +127,7 @@ void FrameLeftLcd::drawLabels()
     keyErr->draw();
     spare1->draw();
     opErr->draw();
-    spare2->draw();
+    shutdown->draw();
 }
 
   void FrameLeftLcd::setUplink(DrawMode mode)
@@ -135,6 +148,11 @@ void FrameLeftLcd::drawLabels()
   void FrameLeftLcd::setOpErr(DrawMode mode)
   {
     opErr->setMode(mode);
+  }
+
+  void FrameLeftLcd::setShutdown(DrawMode mode)
+  {
+    shutdown->setMode(mode);
   }
 
 void FrameLeftLcd::setVerbList(const LeftLcdData &d)

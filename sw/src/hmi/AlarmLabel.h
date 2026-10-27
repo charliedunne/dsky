@@ -31,6 +31,13 @@ private:
     Color bgColor_;
     Color fgColor_;
 
+    /**
+     * @brief Target center of the text ink, in window-absolute coordinates.
+     * When unset (-1) the text is centered on the label box instead.
+     */
+    int targetCx_ = -1;
+    int targetCy_ = -1;
+
     void drawLabel(const Color c);
 
 public:
@@ -38,6 +45,30 @@ public:
                const int w, const int h, std::string text);
 
     virtual ~AlarmLabel();
+
+    /**
+     * @brief Set the Foreground Color
+     * 
+     * @param fgColor[in] Foreground color.
+     */
+     void setFgColor(const Color fgColor);
+
+    /**
+     * @brief Set the Background Color
+     * 
+     * @param bgColor[in] Background color.
+     */
+     void setBgColor(const Color bgColor);
+
+    /**
+     * @brief Set the target center for the text ink (window-absolute).
+     * The label box geometry is left unchanged; only the text moves.
+     *
+     * @param cx[in] Target x of the text ink center, in window coordinates.
+     * @param cy[in] Target y of the text ink center, in window coordinates.
+     */
+    void setTargetCenter(const int cx, const int cy);
+
 
     // Base class virtual functions
     void drawOn();

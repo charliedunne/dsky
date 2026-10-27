@@ -35,6 +35,14 @@
 #define LIVE_COLOR_B 0x88
 #define LIVE_COLOR_A 0xFF
 
+#define ALARM_YELLOW_COLOR_R 0xFF
+#define ALARM_YELLOW_COLOR_G 0xFF
+#define ALARM_YELLOW_COLOR_B 0x00
+#define ALARM_YELLOW_COLOR_A 0xBB
+
+
+
+
 // Default blinking Period [frames]
 #define DEFAULT_BLINKING_PERIOD 10
 

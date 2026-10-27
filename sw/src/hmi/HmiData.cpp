@@ -41,6 +41,7 @@ void HmiData::resetLeftLcdData()
     lLcdData_.lTemp = DRAW_OFF;
     lLcdData_.lKeyErr = DRAW_OFF;
     lLcdData_.lOpErr = DRAW_OFF;
+    lLcdData_.lShutdown = DRAW_OFF;
 
     // Clear the VERB 0 menu
     lLcdData_.lVerbList = DRAW_OFF;
@@ -303,6 +304,18 @@ void HmiData::lSetOpErr(DrawMode mode)
     mutex_.lock();
 
     lLcdData_.lOpErr = mode;
+
+    mutex_.unlock();
+}
+
+/**
+ * @brief Set the SHUTDOWN alarm label draw mode (VERB 99 countdown).
+ */
+void HmiData::lSetShutdown(DrawMode mode)
+{
+    mutex_.lock();
+
+    lLcdData_.lShutdown = mode;
 
     mutex_.unlock();
 }
