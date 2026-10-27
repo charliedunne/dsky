@@ -69,6 +69,13 @@ void HmiLogic::updateHmiData(HmiData &data)
     LogWarning << "@TODO Handle more than one event at one" << std::endl;
   }
 
+  /* Each key event must be processed exactly once per frame. The state
+   * handlers above (verbInput/nounInput) may start an action in the same
+   * frame; if the event were still queued when the MODE_RUN check below
+   * calls run(), it would look like a "key press while a cancellable
+   * action is running" and immediately cancel the just-started action */
+  keyEvents_.clear();
+
   if (status_() == MODE_RUN)
   {
     run(data);
@@ -264,6 +271,19 @@ void HmiLogic::run(HmiData &data)
     EventId_t eventKey = keyEvents_[0].getEvent();
 
     LogTrace << "Key detected" << std::endl;
+
+    /* A running cancellable action is aborted by ANY key press (incl. RSET).
+     * cancel() is non-blocking, unlike stop(), so the HMI loop never freezes */
+    Action &action = actions_(data);
+    if (action.isRunning() && action.cancellable())
+    {
+      LogTrace << "Key detected while cancellable action running, cancelling" << std::endl;
+      action.cancel();
+      data.resetRightLcdData();
+      data.resetLeftLcdData();
+      status_.transit(MODE_IDLE);
+      return;
+    }
 
     switch (eventKey)
     {

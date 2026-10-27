@@ -12,6 +12,7 @@
 #include "EnableKeypadLight.h"
 #include "DisableKeypadLight.h"
 #include "ActionVerbList.h"
+#include "SystemShutdown.h"
 
 // HMI
 #include "Hmi.h"
@@ -79,11 +80,13 @@ int main( int argc, char * argv[], char *envp[] ) {
   ActionClock a_Clock(data);
   EnableKeypadLight a_EnableKeypadLight(data);
   DisableKeypadLight a_DisableKeypadLight(data);
+  SystemShutdown a_SystemShutdown(data);
 
   /* Actions registration */
   logic.registerAction(a_Clock);
   logic.registerAction(a_EnableKeypadLight);
   logic.registerAction(a_DisableKeypadLight);
+  logic.registerAction(a_SystemShutdown);
 
   // VERB 0: list all implemented verb/noun combos on the left panel.
   // Registered last so its menu can describe every other action.

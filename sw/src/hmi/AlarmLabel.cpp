@@ -59,6 +59,16 @@ void AlarmLabel::drawLabel(const Color c)
     text.drawText(text_, textPosX, textPosY);
 }
 
+void AlarmLabel::setFgColor(const Color fgColor)
+{
+    fgColor_ = fgColor;
+}
+
+void AlarmLabel::setBgColor(const Color bgColor)
+{
+    bgColor_ = bgColor;
+}
+
 void AlarmLabel::drawOn()  
 {
     drawLabel(fgColor_);

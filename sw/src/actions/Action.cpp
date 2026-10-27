@@ -25,6 +25,13 @@ Action::Action(int verb, int noun, HmiData &data, ActionSchedule_e actionSchedul
 
 Action::~Action()
 {
+  /* Never destroy a joinable std::thread: that calls std::terminate.
+   * A finished thread joins instantly; while powering off the systemctl
+   * client exits quickly, well before the machine actually goes down */
+  if (thread_.joinable())
+  {
+    thread_.join();
+  }
 }
 
 void Action::setPeriod(int period)
@@ -130,4 +137,14 @@ bool Action::isRunning()
 bool Action::finished()
 {
   return finished_;
+}
+
+bool Action::cancellable() const
+{
+  return false;
+}
+
+void Action::cancel()
+{
+  /* Default action is not cancellable */
 }

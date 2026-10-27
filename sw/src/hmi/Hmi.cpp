@@ -65,6 +65,13 @@ void Hmi::wait() {
 
 void Hmi::render() {
 
+  // Pin the draw color before clearing: gfxPrimitives calls (boxColor, etc.)
+  // internally call SDL_SetRenderDrawColor and leave it set, so without this
+  // the clear would use whatever color the last element of the previous frame
+  // left behind. That leaked a blinking yellow into the window margins while
+  // the SHTDWN label was active.
+  SDL_SetRenderDrawColor(ren_, GHOST_COLOR_R, GHOST_COLOR_G, GHOST_COLOR_B, 255);
+
   // Clear the screen
   if (SDL_RenderClear(ren_) != 0) {
     LogError << "SDL_RenderClear" << std::endl;
@@ -87,6 +94,7 @@ void Hmi::update(HmiData &data) {
   leftLcd_->setTemp(data.getLeftLcdData().lTemp);
   leftLcd_->setKeyErr(data.getLeftLcdData().lKeyErr);
   leftLcd_->setOpErr(data.getLeftLcdData().lOpErr);
+  leftLcd_->setShutdown(data.getLeftLcdData().lShutdown);
 
   // VERB 0 menu
   leftLcd_->setVerbList(data.getLeftLcdData());

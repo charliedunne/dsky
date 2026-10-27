@@ -39,6 +39,21 @@ public:
 
     virtual ~AlarmLabel();
 
+    /**
+     * @brief Set the Foreground Color
+     * 
+     * @param fgColor[in] Foreground color.
+     */
+     void setFgColor(const Color fgColor);
+
+    /**
+     * @brief Set the Background Color
+     * 
+     * @param bgColor[in] Background color.
+     */
+     void setBgColor(const Color bgColor);
+
+
     // Base class virtual functions
     void drawOn();
     void drawOff();

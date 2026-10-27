@@ -27,7 +27,7 @@ private:
   AlarmLabel *keyErr = nullptr;
   AlarmLabel *spare1 = nullptr;
   AlarmLabel *opErr = nullptr;
-  AlarmLabel *spare2 = nullptr;
+  AlarmLabel *shutdown = nullptr;
 
   SDL_Texture *gridTxt_ = nullptr;
 
@@ -46,6 +46,7 @@ public:
   void setTemp(DrawMode);
   void setKeyErr(DrawMode);
   void setOpErr(DrawMode);
+  void setShutdown(DrawMode);
 
   /**
    * @brief Update the VERB 0 menu content from the left LCD data.

@@ -136,6 +136,21 @@ public:
    */
   bool finished();
 
+  /**
+   * @brief Check if this action can be cancelled by a key press while running.
+   *
+   * @return true If the action supports user cancellation (default: false)
+   */
+  virtual bool cancellable() const;
+
+  /**
+   * @brief Ask the action to abort itself without blocking the caller.
+   *
+   * @note Unlike stop(), this does not join the action thread, so it is safe
+   *       to call from the HMI loop. Only meaningful when cancellable().
+   */
+  virtual void cancel();
+
 protected:
   /**
    * @brief Define in derived classes the operation to do in the thread
