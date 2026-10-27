@@ -93,6 +93,19 @@ public:
     void drawText(std::string text, int x, int y, Color c, float scale = 1.0f);
 
     void estimateSize(std::string, int *w, int *h);
+
+    /**
+     * @brief Compute the height of the tallest glyph contained in a string
+     *
+     * Unlike estimateSize(), which always reports the font's nominal pixel
+     * height (driven by the tallest glyph in the whole font), this returns
+     * the actual maximum glyph height so callers can center text on its real
+     * ink extent.
+     *
+     * @param text[in] String to measure
+     * @return Height in pixels of the tallest glyph (0 if none found)
+     */
+    int maxGlyphHeight(std::string text);
 };
 
 #endif /* _FONT_H_ */

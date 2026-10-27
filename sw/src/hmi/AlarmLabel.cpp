@@ -48,11 +48,28 @@ void AlarmLabel::drawLabel(const Color c)
     /* Estimate the size of the text */
     text.estimateSize(text_, &textSizeW, &textSizeH);
 
-    /* Calculate the position of the text to be centered in box */
-    int centerX = x_ + w_/2;
-    int centerY = y_ + h_/2;
+    /* Calculate the position of the text to be centered on the target point.
+     * The target defaults to the box center when not set; the box geometry
+     * itself is left unchanged. */
+    int centerX = (targetCx_ >= 0) ? targetCx_ : x_ + w_/2;
+    int centerY = (targetCy_ >= 0) ? targetCy_ : y_ + h_/2;
+
+    /* Horizontal: drawText() advances by the raw glyph width, so the ink
+     * extent is [textPosX+1, textPosX+textSizeW-1] and its center is
+     * textPosX + textSizeW/2. */
     textPosX = centerX - textSizeW/2;
-    textPosY = centerY - textSizeH/2;
+
+    /* Vertical: all glyphs are drawn from the same top y (no baseline), so
+     * the ink extent is [textPosY+1, textPosY+maxGlyphH-1]. estimateSize()
+     * reports the font's nominal pixel height (driven by the tallest glyph
+     * in the whole font, e.g. 'Q'), which would offset shorter strings;
+     * center on the actual tallest glyph of this string instead. */
+    int textInkH = text.maxGlyphHeight(text_);
+    if (textInkH <= 0)
+    {
+        textInkH = textSizeH;
+    }
+    textPosY = centerY - textInkH/2;
 
     /* Draw the text */
     text.setColor(Color(0, 0, 0, 255));
@@ -67,6 +84,12 @@ void AlarmLabel::setFgColor(const Color fgColor)
 void AlarmLabel::setBgColor(const Color bgColor)
 {
     bgColor_ = bgColor;
+}
+
+void AlarmLabel::setTargetCenter(const int cx, const int cy)
+{
+    targetCx_ = cx;
+    targetCy_ = cy;
 }
 
 void AlarmLabel::drawOn()  

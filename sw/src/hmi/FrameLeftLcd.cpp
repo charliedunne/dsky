@@ -39,6 +39,16 @@ FrameLeftLcd::FrameLeftLcd(SDL_Renderer *r, int x, int y, int w, int h, Color bg
     shutdown = new AlarmLabel(r_, w_ / 2 + 1, 2 * (h_ / 2) / 3 + 2,
                             w_ / 2, (h_ / 2) / 3, std::string("SHTDWN"));
 
+    // Center the text ink on the measured grid-cell band centers
+    // (window-absolute). The yellow box geometry is left unchanged; only
+    // the text position moves.
+    uplinkAct->setTargetCenter(91, 49);
+    temp->setTargetCenter(248, 49);
+    keyErr->setTargetCenter(91, 123);
+    spare1->setTargetCenter(248, 123);
+    opErr->setTargetCenter(91, 202);
+    shutdown->setTargetCenter(248, 202);
+
     // Set the Alarm colors
     shutdown->setFgColor(Color(ALARM_YELLOW_COLOR_R, ALARM_YELLOW_COLOR_G, ALARM_YELLOW_COLOR_B, ALARM_YELLOW_COLOR_A));
 
