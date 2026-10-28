@@ -30,18 +30,31 @@
 #define SCREENSAVER_BACKLIGHT_FALLBACK 128
 
 /**
+ * @brief Device node of the DRM card driving the display panel.
+ */
+#define SCREENSAVER_DRM_CARD "/dev/dri/card0"
+
+/**
  * @brief Minimum interval between repeated backlight failure log messages
  *        [seconds], to keep the journal clean when the device is missing.
  */
 #define SCREENSAVER_LOG_INTERVAL 30
 
 /**
+ * @brief Forward declaration of libdrm's CRTC configuration structure; the
+ *        DRM headers are only needed in the implementation file.
+ */
+struct _drmModeCrtc;
+
+/**
  * @brief Turns the display off after a period of keypad inactivity.
  *
- * A background thread ticks about once per second and controls the panel
- * backlight through sysfs: turning the screen off writes 0 to the brightness
- * file, waking it restores the level captured before sleep. Any keypad
- * interaction resets the idle timer and immediately wakes the screen.
+ * A background thread ticks about once per second and turns the screen off
+ * by stopping CRTC scanout through libdrm (a true blank) and dropping the
+ * panel backlight to 0 via sysfs; waking restores the saved CRTC
+ * configuration and the brightness level captured before sleep. Any keypad
+ * interaction resets the idle timer and immediately wakes the screen. If no
+ * DRM device or active CRTC is available, only the backlight is controlled.
  */
 class ScreenSaver {
 
@@ -81,15 +94,52 @@ class ScreenSaver {
     int restoreBrightness_;
 
     /**
-     * @brief Timestamp of the last backlight failure log message, used to
-     *        throttle repeated errors. Guarded by screenMutex_.
+     * @brief Open file descriptor of the DRM device, -1 if unavailable.
+     *        Guarded by screenMutex_.
+     */
+    int drmFd_;
+
+    /**
+     * @brief File descriptor that holds DRM mastership on the card, used for
+     *        CRTC blanking and restore because those ioctls require
+     *        mastership; equals drmFd_ when our own fd is (or becomes) the
+     *        master, -1 if unknown. Guarded by screenMutex_.
+     */
+    int masterFd_;
+
+    /**
+     * @brief Saved CRTC configuration captured at startup (or lazily on the
+     *        first blank if the display was not configured yet), used to
+     *        restore scanout when waking the display; nullptr in
+     *        backlight-only mode. Guarded by screenMutex_.
+     */
+    struct _drmModeCrtc *crtcConfig_;
+
+    /**
+     * @brief Connector id attached to the saved CRTC, needed because this
+     *        libdrm version does not store connectors in drmModeCrtc.
+     *        Guarded by screenMutex_.
+     */
+    uint32_t crtcConnectorId_;
+
+    /**
+     * @brief True while the CRTC is blanked (scanout stopped). Guarded by
+     *        screenMutex_.
+     */
+    bool crtcBlanked_;
+
+    /**
+     * @brief Timestamp of the last failure log message, used to throttle
+     *        repeated errors. Guarded by screenMutex_.
      */
     std::chrono::steady_clock::time_point lastFailLog_;
 
     /**
-     * @brief Guards screenOn_, backlightPath_, restoreBrightness_ and
-     *        lastFailLog_ so the main thread and the tick thread never issue
-     *        redundant or racing sysfs writes
+     * @brief Guards screenOn_, backlightPath_, restoreBrightness_, drmFd_,
+     *        masterFd_, crtcConfig_, crtcConnectorId_, crtcBlanked_ and
+     *        lastFailLog_ so
+     *        the main thread and the tick thread never issue redundant or
+     *        racing sysfs or DRM operations
      */
     std::mutex screenMutex_;
 
@@ -146,24 +196,41 @@ class ScreenSaver {
     void run();
 
     /**
-     * @brief Turn the physical display on or off via the backlight sysfs.
+     * @brief Turn the physical display on or off.
      *
      * Turning off captures the current brightness (or falls back to a safe
-     * level) and writes 0; turning on restores the captured level. The cached
-     * state is only updated on success so a failed write is retried on the
-     * next tick.
+     * level), stops CRTC scanout when available for a true blank, and writes
+     * 0 to the backlight; turning on re-enables the saved CRTC configuration
+     * and restores the captured brightness. The cached state is only updated
+     * on success so a failed operation is retried on the next tick or
+     * interaction.
      *
      * @param[in] on true to turn the screen on, false to turn it off
      */
     void setScreen(bool on);
 
     /**
-     * @brief Log a backlight failure, throttled to one message per
+     * @brief Lazily discover the active CRTC configuration on first use.
+     *
+     * The display may not be configured yet when the constructor runs, so the
+     * initial discovery can fail and fall back to backlight-only mode. This
+     * reopens the DRM device if it was closed and retries the discovery; it is
+     * a no-op once a configuration has been captured. CRTC changes require DRM
+     * mastership, which on this system may be held by another fd of this
+     * process (e.g. SDL's); the holder is located by probing and cached in
+     * masterFd_.
+     *
+     * @return true if a CRTC configuration is available for blanking
+     */
+    bool ensureCrtcConfig();
+
+    /**
+     * @brief Log a screensaver failure, throttled to one message per
      *        SCREENSAVER_LOG_INTERVAL seconds.
      *
-     * @param[in] what short description of the failure
+     * @param[in] what full description of the failure
      */
-    void logBacklightFailure(const char *what);
+    void logFailure(const std::string &what);
 
 };
 
