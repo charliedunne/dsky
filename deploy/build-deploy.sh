@@ -34,6 +34,39 @@ SYSROOT=$SW/pi-sysroot
 CROSS_CXX=${DSKY_CROSS_CXX:-$HOME/bullseye-cross/usr/bin/aarch64-linux-gnu-g++-10}
 PI_HOST=${DSKY_PI_HOST:-pi@dsky.local}
 
+# Print usage/help for all supported options and exit.
+usage() {
+  cat <<'EOF'
+Usage: ./deploy/build-deploy.sh [options]
+
+  (no options = build + deploy both binaries to the Pi)
+
+Options:
+  --app        only the dsky HMI app
+  --daemon     only the dskyKeyInt keypad daemon
+  --local      build natively with the host compilers (x86_64): dsky app into
+               sw/build-app, stub keypad into sw/stub/keypad/build; Pi
+               deployment is skipped automatically
+  --stub       (with --local) only the stub keypad
+  --resources  also rsync sw/resources/ to /home/pi/run/resources/
+  --no-deploy  build only; do not touch the Pi
+  -h, --help   show this help and exit
+
+Examples:
+  ./deploy/build-deploy.sh                 cross-build + deploy app & daemon
+  ./deploy/build-deploy.sh --app           cross-build + deploy app only
+  ./deploy/build-deploy.sh --local         native build of app + stub keypad
+  ./deploy/build-deploy.sh --local --stub  native build of stub keypad only
+
+Constraints:
+  --stub requires --local; --daemon and --resources cannot be combined with
+  --local; --app and --stub are mutually exclusive.
+
+Env overrides: DSKY_PI_HOST (default pi@dsky.local), DSKY_CROSS_CXX
+(default ~/bullseye-cross/usr/bin/aarch64-linux-gnu-g++-10).
+EOF
+}
+
 LOCAL_MODE=0
 APP_FLAG=""
 DAEMON_FLAG=""
@@ -45,6 +78,7 @@ SYNC_RESOURCES=0
 DEPLOY=1
 for arg in "$@"; do
   case "$arg" in
+    -h|--help) usage; exit 0 ;;
     --app)       APP_FLAG=1 ;;
     --daemon)    DAEMON_FLAG=1 ;;
     --stub)      STUB_FLAG=1 ;;
