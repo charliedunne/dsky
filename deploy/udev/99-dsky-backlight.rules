@@ -1,0 +1,5 @@
+# Grant user pi ownership of the LCD backlight brightness sysfs file so the
+# dsky HMI (running as pi) can turn the screen off/on for its screensaver.
+# The panel is an i2c client on bus 10 at address 0x45; that kernel name is
+# stable across reboots.
+SUBSYSTEM=="backlight", KERNEL=="10-0045", OWNER="pi"

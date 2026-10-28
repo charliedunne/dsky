@@ -40,6 +40,9 @@ target_sources(dsky PRIVATE
   src/actions/DisableKeypadLight.cpp
   src/actions/ActionVerbList.cpp
   src/actions/SystemShutdown.cpp
+  src/actions/ScreenSaver.cpp
+  src/actions/EnableScreenSaver.cpp
+  src/actions/DisableScreenSaver.cpp
   src/drivers/dskyKeyInt/MsgQueue.cpp
 )
 
