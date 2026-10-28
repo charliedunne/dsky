@@ -6,9 +6,10 @@
 #include <ctime>
 
 // Logging
+#include "ListOfActions.h"
 #include "Logger.h"
 
-ActionClock::ActionClock(HmiData &data) : Action(1, -1, data, ACTION_PERIODIC, "CLOCK")
+ActionClock::ActionClock(HmiData &data) : Action(CLOCK_VERB,  CLOCK_NOUN, data, ACTION_PERIODIC, "CLOCK")
 {
   setPeriod(1000);
 }

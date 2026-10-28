@@ -1,6 +1,7 @@
 #include "DisableKeypadLight.h"
 
 // Configuration
+#include "ListOfActions.h"
 #include "config.h"
 
 // Message Queue
@@ -10,7 +11,7 @@
 // Logging
 #include "Logger.h"
 
-DisableKeypadLight::DisableKeypadLight(HmiData &data) : Action(2, 0, data, ACTION_SINGLE, "KEYPAD OFF")
+DisableKeypadLight::DisableKeypadLight(HmiData &data) : Action(DISABLE_KEYPAD_VERB, DISABLE_KEYPAD_NOUN, data, ACTION_SINGLE, "KEYPAD OFF")
 {
 }
 

@@ -1,6 +1,7 @@
 #include "SystemShutdown.h"
 
 // Logging
+#include "ListOfActions.h"
 #include "Logger.h"
 
 // STL
@@ -9,7 +10,7 @@
 #include <thread>
 #include <vector>
 
-SystemShutdown::SystemShutdown(HmiData &data) : Action(99, -1, data, ACTION_SINGLE, "SHUTDOWN")
+SystemShutdown::SystemShutdown(HmiData &data) : Action(SHUTDOWN_VERB, SHUTDOWN_NOUN, data, ACTION_SINGLE, "SHUTDOWN")
 {
   cancel_ = false;
 }
