@@ -8,6 +8,14 @@
 #include <vector>
 #include <string>
 
+/**
+ * @brief Command registry/dispatcher mapping (verb, noun) to a registered Action.
+ *
+ * @note Intentionally NOT an Action subclass: this container is never executed
+ *       itself, it only performs cheap stateless lookups for the HMI loop, so
+ *       it has no verb/noun of its own and no thread machinery. To expose the
+ *       list as a menu item, use ActionVerbList (the Action bridge).
+ */
 class ListOfActions {
 
     private:

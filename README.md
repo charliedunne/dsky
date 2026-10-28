@@ -81,6 +81,18 @@ sudo touch /var/local/dskykeyint /var/local/dskycmd
 
 The app prints a hint if either file is missing.
 
+Instead of running the cmake commands by hand, `deploy/build-deploy.sh` can do
+the native build for you (it never touches the Pi in local mode):
+
+```sh
+./deploy/build-deploy.sh --local            # dsky app + stub keypad
+./deploy/build-deploy.sh --local --app      # dsky app only
+./deploy/build-deploy.sh --local --stub     # stub keypad only
+```
+
+The stub keypad (`sw/stub/keypad`) emulates the real keypad so the app can be
+tested on a desktop machine.
+
 Notes:
 
 - On x86_64 the window opens normally; on ARM targets CMake switches to
