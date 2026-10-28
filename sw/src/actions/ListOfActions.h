@@ -8,6 +8,29 @@
 #include <vector>
 #include <string>
 
+// List of VERBS/NOUNS
+
+#define ACTION_LIST_VERB 0
+#define ACTION_LIST_NOUN -1
+
+#define CLOCK_VERB 1
+#define CLOCK_NOUN -1
+
+#define ENABLE_KEYPAD_VERB 2
+#define ENABLE_KEYPAD_NOUN 1
+
+#define DISABLE_KEYPAD_VERB 2
+#define DISABLE_KEYPAD_NOUN 0
+
+/*
+ * Add here more Actions
+ */
+
+#define SHUTDOWN_VERB 99
+#define SHUTDOWN_NOUN -1
+
+
+
 /**
  * @brief Command registry/dispatcher mapping (verb, noun) to a registered Action.
  *

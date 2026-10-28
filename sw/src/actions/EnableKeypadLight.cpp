@@ -1,6 +1,7 @@
 #include "EnableKeypadLight.h"
 
 // Configuration
+#include "ListOfActions.h"
 #include "config.h"
 
 // Message Queue
@@ -10,7 +11,7 @@
 // Logging
 #include "Logger.h"
 
-EnableKeypadLight::EnableKeypadLight(HmiData &data) : Action(2, 1, data, ACTION_SINGLE, "KEYPAD ON")
+EnableKeypadLight::EnableKeypadLight(HmiData &data) : Action(ENABLE_KEYPAD_VERB, ENABLE_KEYPAD_NOUN, data, ACTION_SINGLE, "KEYPAD ON")
 {
 }
 
