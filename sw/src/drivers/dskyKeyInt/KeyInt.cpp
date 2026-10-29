@@ -6,6 +6,7 @@
 
 // STL
 #include <chrono>
+#include <exception>
 #include <stdexcept>
 #include <iostream>
 #include <unordered_set>
@@ -115,6 +116,19 @@ KeyInt::KeyInt(const int iicBus,
   // Initialize the PCF8575 controller
   leftKbd_ = new Pcf8575(iicBus, iicAddrLeft);
   rightKbd_ = new Pcf8575(iicBus, iicAddrRigth);
+
+  // Restore both output latches to all-inputs (0xFFFF). Nothing else ever
+  // writes the expanders, so without this a latch corrupted by an older
+  // driver version (1-byte register writes latched on clone parts) would
+  // persist across reboots and blind key sensing. A full 2-byte write of
+  // 0xFFFF puts every pin into high-impedance input mode and self-heals.
+  try {
+    leftKbd_->writeLatch(0xFFFF);
+    rightKbd_->writeLatch(0xFFFF);
+  } catch (const std::exception &e) {
+    LogWarning << "Fail restoring PCF8575 output latch: " << e.what()
+               << std::endl;
+  }
 
   // Set the interruption GPIO configuration
   gpioSetMode(gpioInt_, PI_INPUT);
