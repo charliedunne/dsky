@@ -270,4 +270,47 @@ TEST(set_get_roundtrip) {
   CHECK_EQ(gl.lVerbListCount, 1);
 }
 
+TEST(r1_string_setter) {
+  HmiData d;
+
+  // String set/get round-trip; integer value is cleared.
+  d.rSetStrR1("HELLO", DRAW_ON);
+  const RightLcdData &r = d.getRightLcdData();
+  CHECK(strcmp(r.sR1, "HELLO") == 0);
+  CHECK_EQ(r.nR1Mode, DRAW_ON);
+  CHECK_EQ(r.nR1, UNASIGNED);
+
+  // String after int: last-set-wins, int value cleared.
+  d.rSetnR1(42, DRAW_BLINK);
+  d.rSetStrR1("AB", DRAW_ON);
+  const RightLcdData &r2 = d.getRightLcdData();
+  CHECK(strcmp(r2.sR1, "AB") == 0);
+  CHECK_EQ(r2.nR1, UNASIGNED);
+
+  // Int after string: last-set-wins, string cleared.
+  d.rSetnR1(7, DRAW_BLINK);
+  const RightLcdData &r3 = d.getRightLcdData();
+  CHECK_EQ(r3.sR1[0], '\0');
+  CHECK_EQ(r3.nR1, 7);
+
+  // Truncation at 5 chars.
+  d.rSetStrR1("123456789", DRAW_ON);
+  const RightLcdData &r4 = d.getRightLcdData();
+  CHECK(strcmp(r4.sR1, "12345") == 0);
+  CHECK_EQ(strlen(r4.sR1), 5u);
+
+  // Empty string leaves sR1 empty (renders as int path / DRAW_OFF).
+  d.rSetStrR1("", DRAW_ON);
+  const RightLcdData &r5 = d.getRightLcdData();
+  CHECK_EQ(r5.sR1[0], '\0');
+
+  // Reset clears both string and integer value.
+  d.rSetStrR1("XY", DRAW_ON);
+  d.resetRightLcdData();
+  const RightLcdData &r6 = d.getRightLcdData();
+  CHECK_EQ(r6.sR1[0], '\0');
+  CHECK_EQ(r6.nR1, UNASIGNED);
+  CHECK_EQ(r6.nR1Mode, DRAW_OFF);
+}
+
 TESTS_MAIN;

@@ -1,6 +1,7 @@
 #include "ReadVar.h"
 
 // Configuration
+#include "HmiData.h"
 #include "ListOfActions.h"
 
 // Logging
@@ -19,6 +20,7 @@ void ReadVar::operation()
 
   if (store_.get(getNoun(), value))
   {
+    hmiData_.rSetStrR1("d", DRAW_BLINK);
     hmiData_.rSetnR2(value, DRAW_ON);
     hmiData_.rSetR2Label(DRAW_ON);
   }

@@ -2,6 +2,8 @@
 #define FRAMERIGHTLCD_H
 
 
+#include <string>
+
 #include "SDL2/SDL.h"
 #include "Frame.h"
 #include "Color.h"
@@ -61,6 +63,12 @@ class FrameRightLcd : public Frame {
   void setVerb(const int value, DrawMode const mode = DRAW_ON);
   void setNoun(const int value, DrawMode const mode = DRAW_ON);
   void setR1(const int value, DrawMode const mode = DRAW_ON);
+
+  /**
+   * @brief Set the R1 field to a string of letters + digits (max 5 chars).
+   */
+  void setR1(const std::string &value, DrawMode const mode = DRAW_ON);
+
   void setR2(const int value, DrawMode const mode = DRAW_ON);
   void setR3(const int value, DrawMode const mode = DRAW_ON);
 
