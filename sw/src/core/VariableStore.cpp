@@ -58,7 +58,11 @@ bool VariableStore::set(int noun, int value)
     }
 
     var.value = value;
-    save();
+
+    // A persistence failure must be visible: the in-memory value and hardware
+    // side effect still take effect, but the change will NOT survive a reboot.
+    if (!save())
+        LogError << "VariableStore: persistence failed for " << var.name << ", value will not survive reboot" << std::endl;
 
     if (var.apply)
         var.apply(value);
@@ -85,14 +89,14 @@ void VariableStore::applyAll()
     }
 }
 
-void VariableStore::save()
+bool VariableStore::save()
 {
     std::string tmp = filePath_ + ".tmp";
     std::ofstream out(tmp);
     if (!out.is_open())
     {
-        LogWarning << "VariableStore: cannot open " << tmp << " for writing" << std::endl;
-        return;
+        LogError << "VariableStore: cannot open " << tmp << " for writing" << std::endl;
+        return false;
     }
 
     out << "{\n";
@@ -109,15 +113,18 @@ void VariableStore::save()
 
     if (out.fail())
     {
-        LogWarning << "VariableStore: write failed for " << tmp << std::endl;
-        return;
+        LogError << "VariableStore: write failed for " << tmp << std::endl;
+        return false;
     }
 
     // Atomic replace so a crash mid-write cannot corrupt the file
     if (::rename(tmp.c_str(), filePath_.c_str()) != 0)
     {
-        LogWarning << "VariableStore: rename to " << filePath_ << " failed" << std::endl;
+        LogError << "VariableStore: rename to " << filePath_ << " failed" << std::endl;
+        return false;
     }
+
+    return true;
 }
 
 void VariableStore::load()

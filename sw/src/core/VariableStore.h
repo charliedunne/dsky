@@ -66,8 +66,9 @@ public:
 
     /**
      * @brief Persist all current values to the JSON file (write-through).
+     * @return true on success, false if the file could not be written or renamed
      */
-    void save();
+    bool save();
 
     /**
      * @brief Get the current value of a variable.
