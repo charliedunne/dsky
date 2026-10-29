@@ -38,16 +38,17 @@ static const uint32_t KEY_POLL_INTERVAL_MS = 50;
  * @brief Debounce hold time in milliseconds. A port bit is accepted into the
  * debounced state only after it has held its new level for this long without
  * interrupting. The purpose is to filter mechanical/electrical contact bounce
- * (typically < ~20 ms); a 30 ms hold comfortably exceeds that while keeping
- * worst-case detection latency low (~80 ms with the 50 ms poll tick) so quick
- * taps are not swallowed. Longer-hold filtering of marginal-pin phantoms is
+ * (typically < ~20 ms); a 20 ms hold sits right at that upper bound, which is
+ * enough to reject bounce while keeping worst-case detection latency as low as
+ * possible (~70 ms with the 50 ms poll tick) so even quick taps are not
+ * swallowed. Longer-hold filtering of marginal-pin phantoms is
  * deliberately NOT done here: their levels are sustained and would pass any
  * short hold test — they are stopped by release-confirmed hold-duration
  * gating (KEY_MIN_PRESS_MS / KEY_MAX_HOLD_MS) in handlePortTransitions(),
  * and the main phantom source (latch corruption from SMBus writes) has been
  * eliminated by the pure-read PCF8575 driver.
  */
-static const uint32_t KEY_DEBOUNCE_MS = 30;
+static const uint32_t KEY_DEBOUNCE_MS = 20;
 
 /**
  * @brief Minimum press duration in milliseconds for a release-confirmed tap.
