@@ -16,17 +16,8 @@
 #define CLOCK_VERB 1
 #define CLOCK_NOUN -1
 
-#define ENABLE_KEYPAD_VERB 2
-#define ENABLE_KEYPAD_NOUN 1
-
-#define DISABLE_KEYPAD_VERB 2
-#define DISABLE_KEYPAD_NOUN 0
-
-#define ENABLE_SCREENSAVER_VERB 3
-#define ENABLE_SCREENSAVER_NOUN 1
-
-#define DISABLE_SCREENSAVER_VERB 3
-#define DISABLE_SCREENSAVER_NOUN 0
+/* VERBS 2 and 3 were removed: keypad light and screensaver are now
+ * controlled through the variable read/write verbs (READ_VAR/WRITE_VAR). */
 
 #define READ_VAR_VERB 8
 #define WRITE_VAR_VERB 9

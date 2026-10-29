@@ -9,11 +9,7 @@
 // Actions
 #include "Action.h"
 #include "ActionClock.h"
-#include "EnableKeypadLight.h"
-#include "DisableKeypadLight.h"
 #include "ScreenSaver.h"
-#include "EnableScreenSaver.h"
-#include "DisableScreenSaver.h"
 #include "ActionVerbList.h"
 #include "SystemShutdown.h"
 #include "ReadVar.h"
@@ -115,10 +111,6 @@ int main( int argc, char * argv[], char *envp[] ) {
 
   /* Actions */
   ActionClock a_Clock(data);
-  EnableKeypadLight a_EnableKeypadLight(store, data);
-  DisableKeypadLight a_DisableKeypadLight(store, data);
-  EnableScreenSaver a_EnableScreenSaver(store, data);
-  DisableScreenSaver a_DisableScreenSaver(store, data);
   SystemShutdown a_SystemShutdown(data);
   ReadVar a_ReadKeyLight(store, VAR_NOUN_KEYPAD_LIGHT, data);
   WriteVar a_WriteKeyLight(store, VAR_NOUN_KEYPAD_LIGHT, data);
@@ -127,10 +119,6 @@ int main( int argc, char * argv[], char *envp[] ) {
 
   /* Actions registration */
   logic.registerAction(a_Clock);
-  logic.registerAction(a_EnableKeypadLight);
-  logic.registerAction(a_DisableKeypadLight);
-  logic.registerAction(a_EnableScreenSaver);
-  logic.registerAction(a_DisableScreenSaver);
   logic.registerAction(a_SystemShutdown);
   logic.registerAction(a_ReadKeyLight);
   logic.registerAction(a_WriteKeyLight);
