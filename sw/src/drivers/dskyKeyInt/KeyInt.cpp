@@ -22,12 +22,12 @@ int KeyInt::gpioInt_ = 0;
 Pcf8575 *KeyInt::leftKbd_ = nullptr;
 Pcf8575 *KeyInt::rightKbd_ = nullptr;
 MsgQueue *KeyInt::outMsgQueue_ = nullptr;
-int KeyInt::lastLeft_ = 0xFFFF;
-int KeyInt::lastRight_ = 0xFFFF;
 int KeyInt::debLeft_ = 0xFFFF;
 int KeyInt::debRight_ = 0xFFFF;
 uint32_t KeyInt::leftDebounceMs_[16] = {0};
 uint32_t KeyInt::rightDebounceMs_[16] = {0};
+uint32_t KeyInt::leftPressMs_[16] = {0};
+uint32_t KeyInt::rightPressMs_[16] = {0};
 bool KeyInt::seeded_ = false;
 std::mutex KeyInt::stateMutex_;
 
@@ -42,11 +42,27 @@ static const uint32_t KEY_POLL_INTERVAL_MS = 50;
  * worst-case detection latency low (~80 ms with the 50 ms poll tick) so quick
  * taps are not swallowed. Longer-hold filtering of marginal-pin phantoms is
  * deliberately NOT done here: their levels are sustained and would pass any
- * short hold test — they are stopped by the VALID_KEY_IDS whitelist instead,
+ * short hold test — they are stopped by release-confirmed hold-duration
+ * gating (KEY_MIN_PRESS_MS / KEY_MAX_HOLD_MS) in handlePortTransitions(),
  * and the main phantom source (latch corruption from SMBus writes) has been
  * eliminated by the pure-read PCF8575 driver.
  */
 static const uint32_t KEY_DEBOUNCE_MS = 30;
+
+/**
+ * @brief Minimum press duration in milliseconds for a release-confirmed tap.
+ * A real key press must hold its line low at least this long (after debounce)
+ * to be emitted on release; shorter transitions are treated as noise.
+ */
+static const uint32_t KEY_MIN_PRESS_MS = 20;
+
+/**
+ * @brief Maximum press duration in milliseconds for a release-confirmed tap.
+ * A human operator never holds a key this long; a marginal pin that stays
+ * low for seconds (sustained interference) exceeds it, so its "release" is
+ * suppressed instead of cascading into phantom events.
+ */
+static const uint32_t KEY_MAX_HOLD_MS = 1000;
 
 /**
  * @brief Set of composites that map to a real key (EventId_t, minus
@@ -216,54 +232,106 @@ void KeyInt::processState(int leftData, int rightData)
 
   if (!seeded_)
   {
-    /* Seed the debounced state and the last-emitted state from the first
-     * successful read, with all per-bit timers cleared. No startup emit:
-     * whatever the idle level is (including stuck marginal pins) becomes
-     * the reference, so it can never produce a spurious event. */
+    /* Seed the debounced state from the first successful read, with all
+     * per-bit timers cleared and no press-start timestamps. No startup
+     * emit: whatever the idle level is (including stuck marginal pins)
+     * becomes the reference, so it can never produce a spurious event —
+     * a later release of a pin that was already down at seed has no
+     * recorded press start and is skipped. */
     debLeft_ = leftData;
     debRight_ = rightData;
-    lastLeft_ = leftData;
-    lastRight_ = rightData;
     for (int bit = 0; bit < 16; ++bit)
     {
       leftDebounceMs_[bit] = 0;
       rightDebounceMs_[bit] = 0;
+      leftPressMs_[bit] = 0;
+      rightPressMs_[bit] = 0;
     }
     seeded_ = true;
     return;
   }
 
+  /* Capture the previous debounced levels before advancing. Transitions are
+   * detected on the debounced state itself, so the INT edge path and the
+   * poll tick path see identical transitions and can never double-emit. */
+  const int prevLeft = debLeft_;
+  const int prevRight = debRight_;
+
   debouncePort(leftData, debLeft_, leftDebounceMs_, now);
   debouncePort(rightData, debRight_, rightDebounceMs_, now);
 
-  // Only emit on a debounced state change (dedup between INT edge and poll
-  // ticks)
-  if ((debLeft_ == lastLeft_) && (debRight_ == lastRight_))
+  handlePortTransitions(prevLeft, debLeft_, leftPressMs_, true, now);
+  handlePortTransitions(prevRight, debRight_, rightPressMs_, false, now);
+}
+
+void KeyInt::handlePortTransitions(int prevPort, int curPort,
+                                   uint32_t pressMs[16], bool isLeft,
+                                   uint32_t now)
+{
+  for (int bit = 0; bit < 16; ++bit)
   {
-    return;
+    const bool prevLevel = (prevPort & (1 << bit)) != 0;
+    const bool curLevel = (curPort & (1 << bit)) != 0;
+
+    if (prevLevel == curLevel)
+    {
+      continue; // No transition on this bit
+    }
+
+    if (!curLevel)
+    {
+      /* idle -> pressed: a key press clears the port bit. Record when the
+       * debounced level went to pressed so the release can be confirmed by
+       * its hold duration. */
+      pressMs[bit] = now;
+      continue;
+    }
+
+    /* pressed -> idle (release). Confirm the press before emitting. */
+    const uint32_t start = pressMs[bit];
+    pressMs[bit] = 0;
+
+    if (start == 0)
+    {
+      /* The bit was already down at seed (stuck marginal pin): no tracked
+       * press, so no event. */
+      continue;
+    }
+
+    const uint32_t duration = now - start; // wraps correctly mod 2^32
+    if ((duration < KEY_MIN_PRESS_MS) || (duration > KEY_MAX_HOLD_MS))
+    {
+      /* Too short: noise. Too long: a sustained marginal-pin phantom whose
+       * level is settling, not a human tap — suppress it. */
+      LogDebug << "Suppressed key release: bit " << std::dec << bit
+               << " held " << duration << " ms" << std::endl;
+      continue;
+    }
+
+    /* Reconstruct the pre-release composite: this bit still cleared, all
+     * other bits at their current debounced levels. Cast to unsigned before
+     * shifting: a signed shift into the sign bit is undefined behavior. */
+    const int preReleasePort = curPort & ~(1 << bit);
+    const uint32_t keyId = isLeft
+        ? (static_cast<uint32_t>(preReleasePort) << 16 |
+           static_cast<uint32_t>(debRight_))
+        : (static_cast<uint32_t>(debLeft_) << 16 |
+           static_cast<uint32_t>(preReleasePort));
+
+    /* Whitelist: drop composites that do not map to a real key. */
+    if (VALID_KEY_IDS.find(keyId) == VALID_KEY_IDS.end())
+    {
+      LogDebug << "Filtered non-key composite: 0x" << std::hex << keyId
+               << std::endl;
+      continue;
+    }
+
+    sendKey(keyId);
   }
+}
 
-  lastLeft_ = debLeft_;
-  lastRight_ = debRight_;
-
-  /* Compose the composite key id once: left port in the high word, right
-   * port in the low word. Cast to unsigned before shifting: a signed shift
-   * into the sign bit is undefined behavior (debLeft_ can have bit 15 set). */
-  const uint32_t keyId =
-      static_cast<uint32_t>(debLeft_) << 16 | static_cast<uint32_t>(debRight_);
-
-  /* Whitelist: drop composites that do not map to a real key. Phantom
-   * interference levels settle slowly and pass the debounce stability test,
-   * so without this filter they cascade into an emit storm. lastLeft_/
-   * lastRight_ are already updated above, so later transitions from a
-   * filtered state are still detected and re-evaluated. */
-  if (VALID_KEY_IDS.find(keyId) == VALID_KEY_IDS.end())
-  {
-    LogDebug << "Filtered non-key composite: 0x" << std::hex << keyId
-             << std::endl;
-    return;
-  }
-
+void KeyInt::sendKey(uint32_t keyId)
+{
   /* Compose message to send */
   KeyMsg_t msg;
 
