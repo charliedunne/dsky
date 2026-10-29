@@ -127,6 +127,7 @@ build_daemon() {
   echo "==> Building dskyKeyInt (cross)..."
   ( cd "$DRIVER" && "$CROSS_CXX" -std=c++17 -D_REENTRANT -O2 \
       -I. -Ibuild \
+      -I../../core \
       -I../../../build-pi/include \
       -I../../../3rdparty/simple-cpp-logger/include \
       -D LOGGER_MAX_LOG_LEVEL_PRINTED=7 -D LOGGER_PREFIX_LEVEL=2 \

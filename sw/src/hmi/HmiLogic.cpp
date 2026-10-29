@@ -29,8 +29,16 @@ void HmiLogic::parseKeyEvents(std::vector<Event> events)
 
 void HmiLogic::updateHmiData(HmiData &data)
 {
-  if (keyEvents_.size() == 1)
+  /* Process each queued key event sequentially. The state handlers read
+   * keyEvents_[0], so the batch is reduced to one event per iteration. An
+   * event may transit the status machine (e.g. start an action), in which
+   * case later events in the same batch are dispatched against the new
+   * state, exactly as if they had arrived on a later frame. */
+  const std::vector<Event> pending = keyEvents_;
+  for (size_t i = 0; i < pending.size(); ++i)
   {
+    keyEvents_.assign(1, pending[i]);
+
     switch (status_())
     {
 
@@ -58,15 +66,6 @@ void HmiLogic::updateHmiData(HmiData &data)
       LogError << "Unknown Status Machine" << std::endl;
       break;
     }
-  }
-  else if (keyEvents_.size() > 1)
-  {
-
-    /**
-     * @todo What to do for multiple events at once
-     */
-
-    LogWarning << "@TODO Handle more than one event at one" << std::endl;
   }
 
   /* Each key event must be processed exactly once per frame. The state

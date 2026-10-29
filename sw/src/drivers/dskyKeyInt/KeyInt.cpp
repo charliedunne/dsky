@@ -1,9 +1,14 @@
 // Provided interface
 #include "KeyInt.h"
 
+// Core (EventId_t: the set of valid keypad composites)
+#include "Event.h"
+
 // STL
+#include <chrono>
 #include <stdexcept>
 #include <iostream>
+#include <unordered_set>
 
 // Configuration
 #include "config.h"
@@ -18,10 +23,87 @@ Pcf8575 *KeyInt::rightKbd_ = nullptr;
 MsgQueue *KeyInt::outMsgQueue_ = nullptr;
 int KeyInt::lastLeft_ = 0xFFFF;
 int KeyInt::lastRight_ = 0xFFFF;
+int KeyInt::debLeft_ = 0xFFFF;
+int KeyInt::debRight_ = 0xFFFF;
+uint32_t KeyInt::leftDebounceMs_[16] = {0};
+uint32_t KeyInt::rightDebounceMs_[16] = {0};
+bool KeyInt::seeded_ = false;
 std::mutex KeyInt::stateMutex_;
 
 /** @brief Polling fallback period in milliseconds (50 ms). */
 static const uint32_t KEY_POLL_INTERVAL_MS = 50;
+
+/**
+ * @brief Debounce hold time in milliseconds. A port bit is accepted into the
+ * debounced state only after it has held its new level for this long without
+ * interrupting. Real key presses are held well above this (keypad auto-repeat
+ * and human press duration), while marginal-pin chatter never stabilizes, so
+ * chattering bits can never be accepted.
+ */
+static const uint32_t KEY_DEBOUNCE_MS = 100;
+
+/**
+ * @brief Set of composites that map to a real key (EventId_t, minus
+ * E_NO_EVENT which is the no-key-pressed idle state).
+ *
+ * Debounce alone cannot stop phantom events from marginal pins: their
+ * levels are sustained and settle one bit at a time over seconds, so each
+ * flip passes the stability test and cascades into an emit storm. Only
+ * composites that HmiLogic can act on are useful, so anything else is
+ * dropped here before it reaches the message queue.
+ */
+static const std::unordered_set<uint32_t> VALID_KEY_IDS = {
+    (uint32_t)E_KEY_0,      (uint32_t)E_KEY_1,     (uint32_t)E_KEY_2,
+    (uint32_t)E_KEY_3,      (uint32_t)E_KEY_4,     (uint32_t)E_KEY_5,
+    (uint32_t)E_KEY_6,      (uint32_t)E_KEY_7,     (uint32_t)E_KEY_8,
+    (uint32_t)E_KEY_9,      (uint32_t)E_KEY_PLUS,  (uint32_t)E_KEY_MINUS,
+    (uint32_t)E_KEY_VERB,   (uint32_t)E_KEY_NOUN,  (uint32_t)E_KEY_CLR,
+    (uint32_t)E_KEY_KEYREL, (uint32_t)E_KEY_ENTR,  (uint32_t)E_KEY_RSET,
+    (uint32_t)E_KEY_PRO};
+
+/**
+ * @brief Advance the per-bit debounce state for one 16-bit port.
+ *
+ * For each bit: if the raw level equals the currently accepted level the
+ * pending timer is cleared (the bit is stable again). Otherwise a timer is
+ * started on the first sighting and, once the bit has held the new level for
+ * KEY_DEBOUNCE_MS continuously, the accepted state flips.
+ *
+ * @param raw [in] Raw 16-bit port reading
+ * @param accepted [in,out] Debounced (accepted) port state
+ * @param pendingMs [in,out] Per-bit timer: 0 = stable, else steady_clock ms
+ * timestamp of the first sighting of the new level
+ * @param now [in] Current steady_clock time in milliseconds
+ */
+static void debouncePort(int raw, int &accepted, uint32_t pendingMs[16],
+                         uint32_t now)
+{
+  for (int bit = 0; bit < 16; ++bit)
+  {
+    const bool rawLevel = (raw & (1 << bit)) != 0;
+    const bool accLevel = (accepted & (1 << bit)) != 0;
+
+    if (rawLevel == accLevel)
+    {
+      // Raw matches the accepted level: bit is stable again
+      pendingMs[bit] = 0;
+      continue;
+    }
+
+    if (pendingMs[bit] == 0)
+    {
+      // First sighting of the new level: start the timer
+      pendingMs[bit] = now;
+    }
+    else if ((now - pendingMs[bit]) >= KEY_DEBOUNCE_MS)
+    {
+      // The bit has held the new level long enough: accept it.
+      // (unsigned subtraction wraps correctly mod 2^32 for monotonic clocks)
+      accepted = rawLevel ? (accepted | (1 << bit)) : (accepted & ~(1 << bit));
+      pendingMs[bit] = 0;
+    }
+  }
+}
 
 KeyInt::KeyInt(const int iicBus,
                const int iicAddrLeft, const int iicAddrRigth,
@@ -104,36 +186,74 @@ void KeyInt::pollHandler(void)
 
 void KeyInt::processState(int leftData, int rightData)
 {
-  // Serialize the dedup check and the emit path (INT alert thread and poll
-  // timer thread both reach here)
+  // Serialize the debounce state and the emit path (INT alert thread and
+  // poll timer thread both reach here)
   std::lock_guard<std::mutex> lock(stateMutex_);
 
-  // Only emit on a state change (dedup between INT edge and poll ticks)
-  if ((leftData == lastLeft_) && (rightData == lastRight_))
+  const uint32_t now = static_cast<uint32_t>(
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::steady_clock::now().time_since_epoch())
+          .count());
+
+  if (!seeded_)
+  {
+    /* Seed the debounced state and the last-emitted state from the first
+     * successful read, with all per-bit timers cleared. No startup emit:
+     * whatever the idle level is (including stuck marginal pins) becomes
+     * the reference, so it can never produce a spurious event. */
+    debLeft_ = leftData;
+    debRight_ = rightData;
+    lastLeft_ = leftData;
+    lastRight_ = rightData;
+    for (int bit = 0; bit < 16; ++bit)
+    {
+      leftDebounceMs_[bit] = 0;
+      rightDebounceMs_[bit] = 0;
+    }
+    seeded_ = true;
+    return;
+  }
+
+  debouncePort(leftData, debLeft_, leftDebounceMs_, now);
+  debouncePort(rightData, debRight_, rightDebounceMs_, now);
+
+  // Only emit on a debounced state change (dedup between INT edge and poll
+  // ticks)
+  if ((debLeft_ == lastLeft_) && (debRight_ == lastRight_))
   {
     return;
   }
 
-  lastLeft_ = leftData;
-  lastRight_ = rightData;
+  lastLeft_ = debLeft_;
+  lastRight_ = debRight_;
 
-  // Only process data when data is available
-  if ((leftData != 0xFFFF) || (rightData != 0xFFFF))
+  /* Compose the composite key id once: left port in the high word, right
+   * port in the low word. Cast to unsigned before shifting: a signed shift
+   * into the sign bit is undefined behavior (debLeft_ can have bit 15 set). */
+  const uint32_t keyId =
+      static_cast<uint32_t>(debLeft_) << 16 | static_cast<uint32_t>(debRight_);
+
+  /* Whitelist: drop composites that do not map to a real key. Phantom
+   * interference levels settle slowly and pass the debounce stability test,
+   * so without this filter they cascade into an emit storm. lastLeft_/
+   * lastRight_ are already updated above, so later transitions from a
+   * filtered state are still detected and re-evaluated. */
+  if (VALID_KEY_IDS.find(keyId) == VALID_KEY_IDS.end())
   {
-
-    /* Compose message to send */
-    KeyMsg_t msg;
-
-    msg.mType = 1;
-    /* Cast to unsigned before shifting: a signed shift into the sign bit
-     * is undefined behavior (leftData can have bit 15 set). */
-    msg.mData.keyId = static_cast<unsigned int>(leftData) << 16 |
-                      static_cast<unsigned int>(rightData);
-    msg.mData.keyModifier = KM_SHORT;
-
-    std::cout << "KeyId: 0x" << std::hex << msg.mData.keyId << std::endl;
-
-    /* Queue message for sending */
-    outMsgQueue_->send(msg);
+    LogDebug << "Filtered non-key composite: 0x" << std::hex << keyId
+             << std::endl;
+    return;
   }
+
+  /* Compose message to send */
+  KeyMsg_t msg;
+
+  msg.mType = 1;
+  msg.mData.keyId = keyId;
+  msg.mData.keyModifier = KM_SHORT;
+
+  std::cout << "KeyId: 0x" << std::hex << msg.mData.keyId << std::endl;
+
+  /* Queue message for sending */
+  outMsgQueue_->send(msg);
 }

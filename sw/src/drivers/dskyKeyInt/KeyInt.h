@@ -6,6 +6,7 @@
 #include "KeyIntMsgDef.h"
 
 // STL
+#include <cstdint>
 #include <mutex>
 
 // Message queues
@@ -64,6 +65,38 @@ private:
      * @brief Last processed right keyboard state (dedup between paths)
      */
     static int lastRight_;
+
+    /**
+     * @brief Debounced (accepted) left keyboard state. A bit only flips
+     * in this value after the raw line has held the new level for
+     * KEY_DEBOUNCE_MS continuously, so chattering marginal pins never
+     * produce events.
+     */
+    static int debLeft_;
+
+    /**
+     * @brief Debounced (accepted) right keyboard state (see debLeft_)
+     */
+    static int debRight_;
+
+    /**
+     * @brief Per-bit debounce timers for the left port, in milliseconds of
+     * steady_clock. 0 means the bit is currently stable; any other value
+     * is the timestamp at which the bit was first seen in its new (not yet
+     * accepted) level.
+     */
+    static uint32_t leftDebounceMs_[16];
+
+    /**
+     * @brief Per-bit debounce timers for the right port (see leftDebounceMs_)
+     */
+    static uint32_t rightDebounceMs_[16];
+
+    /**
+     * @brief True once the debounced state has been seeded from the first
+     * successful read (prevents a spurious startup emission)
+     */
+    static bool seeded_;
 
     /**
      * @brief Mutex protecting the last-state pair and the emit path
