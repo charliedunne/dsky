@@ -4,6 +4,7 @@
 // STL
 #include <atomic>
 #include <chrono>
+#include <cstdint>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -129,6 +130,15 @@ class ScreenSaver {
     bool crtcBlanked_;
 
     /**
+     * @brief Framebuffer id that was scanning out on the CRTC, captured via
+     *        drmModeGetCrtc() immediately before blanking. Restoring with
+     *        this id is valid because SDL keeps the framebuffer alive while
+     *        the CRTC is disabled (rendering is gated by the caller).
+     *        Guarded by screenMutex_.
+     */
+    uint32_t capturedBufferId_;
+
+    /**
      * @brief Timestamp of the last failure log message, used to throttle
      *        repeated errors. Guarded by screenMutex_.
      */
@@ -136,12 +146,13 @@ class ScreenSaver {
 
     /**
      * @brief Guards screenOn_, backlightPath_, restoreBrightness_, drmFd_,
-     *        masterFd_, crtcConfig_, crtcConnectorId_, crtcBlanked_ and
-     *        lastFailLog_ so
+     *        masterFd_, crtcConfig_, crtcConnectorId_, crtcBlanked_,
+     *        capturedBufferId_ and lastFailLog_ so
      *        the main thread and the tick thread never issue redundant or
-     *        racing sysfs or DRM operations
+     *        racing sysfs or DRM operations. Mutable because the const
+     *        getter isScreenOn() also reads the guarded state.
      */
-    std::mutex screenMutex_;
+    mutable std::mutex screenMutex_;
 
     /**
      * @brief Timestamp of the last keypad interaction, guarded by idleMutex_
@@ -187,6 +198,17 @@ class ScreenSaver {
      */
     bool isEnabled() const;
 
+    /**
+     * @brief Query whether the physical screen is currently on.
+     *
+     * The main loop uses this to skip rendering while the display is blanked:
+     * presenting with the CRTC disabled leaks Mesa sync_file fence fds, so no
+     * GPU work should be submitted until the screen wakes again.
+     *
+     * @return true if the screen is on, false if it is blanked
+     */
+    bool isScreenOn() const;
+
     private:
 
     /**
@@ -199,11 +221,12 @@ class ScreenSaver {
      * @brief Turn the physical display on or off.
      *
      * Turning off captures the current brightness (or falls back to a safe
-     * level), stops CRTC scanout when available for a true blank, and writes
-     * 0 to the backlight; turning on re-enables the saved CRTC configuration
-     * and restores the captured brightness. The cached state is only updated
-     * on success so a failed operation is retried on the next tick or
-     * interaction.
+     * level), captures the buffer id currently scanning out, disables the CRTC
+     * for a true blank when available, and writes 0 to the backlight. Turning
+     * on restores the captured brightness first, then re-enables the CRTC with
+     * the buffer captured at blank time (SDL keeps its framebuffer alive while
+     * blanked, so that id stays valid). The cached state is only updated on
+     * success so a failed operation is retried on the next tick or interaction.
      *
      * @param[in] on true to turn the screen on, false to turn it off
      */

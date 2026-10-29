@@ -46,6 +46,10 @@ void handler(int s) {
 
 int main( int argc, char * argv[], char *envp[] ) {
 
+  // Make stdout line-buffered so journalctl shows log lines in real time
+  // instead of after the block buffer fills.
+  std::cout << std::unitbuf;
+
   // Initialize core
   LogInfo << "Initializing core...\n";
 
@@ -133,7 +137,12 @@ int main( int argc, char * argv[], char *envp[] ) {
 
     hmi.update(data);
 
-    hmi.render();
+    // Skip rendering while the display is blanked. Presenting with the CRTC
+    // disabled leaks Mesa sync_file fence fds (never closed), which exhausts
+    // the process fd limit and breaks the screensaver's own sysfs writes.
+    if (screenSaver.isScreenOn()) {
+      hmi.render();
+    }
 
     extraTime = SDL_framerateDelay(&fpsManager);
     //SDL_Delay(200);

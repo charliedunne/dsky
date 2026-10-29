@@ -123,6 +123,8 @@ struct _drmModeCrtc *findActiveCrtc(int fd, uint32_t &connectorId)
             crtcId = enc->crtc_id;
             drmModeFreeEncoder(enc);
         }
+        // Capture the connector id before freeing the connector.
+        uint32_t connector = conn->connector_id;
         drmModeFreeConnector(conn);
         if (crtcId == 0) {
             continue;
@@ -131,7 +133,7 @@ struct _drmModeCrtc *findActiveCrtc(int fd, uint32_t &connectorId)
         drmModeCrtcPtr crtc = drmModeGetCrtc(fd, crtcId);
         if (crtc != nullptr) {
             found = crtc;
-            connectorId = conn->connector_id;
+            connectorId = connector;
         }
     }
 
@@ -196,7 +198,7 @@ int findMasterFd(int fallbackFd)
 
 } // namespace
 
-ScreenSaver::ScreenSaver() : running_(true), enabled_(SCREENSAVER_DEFAULT != 0), screenOn_(true), restoreBrightness_(SCREENSAVER_BACKLIGHT_FALLBACK), drmFd_(-1), masterFd_(-1), crtcConfig_(nullptr), crtcConnectorId_(0), crtcBlanked_(false), lastFailLog_(), lastInteraction_(std::chrono::steady_clock::now())
+ScreenSaver::ScreenSaver() : running_(true), enabled_(SCREENSAVER_DEFAULT != 0), screenOn_(true), restoreBrightness_(SCREENSAVER_BACKLIGHT_FALLBACK), drmFd_(-1), masterFd_(-1), crtcConfig_(nullptr), crtcConnectorId_(0), crtcBlanked_(false), capturedBufferId_(0), lastFailLog_(), lastInteraction_(std::chrono::steady_clock::now())
 {
     backlightPath_ = findBacklightPath();
     if (backlightPath_.empty()) {
@@ -236,11 +238,17 @@ ScreenSaver::~ScreenSaver()
     }
 
     // Best-effort restore so the user is never stranded in the dark.
-    if (crtcBlanked_) {
-        drmModeSetCrtc((masterFd_ >= 0) ? masterFd_ : drmFd_, crtcConfig_->crtc_id,
-                       crtcConfig_->buffer_id, crtcConfig_->x, crtcConfig_->y,
-                       &crtcConnectorId_, 1,
-                       &crtcConfig_->mode);
+    {
+        std::lock_guard<std::mutex> lock(screenMutex_);
+        if (crtcBlanked_) {
+            // Best-effort restore with the buffer captured at blank time.
+            // Ignore failures: this is best-effort cleanup on shutdown.
+            drmModeSetCrtc((masterFd_ >= 0) ? masterFd_ : drmFd_, crtcConfig_->crtc_id,
+                           capturedBufferId_ ? capturedBufferId_ : crtcConfig_->buffer_id,
+                           crtcConfig_->x, crtcConfig_->y, &crtcConnectorId_, 1,
+                           &crtcConfig_->mode);
+            writeBacklight(backlightPath_, restoreBrightness_);
+        }
     }
     if (drmFd_ >= 0) {
         ::close(drmFd_);
@@ -280,6 +288,12 @@ void ScreenSaver::setEnabled(bool enabled)
 bool ScreenSaver::isEnabled() const
 {
     return enabled_;
+}
+
+bool ScreenSaver::isScreenOn() const
+{
+    std::lock_guard<std::mutex> lock(screenMutex_);
+    return screenOn_;
 }
 
 void ScreenSaver::run()
@@ -330,6 +344,15 @@ void ScreenSaver::setScreen(bool on)
 
         // Blank the display by disabling the CRTC (true screen-off, like X DPMS).
         if (!crtcBlanked_ && ensureCrtcConfig()) {
+            // Capture the buffer currently scanning out so we can restore it on
+            // wake. SDL keeps its framebuffer alive while blanked, so the id
+            // stays valid until the next successful present after restore.
+            drmModeCrtcPtr live = drmModeGetCrtc(masterFd_, crtcConfig_->crtc_id);
+            if (live != nullptr) {
+                capturedBufferId_ = live->buffer_id;
+                drmModeFreeCrtc(live);
+            }
+
             if (drmModeSetCrtc(masterFd_, crtcConfig_->crtc_id, 0, 0, 0, nullptr, 0, nullptr) != 0) {
                 logFailure("failed to blank CRTC " + std::to_string(crtcConfig_->crtc_id) + " (" + std::strerror(errno) + ")");
             } else {
@@ -339,27 +362,39 @@ void ScreenSaver::setScreen(bool on)
 
         if (!writeBacklight(backlightPath_, 0)) {
             logFailure("failed to turn screen off (" + backlightPath_ + ": " + std::strerror(errno) + ")");
+            // The CRTC is already disabled: restore it so the panel does not
+            // stay dark, and leave the screen on so blanking is retried next tick.
+            if (crtcBlanked_) {
+                drmModeSetCrtc(masterFd_, crtcConfig_->crtc_id,
+                               capturedBufferId_ ? capturedBufferId_ : crtcConfig_->buffer_id,
+                               crtcConfig_->x, crtcConfig_->y, &crtcConnectorId_, 1,
+                               &crtcConfig_->mode);
+                crtcBlanked_ = false;
+            }
             return; // do not update the cached state, retry next tick
         }
 
         screenOn_ = false;
         LogInfo << "ScreenSaver: screen off (will restore brightness " << restoreBrightness_ << ")" << std::endl;
     } else {
-        // Restore the CRTC with its saved configuration.
-        if (crtcBlanked_) {
-            if (drmModeSetCrtc(masterFd_, crtcConfig_->crtc_id, crtcConfig_->buffer_id,
-                               crtcConfig_->x, crtcConfig_->y,
-                               &crtcConnectorId_, 1,
-                               &crtcConfig_->mode) != 0) {
-                logFailure("failed to restore CRTC " + std::to_string(crtcConfig_->crtc_id) + " (" + std::strerror(errno) + ")");
-                return; // keep the screen off, retried on the next keypress
-            }
-            crtcBlanked_ = false;
-        }
-
+        // Bring the backlight up first so the screen is never left dark even
+        // if the CRTC restore below cannot be completed this pass.
         if (!writeBacklight(backlightPath_, restoreBrightness_)) {
             logFailure("failed to turn screen on (" + backlightPath_ + ": " + std::strerror(errno) + ")");
             return; // do not update the cached state, retry next tick
+        }
+
+        // Restore the CRTC with the buffer we captured at blank time. SDL
+        // keeps its framebuffer alive while blanked, so that id is still valid.
+        if (crtcBlanked_) {
+            if (drmModeSetCrtc(masterFd_, crtcConfig_->crtc_id,
+                               capturedBufferId_ ? capturedBufferId_ : crtcConfig_->buffer_id,
+                               crtcConfig_->x, crtcConfig_->y, &crtcConnectorId_, 1,
+                               &crtcConfig_->mode) != 0) {
+                logFailure("failed to restore CRTC " + std::to_string(crtcConfig_->crtc_id) + " (" + std::strerror(errno) + ")");
+                return; // keep the screen off and blanked, retried on the next keypress
+            }
+            crtcBlanked_ = false;
         }
 
         screenOn_ = true;
