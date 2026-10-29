@@ -28,6 +28,7 @@ SET(CMAKE_CXX_FLAGS "-std=c++20")
 # Includes
 include_directories(build)
 include_directories(build/include)
+include_directories(../../core)
 include_directories(../../../build/include)
 include_directories(../../../3rdparty/simple-cpp-logger/include)
 

@@ -40,6 +40,9 @@ target_sources(dsky PRIVATE
   src/actions/DisableKeypadLight.cpp
   src/actions/ActionVerbList.cpp
   src/actions/SystemShutdown.cpp
+  src/actions/ScreenSaver.cpp
+  src/actions/EnableScreenSaver.cpp
+  src/actions/DisableScreenSaver.cpp
   src/drivers/dskyKeyInt/MsgQueue.cpp
 )
 
@@ -83,6 +86,9 @@ set(DSKY_DEPS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build" CACHE PATH "Directory cont
 include_directories(${DSKY_DEPS_DIR})
 include_directories(${DSKY_DEPS_DIR}/include)
 include_directories(${DSKY_DEPS_DIR}/include/SDL2)
+# libdrm: xf86drmMode.h includes <drm.h>, which lives in the libdrm subdir of
+# the sysroot include dir (native builds: /usr/include/libdrm).
+include_directories(${CMAKE_SYSROOT}/usr/include/libdrm)
 include_directories(src/hmi)
 include_directories(src/common)
 include_directories(src/common/exceptions)
@@ -116,4 +122,5 @@ target_link_libraries(dsky ${DSKY_DEPS_DIR}/lib/libSDL2_ttf.so)
 target_link_libraries(dsky ${DSKY_DEPS_DIR}/lib/libSDL2_image.so)
 target_link_libraries(dsky ${DSKY_DEPS_DIR}/lib/libSDL2_gfx.so)
 target_link_libraries(dsky pthread)
+target_link_libraries(dsky drm)
 

@@ -6,6 +6,7 @@
 #include "KeyIntMsgDef.h"
 
 // STL
+#include <cstdint>
 #include <mutex>
 
 // Message queues
@@ -49,21 +50,76 @@ private:
 
     /**
      * @brief Process a freshly read keyboard state.
-     * Emits a KeyId message only if the state differs from the last
-     * processed one and at least one key is pressed. Shared by the INT
-     * edge path and the polling fallback so they cannot double-emit.
+     * Advances the per-bit debounce state and detects transitions on the
+     * debounced levels; a key event is emitted only on a release that is
+     * confirmed by its hold duration (see handlePortTransitions). Shared by
+     * the INT edge path and the polling fallback so they cannot double-emit.
      */
     static void processState(int leftData, int rightData);
 
     /**
-     * @brief Last processed left keyboard state (dedup between paths)
+     * @brief Detect per-bit transitions on one port and emit release events.
+     * Called once per port after the debounced state has advanced; records a
+     * press-start timestamp on idle->pressed and, on pressed->idle, emits one
+     * event only if the hold duration is within [KEY_MIN_PRESS_MS,
+     * KEY_MAX_HOLD_MS] and the pre-release composite maps to a real key.
      */
-    static int lastLeft_;
+    static void handlePortTransitions(int prevPort, int curPort,
+                                      uint32_t pressMs[16], bool isLeft,
+                                      uint32_t now);
 
     /**
-     * @brief Last processed right keyboard state (dedup between paths)
+     * @brief Compose and queue a KeyId message for a confirmed key event.
+     * The caller must hold stateMutex_ (the emit path is serialized there).
      */
-    static int lastRight_;
+    static void sendKey(uint32_t keyId);
+
+    /**
+     * @brief Debounced (accepted) left keyboard state. A bit only flips
+     * in this value after the raw line has held the new level for
+     * KEY_DEBOUNCE_MS continuously, so chattering marginal pins never
+     * produce events.
+     */
+    static int debLeft_;
+
+    /**
+     * @brief Debounced (accepted) right keyboard state (see debLeft_)
+     */
+    static int debRight_;
+
+    /**
+     * @brief Per-bit debounce timers for the left port, in milliseconds of
+     * steady_clock. 0 means the bit is currently stable; any other value
+     * is the timestamp at which the bit was first seen in its new (not yet
+     * accepted) level.
+     */
+    static uint32_t leftDebounceMs_[16];
+
+    /**
+     * @brief Per-bit debounce timers for the right port (see leftDebounceMs_)
+     */
+    static uint32_t rightDebounceMs_[16];
+
+    /**
+     * @brief Per-bit press-start timestamps for the left port, in milliseconds
+     * of steady_clock. 0 means the bit is not currently pressed (or was
+     * already pressed at seed and is therefore untracked); any other value is
+     * the time at which the debounced level first went to pressed. Used with
+     * KEY_MIN_PRESS_MS / KEY_MAX_HOLD_MS to confirm a press on release and to
+     * reject sustained marginal-pin phantoms.
+     */
+    static uint32_t leftPressMs_[16];
+
+    /**
+     * @brief Per-bit press-start timestamps for the right port (see leftPressMs_)
+     */
+    static uint32_t rightPressMs_[16];
+
+    /**
+     * @brief True once the debounced state has been seeded from the first
+     * successful read (prevents a spurious startup emission)
+     */
+    static bool seeded_;
 
     /**
      * @brief Mutex protecting the last-state pair and the emit path

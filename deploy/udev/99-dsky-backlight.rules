@@ -1,0 +1,11 @@
+# Grant user pi ownership of the LCD backlight brightness sysfs file so the
+# dsky HMI (running as pi) can turn the screen off/on for its screensaver.
+# The panel is an i2c client on bus 10 at address 0x45; that kernel name is
+# stable across reboots.
+#
+# A plain OWNER="pi" does NOT work here: the backlight class device has no
+# devnode (its devpath is a sysfs directory under platform/soc/...i2c-10),
+# and this udev (systemd 247) applies rule ownership only to devnodes, not
+# to attribute files of directory devices. RUN+= runs as root during the add
+# event, so the chown always succeeds.
+SUBSYSTEM=="backlight", KERNEL=="10-0045", RUN+="/bin/chown pi /sys/class/backlight/10-0045/brightness"

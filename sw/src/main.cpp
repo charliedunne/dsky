@@ -11,6 +11,9 @@
 #include "ActionClock.h"
 #include "EnableKeypadLight.h"
 #include "DisableKeypadLight.h"
+#include "ScreenSaver.h"
+#include "EnableScreenSaver.h"
+#include "DisableScreenSaver.h"
 #include "ActionVerbList.h"
 #include "SystemShutdown.h"
 
@@ -42,6 +45,10 @@ void handler(int s) {
 }
 
 int main( int argc, char * argv[], char *envp[] ) {
+
+  // Make stdout line-buffered so journalctl shows log lines in real time
+  // instead of after the block buffer fills.
+  std::cout << std::unitbuf;
 
   // Initialize core
   LogInfo << "Initializing core...\n";
@@ -80,12 +87,17 @@ int main( int argc, char * argv[], char *envp[] ) {
   ActionClock a_Clock(data);
   EnableKeypadLight a_EnableKeypadLight(data);
   DisableKeypadLight a_DisableKeypadLight(data);
+  ScreenSaver screenSaver;
+  EnableScreenSaver a_EnableScreenSaver(data, screenSaver);
+  DisableScreenSaver a_DisableScreenSaver(data, screenSaver);
   SystemShutdown a_SystemShutdown(data);
 
   /* Actions registration */
   logic.registerAction(a_Clock);
   logic.registerAction(a_EnableKeypadLight);
   logic.registerAction(a_DisableKeypadLight);
+  logic.registerAction(a_EnableScreenSaver);
+  logic.registerAction(a_DisableScreenSaver);
   logic.registerAction(a_SystemShutdown);
 
   // VERB 0: list all implemented verb/noun combos on the left panel.
@@ -104,6 +116,11 @@ int main( int argc, char * argv[], char *envp[] ) {
     /* Array to register all the keypad events (normally only one per cycle) */
     std::vector<Event> events = keypad.getEvents();
 
+    // Any keypad activity resets the screensaver idle timer and wakes the screen.
+    if (!events.empty()) {
+      screenSaver.noteInteraction();
+    }
+
     // Re-check after a blocking call so Ctrl+C stops us at the next point
     if (!running) break;
 
@@ -120,7 +137,12 @@ int main( int argc, char * argv[], char *envp[] ) {
 
     hmi.update(data);
 
-    hmi.render();
+    // Skip rendering while the display is blanked. Presenting with the CRTC
+    // disabled leaks Mesa sync_file fence fds (never closed), which exhausts
+    // the process fd limit and breaks the screensaver's own sysfs writes.
+    if (screenSaver.isScreenOn()) {
+      hmi.render();
+    }
 
     extraTime = SDL_framerateDelay(&fpsManager);
     //SDL_Delay(200);
