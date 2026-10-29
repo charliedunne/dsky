@@ -28,6 +28,13 @@
 #define DISABLE_SCREENSAVER_VERB 3
 #define DISABLE_SCREENSAVER_NOUN 0
 
+#define READ_VAR_VERB 8
+#define WRITE_VAR_VERB 9
+
+/* Nouns used by the variable read/write verbs */
+#define VAR_NOUN_KEYPAD_LIGHT 2
+#define VAR_NOUN_SCREENSAVER 3
+
 /*
  * Add here more Actions
  */
@@ -84,6 +91,20 @@ class ListOfActions {
      * @return false If any Noun is expected
      */
     bool needNoun(int verb);
+
+    /**
+     * @brief Check if a registered (verb, noun) command requires a value input.
+     *
+     * Only the write-variable verb prompts for a value, and only when an
+     * action is actually registered for that exact (verb, noun) pair.
+     *
+     * @param verb[in] Verb
+     * @param noun[in] Noun
+     *
+     * @return true If a value must be typed before execution
+     * @return false If no value input is required
+     */
+    bool needValue(int verb, int noun);
 
     /**
      * @brief Human-readable description of every registered action,

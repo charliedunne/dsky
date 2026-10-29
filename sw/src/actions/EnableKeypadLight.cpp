@@ -2,33 +2,26 @@
 
 // Configuration
 #include "ListOfActions.h"
-#include "config.h"
-
-// Message Queue
-#include "MsgQueue.h"
-#include "KeyIntMsgDef.h"
 
 // Logging
 #include "Logger.h"
 
-EnableKeypadLight::EnableKeypadLight(HmiData &data) : Action(ENABLE_KEYPAD_VERB, ENABLE_KEYPAD_NOUN, data, ACTION_SINGLE, "KEYPAD ON")
+EnableKeypadLight::EnableKeypadLight(VariableStore &store, HmiData &data) :
+  Action(ENABLE_KEYPAD_VERB, ENABLE_KEYPAD_NOUN, data, ACTION_SINGLE, "KEYPAD ON"),
+  store_(store)
 {
 }
 
-void EnableKeypadLight::operation() 
+void EnableKeypadLight::operation()
 {
-    /* Message queue object */
-    MsgQueue msgQueue = MsgQueue(CMD_MSG_QUEUE_FILE,
-                               CMD_MSG_QUEUE_ID, MSG_QUEUE_OUT);
+  LogTrace << "Running Keypad Light ON" << std::endl;
 
-    /* Command to transmit */
-    CommMsg_t cmd;
-
-    cmd.mType = 1;
-    cmd.cmd.keylight.enable = true;
-    cmd.cmd.keylight.brightness = 255;
-
-    LogTrace << "Running Keypad Light ON" << std::endl;
-
-    msgQueue.send(cmd);
+  /* set() persists the value and triggers the apply callback that
+   * sends the keylight message to dskyKeyInt. Do NOT throw on failure:
+   * an exception escaping operation() is uncaught in the action thread
+   * and would terminate the process, so log the error instead. */
+  if (!store_.set(VAR_NOUN_KEYPAD_LIGHT, 1))
+  {
+    LogError << "Failed to enable keypad light" << std::endl;
+  }
 }

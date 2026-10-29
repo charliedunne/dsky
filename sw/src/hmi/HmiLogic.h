@@ -7,6 +7,7 @@
 // Core
 #include "Event.h"
 #include "StatusMachine.h"
+#include "VariableStore.h"
 
 // HMI 
 #include "Hmi.h"
@@ -33,9 +34,18 @@ class HmiLogic {
    */
   ListOfActions actions_;
 
+  /**
+   * @brief Persistent variable store (used to validate bool digit input)
+   */
+  VariableStore &store_;
+
  public:
 
-  HmiLogic();
+  /**
+   * @brief Construct the HMI logic bound to a variable store.
+   * @param store Store used to query variable types during value input
+   */
+  HmiLogic(VariableStore &store);
   virtual ~HmiLogic();
 
   /**
@@ -68,6 +78,7 @@ class HmiLogic {
   void idle(HmiData &data);
   void verbInput(HmiData &data);
   void nounInput(HmiData &data);
+  void valueInput(HmiData &data);
   void run(HmiData &data);
   void error(HmiData &data);
 };

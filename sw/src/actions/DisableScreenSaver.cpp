@@ -6,13 +6,22 @@
 // Logging
 #include "Logger.h"
 
-DisableScreenSaver::DisableScreenSaver(HmiData &data, ScreenSaver &saver) : Action(DISABLE_SCREENSAVER_VERB, DISABLE_SCREENSAVER_NOUN, data, ACTION_SINGLE, "SCREENSAVER OFF"), saver_(saver)
+DisableScreenSaver::DisableScreenSaver(VariableStore &store, HmiData &data) :
+  Action(DISABLE_SCREENSAVER_VERB, DISABLE_SCREENSAVER_NOUN, data, ACTION_SINGLE, "SCREENSAVER OFF"),
+  store_(store)
 {
 }
 
 void DisableScreenSaver::operation()
 {
-    LogTrace << "Running ScreenSaver OFF" << std::endl;
+  LogTrace << "Running ScreenSaver OFF" << std::endl;
 
-    saver_.setEnabled(false);
+  /* set() persists the value and triggers the apply callback that
+   * disables the screensaver. Do NOT throw on failure: an exception
+   * escaping operation() is uncaught in the action thread and would
+   * terminate the process, so log the error instead. */
+  if (!store_.set(VAR_NOUN_SCREENSAVER, 0))
+  {
+    LogError << "Failed to disable screensaver" << std::endl;
+  }
 }

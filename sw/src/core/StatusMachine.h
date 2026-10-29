@@ -9,6 +9,7 @@ typedef enum
     MODE_IDLE,
     MODE_V_INPUT,
     MODE_N_INPUT,
+    MODE_VALUE_INPUT,
     MODE_RUN,
     MODE_ERROR,
 

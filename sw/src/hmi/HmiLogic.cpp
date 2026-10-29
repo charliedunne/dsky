@@ -13,7 +13,7 @@
  */
 int key(EventId_t);
 
-HmiLogic::HmiLogic()
+HmiLogic::HmiLogic(VariableStore &store) : store_(store)
 {
 }
 
@@ -52,6 +52,10 @@ void HmiLogic::updateHmiData(HmiData &data)
 
     case MODE_N_INPUT:
       nounInput(data);
+      break;
+
+    case MODE_VALUE_INPUT:
+      valueInput(data);
       break;
 
     case MODE_RUN:
@@ -194,16 +198,27 @@ void HmiLogic::nounInput(HmiData &data)
 
   case E_KEY_ENTR:
 
-    try
+    if (actions_.needValue(data.getRightLcdData().nVerb,
+                           data.getRightLcdData().nNoun))
     {
-      status_.transit(MODE_RUN);
-      run(data);
+      /* The command needs a value: prompt the user to type it */
+      LogTrace << "Command needs a value, move to VALUE_INPUT" << std::endl;
+      status_.transit(MODE_VALUE_INPUT);
+      data.rSetR2Label(DRAW_ON);
     }
-    catch (const ExcInvalidCommand &e)
+    else
     {
-      LogWarning << "Invalid command set";
-      data.lSetOpErr(DRAW_BLINK);
-      status_.transit(MODE_ERROR);
+      try
+      {
+        status_.transit(MODE_RUN);
+        run(data);
+      }
+      catch (const ExcInvalidCommand &e)
+      {
+        LogWarning << "Invalid command set";
+        data.lSetOpErr(DRAW_BLINK);
+        status_.transit(MODE_ERROR);
+      }
     }
 
     break;
@@ -252,6 +267,85 @@ void HmiLogic::nounInput(HmiData &data)
   default:
     /* Keys not part of the input flow cancel back to IDLE */
     LogTrace << "Cancel noun input, move to IDLE" << std::endl;
+    data.resetRightLcdData();
+    status_.transit(MODE_IDLE);
+    break;
+  }
+}
+
+void HmiLogic::valueInput(HmiData &data)
+{
+  /* Copy the Event key received */
+  EventId_t eventKey = keyEvents_[0].getEvent();
+
+  switch (eventKey)
+  {
+
+  case E_KEY_ENTR:
+
+    if (data.getRightLcdData().nR2 == UNASIGNED)
+    {
+      /* No value typed yet, stay in the prompt */
+      break;
+    }
+
+    status_.transit(MODE_RUN);
+    run(data);
+    break;
+
+  case E_KEY_0:
+  case E_KEY_1:
+  case E_KEY_2:
+  case E_KEY_3:
+  case E_KEY_4:
+  case E_KEY_5:
+  case E_KEY_6:
+  case E_KEY_7:
+  case E_KEY_8:
+  case E_KEY_9:
+
+    if (store_.isBool(data.getRightLcdData().nNoun) && key(eventKey) != 0 && key(eventKey) != 1)
+    {
+      /* Bool variables accept strictly the digits 0 and 1 */
+      LogTrace << "Reject digit for bool variable" << std::endl;
+      break;
+    }
+
+    if (data.getRightLcdData().nR2Mode == DRAW_OFF)
+    {
+      data.rSetnR2(key(eventKey), DRAW_ON);
+    }
+    else if (data.getRightLcdData().nR2 < 100000)
+    {
+      /* Cap the value at 6 digits */
+      data.rSetnR2(data.getRightLcdData().nR2 * 10 + key(eventKey), DRAW_ON);
+    }
+
+    break;
+
+  case E_KEY_VERB:
+    data.rSetnVerb(UNASIGNED, DRAW_OFF);
+    data.rSetnNoun(UNASIGNED, DRAW_OFF);
+    data.rSetNounLabel(DRAW_OFF);
+    data.rSetnR2(UNASIGNED, DRAW_OFF);
+    data.rSetR2Label(DRAW_OFF);
+    status_.transit(MODE_V_INPUT);
+    break;
+
+  case E_KEY_NOUN:
+  case E_KEY_CLR:
+    data.rSetnR2(UNASIGNED, DRAW_OFF);
+    break;
+
+  case E_KEY_RSET:
+    data.resetRightLcdData();
+    data.resetLeftLcdData();
+    status_.transit(MODE_IDLE);
+    break;
+
+  default:
+    /* Keys not part of the input flow cancel back to IDLE */
+    LogTrace << "Cancel value input, move to IDLE" << std::endl;
     data.resetRightLcdData();
     status_.transit(MODE_IDLE);
     break;

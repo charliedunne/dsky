@@ -16,6 +16,8 @@
 #include "DisableScreenSaver.h"
 #include "ActionVerbList.h"
 #include "SystemShutdown.h"
+#include "ReadVar.h"
+#include "WriteVar.h"
 
 // HMI
 #include "Hmi.h"
@@ -24,6 +26,11 @@
 // Core
 #include "Keyboard.h"
 #include "Keypad.h"
+#include "VariableStore.h"
+
+// Message Queue
+#include "MsgQueue.h"
+#include "KeyIntMsgDef.h"
 
 // Logging
 #include <Logger.h>
@@ -72,25 +79,51 @@ int main( int argc, char * argv[], char *envp[] ) {
   // Instanciation of the HMI
   Hmi hmi = Hmi(800, 480);
 
-  // Instance of the logic
-  HmiLogic logic;
+  // Instance of the screensaver (constructed early so apply callbacks can use it)
+  ScreenSaver screenSaver;
 
   // Instance of the Keypad
   Keypad keypad;
 
-  std::string num;
-
   // Data to be shared between the logic and the hmi
   HmiData data;
 
+  /* Persistent variable store */
+  VariableStore store(VAR_STORE_FILE);
+
+  // NOUN 2: keypad light. Apply re-sends the state to dskyKeyInt via the message queue.
+  store.registerVar(VAR_NOUN_KEYPAD_LIGHT, "keypadLight", VAR_BOOL, 0, [](int value) {
+    MsgQueue msgQueue(CMD_MSG_QUEUE_FILE, CMD_MSG_QUEUE_ID, MSG_QUEUE_OUT);
+    CommMsg_t cmd;
+    cmd.mType = 1;
+    cmd.cmd.keylight.enable = (value != 0);
+    cmd.cmd.keylight.brightness = (value != 0) ? 255 : 0;
+    msgQueue.send(cmd);
+  });
+
+  // NOUN 3: screensaver. Apply enables/disables the saver directly.
+  store.registerVar(VAR_NOUN_SCREENSAVER, "screensaver", VAR_BOOL, 1, [&screenSaver](int value) {
+    screenSaver.setEnabled(value != 0);
+  });
+
+  // Restore persisted values, then re-apply them to hardware.
+  store.load();
+  store.applyAll();
+
+  // Instance of the logic
+  HmiLogic logic(store);
+
   /* Actions */
   ActionClock a_Clock(data);
-  EnableKeypadLight a_EnableKeypadLight(data);
-  DisableKeypadLight a_DisableKeypadLight(data);
-  ScreenSaver screenSaver;
-  EnableScreenSaver a_EnableScreenSaver(data, screenSaver);
-  DisableScreenSaver a_DisableScreenSaver(data, screenSaver);
+  EnableKeypadLight a_EnableKeypadLight(store, data);
+  DisableKeypadLight a_DisableKeypadLight(store, data);
+  EnableScreenSaver a_EnableScreenSaver(store, data);
+  DisableScreenSaver a_DisableScreenSaver(store, data);
   SystemShutdown a_SystemShutdown(data);
+  ReadVar a_ReadKeyLight(store, VAR_NOUN_KEYPAD_LIGHT, data);
+  WriteVar a_WriteKeyLight(store, VAR_NOUN_KEYPAD_LIGHT, data);
+  ReadVar a_ReadScreenSaver(store, VAR_NOUN_SCREENSAVER, data);
+  WriteVar a_WriteScreenSaver(store, VAR_NOUN_SCREENSAVER, data);
 
   /* Actions registration */
   logic.registerAction(a_Clock);
@@ -99,6 +132,10 @@ int main( int argc, char * argv[], char *envp[] ) {
   logic.registerAction(a_EnableScreenSaver);
   logic.registerAction(a_DisableScreenSaver);
   logic.registerAction(a_SystemShutdown);
+  logic.registerAction(a_ReadKeyLight);
+  logic.registerAction(a_WriteKeyLight);
+  logic.registerAction(a_ReadScreenSaver);
+  logic.registerAction(a_WriteScreenSaver);
 
   // VERB 0: list all implemented verb/noun combos on the left panel.
   // Registered last so its menu can describe every other action.

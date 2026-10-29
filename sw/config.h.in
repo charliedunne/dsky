@@ -53,3 +53,6 @@
 // Message queue file for IN commands
 #define CMD_MSG_QUEUE_FILE "/var/local/dskycmd"
 #define CMD_MSG_QUEUE_ID 12
+
+// Variable store persistence file
+#define VAR_STORE_FILE "/var/local/dskyvars.json"

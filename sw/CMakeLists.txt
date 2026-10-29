@@ -33,6 +33,7 @@ target_sources(dsky PRIVATE
   src/core/Keyboard.cpp
   src/core/Event.cpp
   src/core/StatusMachine.cpp
+  src/core/VariableStore.cpp
   src/actions/Action.cpp
   src/actions/ListOfActions.cpp
   src/actions/ActionClock.cpp
@@ -43,6 +44,8 @@ target_sources(dsky PRIVATE
   src/actions/ScreenSaver.cpp
   src/actions/EnableScreenSaver.cpp
   src/actions/DisableScreenSaver.cpp
+  src/actions/ReadVar.cpp
+  src/actions/WriteVar.cpp
   src/drivers/dskyKeyInt/MsgQueue.cpp
 )
 

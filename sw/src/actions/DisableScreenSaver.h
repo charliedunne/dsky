@@ -2,22 +2,24 @@
 #define _DISABLESCREENSAVER_H_
 
 #include "Action.h"
-#include "ScreenSaver.h"
+#include "VariableStore.h"
 
 class DisableScreenSaver : public Action {
 
  public:
 
-  DisableScreenSaver(HmiData & data, ScreenSaver & saver);
+  /**
+   * @brief Constructor
+   *
+   * @param[in] store Persistent variable store to write into
+   * @param[in] data HMI data
+   */
+  DisableScreenSaver(VariableStore &store, HmiData &data);
 
   void operation();
 
  private:
-
-  /**
-   * @brief Reference to the shared screensaver instance
-   */
-  ScreenSaver & saver_;
+  VariableStore &store_; ///< Reference to the persistent variable store
 };
 
 #endif /* _DISABLESCREENSAVER_H_ */
