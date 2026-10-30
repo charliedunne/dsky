@@ -88,7 +88,7 @@ int main( int argc, char * argv[], char *envp[] ) {
   VariableStore store(VAR_STORE_FILE);
 
   // NOUN 2: keypad light. Apply re-sends the state to dskyKeyInt via the message queue.
-  store.registerVar(VAR_NOUN_KEYPAD_LIGHT, "keypadLight", VAR_BOOL, 0, [](int value) {
+  store.registerVar(VAR_NOUN_KEYPAD_LIGHT, "keypadLight", "KEYPAD LIGHT", VAR_BOOL, 0, [](int value) {
     MsgQueue msgQueue(CMD_MSG_QUEUE_FILE, CMD_MSG_QUEUE_ID, MSG_QUEUE_OUT);
     CommMsg_t cmd;
     cmd.mType = 1;
@@ -98,7 +98,7 @@ int main( int argc, char * argv[], char *envp[] ) {
   });
 
   // NOUN 3: screensaver. Apply enables/disables the saver directly.
-  store.registerVar(VAR_NOUN_SCREENSAVER, "screensaver", VAR_BOOL, 1, [&screenSaver](int value) {
+  store.registerVar(VAR_NOUN_SCREENSAVER, "screensaver", "SCREENSAVER", VAR_BOOL, 1, [&screenSaver](int value) {
     screenSaver.setEnabled(value != 0);
   });
 
@@ -127,7 +127,7 @@ int main( int argc, char * argv[], char *envp[] ) {
 
   // VERB 0: list all implemented verb/noun combos on the left panel.
   // Registered last so its menu can describe every other action.
-  ActionVerbList a_VerbList(data, logic.getActions());
+  ActionVerbList a_VerbList(data, logic.getActions(), store);
   logic.registerAction(a_VerbList);
 
   // Initialize FPS Manager

@@ -57,8 +57,9 @@ public:
 private:
   // VERB 0 menu rendering
   Font *verbListFont_ = nullptr;
-  std::vector<std::string> verbListLines_;
+  std::vector<std::string> verbListLines_;   // lines of the active page
   DrawMode verbListMode_ = DRAW_OFF;
+  int verbListPage_ = 0;                     // active page index (0 or 1)
 
   /**
    * @brief Draw the background lines (grid)

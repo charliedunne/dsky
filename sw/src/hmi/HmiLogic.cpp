@@ -92,7 +92,9 @@ void HmiLogic::updateHmiData(HmiData &data)
 
 void HmiLogic::idle(HmiData &data)
 {
-  if (keyEvents_[0].getEvent() == E_KEY_VERB)
+  const EventId_t key = keyEvents_[0].getEvent();
+
+  if (key == E_KEY_VERB)
   {
     LogTrace << "VERB" << std::endl;
 
@@ -102,9 +104,22 @@ void HmiLogic::idle(HmiData &data)
   }
   else if (data.getLeftLcdData().lVerbList == DRAW_ON)
   {
-    /* Any other key returns to the clean boot screen */
-    LogTrace << "Key pressed in IDLE, clear verb list" << std::endl;
-    data.clearVerbList();
+    /* + / - flip between the verb list and variable list pages (wraps around) */
+    if (key == E_KEY_PLUS || key == E_KEY_MINUS)
+    {
+      const int cur = data.getLeftLcdData().lVerbListPage;
+      const int next = (key == E_KEY_PLUS) ? cur + 1 : cur - 1;
+      /* Log the wrapped page so the trace matches what is actually displayed */
+      const int wrapped = ((next % 2) + 2) % 2;
+      LogTrace << "Key pressed in IDLE, verb list page -> " << wrapped << std::endl;
+      data.lSetVerbListPage(next);
+    }
+    else
+    {
+      /* Any other key returns to the clean boot screen (page resets to 0) */
+      LogTrace << "Key pressed in IDLE, clear verb list" << std::endl;
+      data.clearVerbList();
+    }
   }
 }
 
