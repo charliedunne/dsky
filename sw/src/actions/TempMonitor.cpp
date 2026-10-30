@@ -96,6 +96,10 @@ bool TempMonitor::handleKey(EventId_t key)
       return enterDigit(d);
     }
     if (key == E_KEY_ENTR) {
+      // ENTER with no digits typed: do nothing, stay in entry mode.
+      if (entryDigits_.load() == 0) {
+        return true;
+      }
       const int v = entryValue_.load();
       if (v <= TEMP_MONITOR_NOUN_MAX) {
         selected_.store(v);
@@ -127,7 +131,7 @@ bool TempMonitor::handleKey(EventId_t key)
     selected_.store((selected_.load() - 1 + count) % count);
     return true;
   }
-  if (key == E_KEY_CLR) {
+  if (key == E_KEY_CLR || key == E_KEY_NOUN) {
     entering_.store(true);
     entryValue_.store(0);
     entryDigits_.store(0);
@@ -145,12 +149,28 @@ void TempMonitor::operation()
   hmiData_.lSetVerbListHeader(0, "DEVICES");
   hmiData_.lSetVerbList(buildListLines(sel), {});
 
-  // Right screen: temperature in R1, NOUN in the dedicated NOUN field
-  // (pending entry value while entering).
+  // Right screen: three display states.
+  //  - Normal: NOUN field shows the selected ID, R1 shows its temperature.
+  //  - Entry, no digits yet: all four fields blank.
+  //  - Entry, digit(s) typed: NOUN shows the pending value live; R1 stays off
+  //    until ENTER confirms the selection.
   hmiData_.rSetCompActLabel(DRAW_ON);
-  hmiData_.rSetnR1(SENSORS[sel].tempC, DRAW_ON);
-  hmiData_.rSetR1Label(DRAW_ON);
-  const int noun = entering_.load() ? entryValue_.load() : sel;
-  hmiData_.rSetnNoun(noun, DRAW_ON);
-  hmiData_.rSetNounLabel(DRAW_ON);
+  if (!entering_.load()) {
+    hmiData_.rSetNounLabel(DRAW_ON);
+    hmiData_.rSetnNoun(sel, DRAW_ON);
+    hmiData_.rSetR1Label(DRAW_ON);
+    hmiData_.rSetnR1(SENSORS[sel].tempC, DRAW_ON);
+  } else if (entryDigits_.load() == 0) {
+    // Waiting for the first digit: everything blank.
+    hmiData_.rSetNounLabel(DRAW_OFF);
+    hmiData_.rSetnNoun(0, DRAW_OFF);
+    hmiData_.rSetR1Label(DRAW_OFF);
+    hmiData_.rSetnR1(0, DRAW_OFF);
+  } else {
+    // Digits typed: pending value shown live in the NOUN field.
+    hmiData_.rSetNounLabel(DRAW_ON);
+    hmiData_.rSetnNoun(entryValue_.load(), DRAW_ON);
+    hmiData_.rSetR1Label(DRAW_OFF);
+    hmiData_.rSetnR1(0, DRAW_OFF);
+  }
 }
