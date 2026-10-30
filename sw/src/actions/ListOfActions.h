@@ -117,6 +117,16 @@ class ListOfActions {
      */
     std::vector<std::string> describe() const;
 
+    /**
+     * @brief Stop every registered action.
+     *
+     * Called during shutdown so that no periodic action keeps running while
+     * the action objects are being destroyed (a late virtual call of
+     * operation() on a half-destroyed object would hit a pure-virtual
+     * terminator and abort). Safe on actions that were never started.
+     */
+    void stopAll();
+
 };
 
 #endif /* _LISTOFACTIONS_H_ */

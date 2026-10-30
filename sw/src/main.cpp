@@ -193,5 +193,11 @@ int main( int argc, char * argv[], char *envp[] ) {
 
   }
 
+  // Stop all actions before they are destroyed below. A periodic action that
+  // is still running can wake up during destruction and virtually dispatch
+  // operation() against the already-restored base vtable, hitting a
+  // pure-virtual terminator and aborting the process.
+  logic.getActions().stopAll();
+
   LogInfo << "Shutting down cleanly." << std::endl;
 }

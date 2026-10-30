@@ -139,3 +139,9 @@ std::vector<std::string> ListOfActions::describe() const {
 
     return out;
 }
+
+void ListOfActions::stopAll() {
+    for (const auto &it : actions_) {
+        it.get().stop();
+    }
+}
