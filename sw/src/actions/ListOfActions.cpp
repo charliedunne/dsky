@@ -98,16 +98,43 @@ std::vector<std::string> ListOfActions::describe() const {
                   return a->getNoun() < b->getNoun();
               });
 
-    // Format each entry as "Vxx LABEL" or "Vxx Nyy LABEL"
+    // Format entries as "Vxx LABEL" or "Vxx Nyy LABEL".
+    // A verb whose nouns all share the same label is collapsed into a
+    // single "Vxx NXX LABEL" line (e.g. READ_VAR / WRITE_VAR).
     std::vector<std::string> out;
-    for (const Action *a : sorted) {
-        char buf[64];
-        if (a->getNoun() == -1) {
-            std::snprintf(buf, sizeof(buf), "V%02d %s", a->getVerb(), a->getLabel().c_str());
-        } else {
-            std::snprintf(buf, sizeof(buf), "V%02d N%02d %s", a->getVerb(), a->getNoun(), a->getLabel().c_str());
+    for (size_t i = 0; i < sorted.size(); ) {
+        int verb = sorted[i]->getVerb();
+
+        // Collect the whole group of entries sharing this verb
+        size_t j = i + 1;
+        while (j < sorted.size() && sorted[j]->getVerb() == verb)
+            ++j;
+
+        // Collapsible only if the group has more than one entry, every
+        // entry has a noun, and all labels are identical.
+        bool collapse = (j > i + 1);
+        for (size_t k = i + 1; k < j && collapse; ++k) {
+            if (sorted[i]->getNoun() == -1 || sorted[k]->getNoun() == -1 ||
+                sorted[k]->getLabel() != sorted[i]->getLabel())
+                collapse = false;
         }
-        out.push_back(std::string(buf));
+
+        char buf[64];
+        if (collapse) {
+            std::snprintf(buf, sizeof(buf), "V%02d NXX %s", verb, sorted[i]->getLabel().c_str());
+            out.push_back(std::string(buf));
+        } else {
+            for (size_t k = i; k < j; ++k) {
+                if (sorted[k]->getNoun() == -1) {
+                    std::snprintf(buf, sizeof(buf), "V%02d %s", verb, sorted[k]->getLabel().c_str());
+                } else {
+                    std::snprintf(buf, sizeof(buf), "V%02d N%02d %s", verb, sorted[k]->getNoun(), sorted[k]->getLabel().c_str());
+                }
+                out.push_back(std::string(buf));
+            }
+        }
+
+        i = j;
     }
 
     return out;

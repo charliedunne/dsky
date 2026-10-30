@@ -158,25 +158,51 @@ void FrameLeftLcd::drawLabels()
 void FrameLeftLcd::setVerbList(const LeftLcdData &d)
 {
     verbListMode_ = d.lVerbList;
+    verbListPage_ = d.lVerbListPage;
+
+    // Copy only the lines of the active page.
     verbListLines_.clear();
-    for (int i = 0; i < d.lVerbListCount && i < 20; ++i) {
-        verbListLines_.push_back(std::string(d.lVerbListLines[i]));
+    const int count = d.lVerbListCount[verbListPage_];
+    for (int i = 0; i < count && i < 20; ++i) {
+        verbListLines_.push_back(std::string(d.lVerbListLines[verbListPage_][i]));
     }
 }
 
 void FrameLeftLcd::drawVerbList()
 {
-    if (verbListMode_ != DRAW_ON || verbListLines_.empty()) return;
+    if (verbListMode_ != DRAW_ON) return;
 
     // Draw over the grid background, stacked from the top.
     // scale ~0.5 fits the ~32px Gorton bitmap into the 335px-wide panel.
     const float scale = 0.5f;
     const int lineHeight = (int)(32 * scale) + 6;   // glyph height + gap (tune later)
-    int y = y_ + 8;                                  // top margin (tune later)
+    const Color green(0, 255, 0, 255);
 
-    for (const std::string &line : verbListLines_) {
-        verbListFont_->drawText(line, x_ + 10, y, Color(0, 255, 0, 255), scale);
+    // Header line: page 0 = verb list, page 1 = variable list.
+    int y = y_ + 8;                                  // top margin (tune later)
+    const char *header = (verbListPage_ == 0) ? "VERB LIST" : "VARIABLE LIST";
+    verbListFont_->drawText(header, x_ + 10, y, green, scale);
+    y += lineHeight;
+
+    // Separator row: a dim-green divider line between the header and the list.
+    // gfxPrimitives renderer calls take a packed 0xAARRGGBB pixel value.
+    const Uint32 dividerPixel = 0xFF008000;   // opaque, (r=0, g=128, b=0)
+    hlineColor(r_, x_ + 10, x_ + w_ - 10, y + lineHeight - 6, dividerPixel);
+    y += lineHeight;
+
+    // Up to 19 content lines fit below the separator; show a "..." marker if truncated.
+    const int maxLines = 19;
+    const int total = (int)verbListLines_.size();
+    int n = total;
+    if (n > maxLines) n = maxLines - 1;   // reserve one line for the "..." marker
+
+    for (int i = 0; i < n; ++i) {
+        verbListFont_->drawText(verbListLines_[i], x_ + 10, y, green, scale);
         y += lineHeight;
+    }
+
+    if (total > maxLines) {
+        verbListFont_->drawText("...", x_ + 10, y, green, scale);
     }
 }
   

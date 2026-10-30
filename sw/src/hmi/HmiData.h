@@ -64,10 +64,11 @@ typedef struct
     DrawMode lOpErr;
     DrawMode lShutdown;
 
-    // VERB 0 menu: human-readable list of implemented verb/noun combos
-    DrawMode lVerbList;                 // DRAW_ON while the list is shown
-    char     lVerbListLines[20][28];    // up to 20 lines, each max 27 chars + NUL
-    int      lVerbListCount;            // number of valid lines (0..20)
+    // VERB 0 menu: two pages — page 0 = verb list, page 1 = variable list
+    DrawMode lVerbList;                        // DRAW_ON while the list is shown
+    char     lVerbListLines[2][20][28];        // up to 20 lines per page, max 27 chars + NUL
+    int      lVerbListCount[2];                // number of valid lines per page (0..20)
+    int      lVerbListPage;                    // active page index (0 or 1)
 
 } LeftLcdData;
 
@@ -104,10 +105,16 @@ public:
     void resetLeftLcdData();
 
     /**
-     * @brief Fill the VERB 0 menu with the given lines and show it.
-     *        Caps at 20 lines / 27 chars per line.
+     * @brief Fill both pages of the VERB 0 menu and show it on page 0.
+     *        Page 0 = verb list, page 1 = variable list.
+     *        Each page caps at 20 lines / 27 chars per line.
      */
-    void lSetVerbList(const std::vector<std::string> &lines);
+    void lSetVerbList(const std::vector<std::string> &verbs, const std::vector<std::string> &vars);
+
+    /**
+     * @brief Switch the active VERB 0 menu page (wraps modulo 2).
+     */
+    void lSetVerbListPage(int page);
 
     /**
      * @brief Hide/clear the VERB 0 menu (does not touch alarm flags).

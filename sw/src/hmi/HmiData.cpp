@@ -46,7 +46,9 @@ void HmiData::resetLeftLcdData()
 
     // Clear the VERB 0 menu
     lLcdData_.lVerbList = DRAW_OFF;
-    lLcdData_.lVerbListCount = 0;
+    lLcdData_.lVerbListCount[0] = 0;
+    lLcdData_.lVerbListCount[1] = 0;
+    lLcdData_.lVerbListPage = 0;
 }
 
 HmiData::HmiData()
@@ -343,10 +345,12 @@ void HmiData::lSetShutdown(DrawMode mode)
     mutex_.unlock();
 }
 
-void HmiData::lSetVerbList(const std::vector<std::string> &lines)
+namespace {
+/**
+ * @brief Copy up to 20 lines into one page buffer of the VERB 0 menu.
+ */
+void fillVerbListPage(char (&page)[20][28], int &count, const std::vector<std::string> &lines)
 {
-    mutex_.lock();
-
     const int maxLines = 20;
     const int lineLen  = 28;   // 27 chars + NUL
 
@@ -354,12 +358,34 @@ void HmiData::lSetVerbList(const std::vector<std::string> &lines)
     if (n > maxLines) n = maxLines;
 
     for (int i = 0; i < n; ++i) {
-        std::strncpy(lLcdData_.lVerbListLines[i], lines[i].c_str(), lineLen - 1);
-        lLcdData_.lVerbListLines[i][lineLen - 1] = '\0';
+        std::strncpy(page[i], lines[i].c_str(), lineLen - 1);
+        page[i][lineLen - 1] = '\0';
     }
 
-    lLcdData_.lVerbListCount = n;
+    count = n;
+}
+} // namespace
+
+void HmiData::lSetVerbList(const std::vector<std::string> &verbs, const std::vector<std::string> &vars)
+{
+    mutex_.lock();
+
+    // Page 0: verb list. Page 1: variable list.
+    fillVerbListPage(lLcdData_.lVerbListLines[0], lLcdData_.lVerbListCount[0], verbs);
+    fillVerbListPage(lLcdData_.lVerbListLines[1], lLcdData_.lVerbListCount[1], vars);
+
+    lLcdData_.lVerbListPage = 0;
     lLcdData_.lVerbList = DRAW_ON;
+
+    mutex_.unlock();
+}
+
+void HmiData::lSetVerbListPage(int page)
+{
+    mutex_.lock();
+
+    // Wrap around modulo 2 (handles negative input as well).
+    lLcdData_.lVerbListPage = ((page % 2) + 2) % 2;
 
     mutex_.unlock();
 }
@@ -369,7 +395,9 @@ void HmiData::clearVerbList()
     mutex_.lock();
 
     lLcdData_.lVerbList = DRAW_OFF;
-    lLcdData_.lVerbListCount = 0;
+    lLcdData_.lVerbListCount[0] = 0;
+    lLcdData_.lVerbListCount[1] = 0;
+    lLcdData_.lVerbListPage = 0;
 
     mutex_.unlock();
 }

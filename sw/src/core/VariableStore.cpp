@@ -15,18 +15,31 @@ VariableStore::VariableStore(const std::string &filePath)
 
 VariableStore::~VariableStore() {}
 
-void VariableStore::registerVar(int noun, const std::string &name, VarType_e type, int defaultValue, ApplyFn apply)
+void VariableStore::registerVar(int noun, const std::string &name, const std::string &label, VarType_e type, int defaultValue, ApplyFn apply)
 {
     Var var;
     var.noun = noun;
     var.name = name;
+    var.label = label;
     var.type = type;
     var.defaultValue = defaultValue;
     var.apply = std::move(apply);
     var.value = defaultValue;
     vars_[noun] = var;
 
-    LogDebug << "VariableStore: registered NOUN " << noun << " -> " << name << std::endl;
+    LogDebug << "VariableStore: registered NOUN " << noun << " -> " << name << " (" << label << ")" << std::endl;
+}
+
+std::vector<std::string> VariableStore::describeVars() const
+{
+    std::vector<std::string> lines;
+    for (const auto &kv : vars_)
+    {
+        char buf[128];
+        snprintf(buf, sizeof(buf), "VAR %d %s", kv.second.noun, kv.second.label.c_str());
+        lines.push_back(buf);
+    }
+    return lines;
 }
 
 bool VariableStore::get(int noun, int &value) const

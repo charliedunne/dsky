@@ -6,6 +6,9 @@
 // Action registry
 #include "ListOfActions.h"
 
+// Persistent variable store (source of the VERB 0 variables page)
+#include "VariableStore.h"
+
 class ActionVerbList : public Action {
 
  private:
@@ -15,9 +18,14 @@ class ActionVerbList : public Action {
    */
   const ListOfActions &actions_;
 
+  /**
+   * @brief Reference to the variable store (source of the variables page)
+   */
+  const VariableStore &store_;
+
  public:
 
-  ActionVerbList(HmiData &data, const ListOfActions &actions);
+  ActionVerbList(HmiData &data, const ListOfActions &actions, const VariableStore &store);
 
   void operation();
 };

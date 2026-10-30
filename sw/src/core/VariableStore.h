@@ -4,6 +4,7 @@
 #include <functional>
 #include <map>
 #include <string>
+#include <vector>
 
 /**
  * @brief Data type of a persisted variable.
@@ -28,12 +29,13 @@ public:
 private:
     struct Var
     {
-        int noun;         ///< NOUN selector for VERB 8/9
-        std::string name; ///< Key used in the JSON persistence file
-        VarType_e type;   ///< Data type (bools are strictly validated as 0/1)
-        int defaultValue; ///< Value used when no persisted value exists
-        ApplyFn apply;    ///< Optional hardware side effect, may be null
-        int value;        ///< Current in-memory value
+        int noun;          ///< NOUN selector for VERB 8/9
+        std::string name;  ///< Key used in the JSON persistence file
+        std::string label; ///< Human-readable name shown on the LCD (e.g. "KEYPAD LIGHT")
+        VarType_e type;    ///< Data type (bools are strictly validated as 0/1)
+        int defaultValue;  ///< Value used when no persisted value exists
+        ApplyFn apply;     ///< Optional hardware side effect, may be null
+        int value;         ///< Current in-memory value
     };
 
     std::map<int, Var> vars_; ///< Registered variables, keyed by NOUN
@@ -51,11 +53,19 @@ public:
      * @brief Register a variable in the store.
      * @param noun NOUN value selecting this variable under VERB 8/9
      * @param name Key used in the JSON persistence file
+     * @param label Human-readable name shown on the LCD (e.g. "KEYPAD LIGHT")
      * @param type Data type (bools are strictly validated as 0/1)
      * @param defaultValue Value used when no persisted value exists
      * @param apply Optional callback invoked on every set() with the new value
      */
-    void registerVar(int noun, const std::string &name, VarType_e type, int defaultValue, ApplyFn apply = nullptr);
+    void registerVar(int noun, const std::string &name, const std::string &label, VarType_e type, int defaultValue, ApplyFn apply = nullptr);
+
+    /**
+     * @brief Build a list of human-readable variable descriptions for display.
+     *        One line per registered variable, in NOUN order: "VAR %d %s".
+     * @return Vector of description lines (e.g. "VAR 2 KEYPAD LIGHT")
+     */
+    std::vector<std::string> describeVars() const;
 
     /**
      * @brief Load persisted values from the JSON file.
