@@ -145,12 +145,12 @@ void TempMonitor::operation()
   hmiData_.lSetVerbListHeader(0, "DEVICES");
   hmiData_.lSetVerbList(buildListLines(sel), {});
 
-  // Right screen: NOUN in R1 (pending entry value while entering),
-  // temperature in R2.
+  // Right screen: temperature in R1, NOUN in the dedicated NOUN field
+  // (pending entry value while entering).
   hmiData_.rSetCompActLabel(DRAW_ON);
-  const int r1 = entering_.load() ? entryValue_.load() : sel;
-  hmiData_.rSetnR1(r1, DRAW_ON);
+  hmiData_.rSetnR1(SENSORS[sel].tempC, DRAW_ON);
   hmiData_.rSetR1Label(DRAW_ON);
-  hmiData_.rSetnR2(SENSORS[sel].tempC, DRAW_ON);
-  hmiData_.rSetR2Label(DRAW_ON);
+  const int noun = entering_.load() ? entryValue_.load() : sel;
+  hmiData_.rSetnNoun(noun, DRAW_ON);
+  hmiData_.rSetNounLabel(DRAW_ON);
 }
