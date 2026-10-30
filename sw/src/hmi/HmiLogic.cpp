@@ -1,6 +1,7 @@
 #include "HmiLogic.h"
 
 // Logging
+#include "HmiData.h"
 #include "Logger.h"
 
 // Exceptions
@@ -204,7 +205,13 @@ void HmiLogic::nounInput(HmiData &data)
       /* The command needs a value: prompt the user to type it */
       LogTrace << "Command needs a value, move to VALUE_INPUT" << std::endl;
       status_.transit(MODE_VALUE_INPUT);
-      data.rSetR2Label(DRAW_ON);
+      data.rSetR2Label(DRAW_BLINK);
+      data.rSetR1Label(DRAW_ON);
+      /* Show the "in" indicator while the user types the value.
+       * No hold needed: no reap runs during VALUE_INPUT, so the
+       * string stays until it is explicitly cleared or the right
+       * LCD data is reset after the command completes. */
+      data.rSetStrR1("in", DRAW_ON);
     }
     else
     {
@@ -329,6 +336,8 @@ void HmiLogic::valueInput(HmiData &data)
     data.rSetNounLabel(DRAW_OFF);
     data.rSetnR2(UNASIGNED, DRAW_OFF);
     data.rSetR2Label(DRAW_OFF);
+    /* Clear the "in" indicator: value entry is being abandoned */
+    data.rSetStrR1("", DRAW_OFF);
     status_.transit(MODE_V_INPUT);
     break;
 

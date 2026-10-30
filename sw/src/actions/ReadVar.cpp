@@ -11,7 +11,7 @@ ReadVar::ReadVar(VariableStore &store, int noun, HmiData &data) :
   Action(READ_VAR_VERB, noun, data, ACTION_PERIODIC, "READ VAR"),
   store_(store)
 {
-  setPeriod(1000);
+  setPeriod(100);
 }
 
 void ReadVar::operation()
@@ -20,7 +20,8 @@ void ReadVar::operation()
 
   if (store_.get(getNoun(), value))
   {
-    hmiData_.rSetStrR1("d", DRAW_BLINK);
+    hmiData_.rSetR1Label(DRAW_ON);
+    hmiData_.rSetStrR1("out", DRAW_ON);
     hmiData_.rSetnR2(value, DRAW_ON);
     hmiData_.rSetR2Label(DRAW_ON);
   }

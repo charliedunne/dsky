@@ -1,6 +1,7 @@
 #include "WriteVar.h"
 
 // Configuration
+#include "HmiData.h"
 #include "ListOfActions.h"
 
 // Logging
