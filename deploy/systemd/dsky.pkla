@@ -1,0 +1,30 @@
+# Polkit rule granting user "pi" (the dsky service account) permission to
+# reboot and power off the system via logind without interactive
+# authentication. Required because dsky runs as User=pi with no session, so
+# `systemctl reboot` / `systemctl poweroff` would otherwise be denied by
+# polkit ("Interactive authentication required").
+#
+# Installed to /etc/polkit-1/localauthority/50-local.d/dsky.pkla.
+# Note: on policykit 0.105 (Debian 11) the keys must be Identity=, Action=
+# and ResultAny=/ResultInactive=/ResultActive=; a bare Result= is not
+# parsed and the rule is silently dropped.
+
+[Allow pi to reboot]
+Identity=unix-user:pi
+Action=org.freedesktop.login1.reboot
+ResultAny=yes
+
+[Allow pi to power off]
+Identity=unix-user:pi
+Action=org.freedesktop.login1.power-off
+ResultAny=yes
+
+[Allow pi to reboot with multiple sessions]
+Identity=unix-user:pi
+Action=org.freedesktop.login1.reboot-multiple-sessions
+ResultAny=yes
+
+[Allow pi to power off with multiple sessions]
+Identity=unix-user:pi
+Action=org.freedesktop.login1.power-off-multiple-sessions
+ResultAny=yes

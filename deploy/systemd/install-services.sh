@@ -5,9 +5,11 @@
 #
 # Copies dskyKeyInt.service and dsky.service to /etc/systemd/system, installs
 # the backlight udev rule from deploy/udev (so the screensaver can write
-# brightness), runs systemctl daemon-reload, disables lightdm (the HMI must
-# own /dev/dri/card0; an X server would become DRM master and black out the
-# display), and enables + starts both units (omit start with --no-start).
+# brightness), installs the polkit rule granting "pi" reboot/poweroff rights
+# (VERB 98/99) into /etc/polkit-1/localauthority/50-local.d, runs
+# systemctl daemon-reload, disables lightdm (the HMI must own /dev/dri/card0;
+# an X server would become DRM master and black out the display), and enables
+# + starts both units (omit start with --no-start).
 # Safe to re-run after editing a unit file.
 #
 # Host: pi@dsky.local by default; override with DSKY_PI_HOST.
@@ -18,17 +20,18 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PI_HOST=${DSKY_PI_HOST:-pi@dsky.local}
 UNITS=("$SCRIPT_DIR/dskyKeyInt.service" "$SCRIPT_DIR/dsky.service")
 UDEV_RULES=("$SCRIPT_DIR/../udev/99-dsky-backlight.rules")
+POLKIT_RULES=("$SCRIPT_DIR/dsky.pkla")
 START=1
 [ "${1:-}" = "--no-start" ] && START=0
 
 ssh_pi() { ssh "$PI_HOST" "$@"; }
 
-echo "==> Staging unit files + udev rules on ${PI_HOST}..."
+echo "==> Staging unit files + udev rules + polkit rule on ${PI_HOST}..."
 # mkdir -p instead of rsync --mkpath: the Pi's rsync (3.2.3) is too old for it.
 ssh_pi 'mkdir -p /tmp/dsky-units'
-rsync -avz "${UNITS[@]}" "${UDEV_RULES[@]}" "$PI_HOST:/tmp/dsky-units/"
+rsync -avz "${UNITS[@]}" "${UDEV_RULES[@]}" "${POLKIT_RULES[@]}" "$PI_HOST:/tmp/dsky-units/"
 
-echo "==> Installing units + udev rules..."
+echo "==> Installing units + udev rules + polkit rule..."
 ssh_pi 'set -e
 for f in /tmp/dsky-units/*.service; do
   sudo cp "$f" /etc/systemd/system/
@@ -41,6 +44,14 @@ done
 # backlight devices so ownership applies without a reboot.
 sudo udevadm control --reload-rules
 sudo udevadm trigger --subsystem-match=backlight
+# Polkit local rule: grants "pi" (dsky service user) reboot/poweroff via
+# logind without interactive auth (VERB 98/99). polkit must be restarted to
+# re-read /etc/polkit-1/localauthority.
+for f in /tmp/dsky-units/*.pkla; do
+  sudo mkdir -p /etc/polkit-1/localauthority/50-local.d
+  sudo install -o root -g root -m 644 "$f" /etc/polkit-1/localauthority/50-local.d/
+done
+sudo systemctl restart polkit
 rm -rf /tmp/dsky-units'
 
 if [ "$START" = 1 ]; then
