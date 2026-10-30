@@ -20,13 +20,26 @@ Action & ListOfActions::operator()(HmiData &data)
     int verb = data.getRightLcdData().nVerb;
     int noun = data.getRightLcdData().nNoun;
 
-    /* Find the Action to do and execute */
+    /* First pass: exact (verb, noun) match always wins. */
     for (int i = 0; i < actions_.size(); ++i)
     {
         if ((actions_[i].operator Action &().getVerb() == verb) &&
             (actions_[i].operator Action &().getNoun() == noun))
         {
             return actions_[i];        
+        }
+    }
+
+    /* Second pass: a verb-only action (registered with noun -1) matches any
+     * current noun for its verb. This lets an action that owns the whole verb
+     * and mirrors its own selection into the NOUN display field (e.g.
+     * TEMP_MONITOR) keep resolving while running, instead of throwing. */
+    for (int i = 0; i < actions_.size(); ++i)
+    {
+        if ((actions_[i].operator Action &().getVerb() == verb) &&
+            (actions_[i].operator Action &().getNoun() == -1))
+        {
+            return actions_[i];
         }
     }
 

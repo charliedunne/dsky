@@ -77,9 +77,17 @@ class ListOfActions {
     void registerAction(Action &action);
 
     /**
-     * @brief Overload to the operator() to make a functor
-     * 
+     * @brief Overload to the operator() to make a functor.
+     *
+     * Resolves the command in two passes: first an exact (verb, noun) match;
+     * then a verb-only action (registered with noun -1), which matches any
+     * current noun for its verb so that actions mirroring their own state into
+     * the NOUN display field keep resolving while running.
+     *
      * @param data[in] Hmi data required for the action
+     *
+     * @return Reference to the matching registered Action
+     * @throws ExcInvalidCommand If no action matches the (verb, noun) command
      */
     Action & operator()(HmiData &data);
 
