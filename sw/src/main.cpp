@@ -15,6 +15,7 @@
 #include "SystemShutdown.h"
 #include "ReadVar.h"
 #include "WriteVar.h"
+#include "TempMonitor.h"
 
 // HMI
 #include "Hmi.h"
@@ -125,6 +126,7 @@ int main( int argc, char * argv[], char *envp[] ) {
   WriteVar a_WriteScreenSaver(store, VAR_NOUN_SCREENSAVER, data);
   ReadVar a_ReadScreenSaverTimer(store, VAR_NOUN_SCREENSAVER_TIMER, data);
   WriteVar a_WriteScreenSaverTimer(store, VAR_NOUN_SCREENSAVER_TIMER, data);
+  TempMonitor a_TempMonitor(data);
 
   /* Actions registration */
   logic.registerAction(a_Clock);
@@ -136,6 +138,7 @@ int main( int argc, char * argv[], char *envp[] ) {
   logic.registerAction(a_WriteScreenSaver);
   logic.registerAction(a_ReadScreenSaverTimer);
   logic.registerAction(a_WriteScreenSaverTimer);
+  logic.registerAction(a_TempMonitor);
 
   // VERB 0: list all implemented verb/noun combos on the left panel.
   // Registered last so its menu can describe every other action.

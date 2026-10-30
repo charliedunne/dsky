@@ -43,6 +43,7 @@ target_sources(dsky PRIVATE
   src/actions/ScreenSaver.cpp
   src/actions/ReadVar.cpp
   src/actions/WriteVar.cpp
+  src/actions/TempMonitor.cpp
   src/drivers/dskyKeyInt/MsgQueue.cpp
 )
 

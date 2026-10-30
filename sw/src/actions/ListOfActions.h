@@ -27,6 +27,9 @@
 #define VAR_NOUN_SCREENSAVER 3
 #define VAR_NOUN_SCREENSAVER_TIMER 4
 
+#define TEMP_MONITOR_VERB 10
+#define TEMP_MONITOR_NOUN -1
+
 /*
  * Add here more Actions
  */
