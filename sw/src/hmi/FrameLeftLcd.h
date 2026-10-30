@@ -46,8 +46,13 @@ public:
   void setTemp(DrawMode);
   void setKeyErr(DrawMode);
   void setOpErr(DrawMode);
-  void setShutdown(DrawMode);
-  void setReboot(DrawMode);
+  /**
+   * @brief Update the shared SHUTDOWN/REBOOT alarm label.
+   *
+   * Both verbs share one grid cell and only one can be active at a time
+   * (ACTION_SINGLE). The first non-OFF mode selects the text and blink state.
+   */
+  void setShutdownReboot(DrawMode shMode, DrawMode rbMode);
 
   /**
    * @brief Update the VERB 0 menu content from the left LCD data.
