@@ -150,9 +150,21 @@ void FrameLeftLcd::drawLabels()
     opErr->setMode(mode);
   }
 
-  void FrameLeftLcd::setShutdown(DrawMode mode)
+  void FrameLeftLcd::setShutdownReboot(DrawMode shMode, DrawMode rbMode)
   {
-    shutdown->setMode(mode);
+    // Single deterministic setter for the shared label: only one verb can be
+    // active at a time (ACTION_SINGLE), so the first non-OFF mode selects both
+    // the text and the blink state. Calling two independent setters here used
+    // to let the OFF side clobber the active side every frame.
+    if (shMode != DRAW_OFF) {
+      shutdown->setText("SHTDWN");
+      shutdown->setMode(shMode);
+    } else if (rbMode != DRAW_OFF) {
+      shutdown->setText("REBOOT");
+      shutdown->setMode(rbMode);
+    } else {
+      shutdown->setMode(DRAW_OFF);
+    }
   }
 
 void FrameLeftLcd::setVerbList(const LeftLcdData &d)

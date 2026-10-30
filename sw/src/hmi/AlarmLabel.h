@@ -61,6 +61,14 @@ public:
      void setBgColor(const Color bgColor);
 
     /**
+     * @brief Set the label text. The text is re-measured on every draw,
+     * so it can be changed at runtime.
+     *
+     * @param text[in] New label text.
+     */
+      void setText(const std::string &text);
+
+    /**
      * @brief Set the target center for the text ink (window-absolute).
      * The label box geometry is left unchanged; only the text moves.
      *

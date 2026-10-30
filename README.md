@@ -237,9 +237,13 @@ clean shutdown.
 ```
 
 This copies the units to `/etc/systemd/system`, runs `daemon-reload`, and
-enables + starts both services. It also **disables lightdm**: the app must be
-the sole KMS client on `/dev/dri/card0` — if an X server becomes DRM master it
-owns the scanout and the HMI can no longer present frames (black screen).
+enables + starts both services. It also installs the system-level pieces the
+Pi needs (see [Pi configuration](#pi-configuration)): the backlight udev rule
+(`/etc/udev/rules.d/`) and the polkit reboot/poweroff rule
+(`/etc/polkit-1/localauthority/50-local.d/`, followed by a polkit restart).
+Finally it **disables lightdm**: the app must be the sole KMS client on
+`/dev/dri/card0` — if an X server becomes DRM master it owns the scanout and
+the HMI can no longer present frames (black screen).
 
 ### 2. Build & deploy
 
@@ -278,6 +282,45 @@ daemon's queue, bypassing the HMI app: `cmdsend on [brightness]`,
   processes block-buffer stdout, so individual lines can lag behind until the
   buffer fills (~4 KB) or the process exits; `systemctl restart <unit>` forces
   an immediate flush. Do not rely on the journal for real-time verification.
+
+### Pi configuration
+
+Beyond the two units, the installer lays down a few system-level pieces that
+the app depends on. All of them are installed by
+`deploy/systemd/install-services.sh`; the sources live in this repo so they
+can be re-applied or inspected.
+
+- **Backlight udev rule** — `deploy/udev/99-dsky-backlight.rules` →
+  `/etc/udev/rules.d/`. Grants user `pi` ownership of
+  `/sys/class/backlight/10-0045/brightness` so the HMI can turn the screen
+  off/on for its screensaver. A plain `OWNER="pi"` does not work here: the
+  backlight class device has no devnode (it is a sysfs directory under
+  `platform/soc/...i2c-10`), and udev applies rule ownership only to
+  devnodes — hence the `RUN+="/bin/chown pi ..."` form. The installer runs
+  `udevadm control --reload-rules` and
+  `udevadm trigger --subsystem-match=backlight` so a fresh install takes
+  effect without a reboot.
+- **Polkit rule** — `deploy/systemd/dsky.pkla` →
+  `/etc/polkit-1/localauthority/50-local.d/dsky.pkla`. Grants user `pi` the
+  four logind actions `org.freedesktop.login1.{reboot,power-off,reboot-multiple-sessions,power-off-multiple-sessions}`
+  without interactive authentication. This is what makes VERB 98 (reboot) and
+  VERB 99 (power off) work: dsky runs as `User=pi` with no session, so a plain
+  `systemctl reboot` would otherwise be denied by polkit ("Interactive
+  authentication required"). Gotchas on policykit 0.105 (Debian 11): only the
+  classic `.pkla` format is parsed — the keys must be `Identity=`, `Action=`
+  and one of `ResultAny=`/`ResultInactive=`/`ResultActive=`; a bare
+  `Result=` is silently dropped. JavaScript `.rules` files are ignored (this
+  polkitd has no JS engine). After any change, `sudo systemctl restart
+  polkit` is required to re-read the directory. Verify as plain `pi`:
+  `pkcheck --action-id org.freedesktop.login1.reboot --process $(pgrep -x dsky)`
+  — exit 0 means authorized.
+- **IPC marker files** — `/var/local/dskykeyint` and `/var/local/dskycmd`.
+  The daemon's SysV IPC queue keys derive from `ftok()` of these files (queue
+  IDs 10 and 12). They persist on disk; the daemon unit's `ExecStartPre`
+  creates them so a fresh filesystem boots cleanly.
+- **lightdm disabled** — see "Display / kiosk behavior" above: the HMI must
+  own `/dev/dri/card0` as DRM master, and an X server would take that role
+  and black out the display.
 
 ## Unit tests
 

@@ -11,6 +11,7 @@
 #include "ActionClock.h"
 #include "ScreenSaver.h"
 #include "ActionVerbList.h"
+#include "SystemReboot.h"
 #include "SystemShutdown.h"
 #include "ReadVar.h"
 #include "WriteVar.h"
@@ -111,6 +112,7 @@ int main( int argc, char * argv[], char *envp[] ) {
 
   /* Actions */
   ActionClock a_Clock(data);
+  SystemReboot a_SystemReboot(data);
   SystemShutdown a_SystemShutdown(data);
   ReadVar a_ReadKeyLight(store, VAR_NOUN_KEYPAD_LIGHT, data);
   WriteVar a_WriteKeyLight(store, VAR_NOUN_KEYPAD_LIGHT, data);
@@ -119,6 +121,7 @@ int main( int argc, char * argv[], char *envp[] ) {
 
   /* Actions registration */
   logic.registerAction(a_Clock);
+  logic.registerAction(a_SystemReboot);
   logic.registerAction(a_SystemShutdown);
   logic.registerAction(a_ReadKeyLight);
   logic.registerAction(a_WriteKeyLight);

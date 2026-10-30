@@ -37,8 +37,13 @@ void SystemShutdown::operation()
    * small increments so a cancel request is picked up within ~100 ms */
   hmiData_.lSetShutdown(DRAW_BLINK);
 
+  hmiData_.rSetR1Label(DRAW_ON);
+
   for (int remaining = COUNTDOWN_SECONDS; remaining > 0 && !cancel_; --remaining)
   {
+    /* Show the seconds remaining in R1 (10, 9, ... 1) */
+    hmiData_.rSetnR1(remaining, DRAW_ON);
+
     for (int i = 0; i < 10 && !cancel_; ++i)
     {
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -55,6 +60,9 @@ void SystemShutdown::operation()
   /* Countdown expired: power off */
   LogTrace << "Countdown over, issuing systemctl poweroff" << std::endl;
 
+  /* Show the final zero in R1 before the system goes down */
+  hmiData_.rSetnR1(0, DRAW_ON);
+
   /* Give the HMI a moment to render before the system goes down */
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
@@ -68,5 +76,6 @@ void SystemShutdown::operation()
   if (ret != 0)
   {
     hmiData_.lSetShutdown(DRAW_OFF);
+    hmiData_.rSetnR1(0, DRAW_OFF);
   }
 }

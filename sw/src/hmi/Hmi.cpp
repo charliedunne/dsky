@@ -95,7 +95,9 @@ void Hmi::update(HmiData &data) {
   leftLcd_->setTemp(data.getLeftLcdData().lTemp);
   leftLcd_->setKeyErr(data.getLeftLcdData().lKeyErr);
   leftLcd_->setOpErr(data.getLeftLcdData().lOpErr);
-  leftLcd_->setShutdown(data.getLeftLcdData().lShutdown);
+  // Shared SHUTDOWN/REBOOT label: one deterministic call per frame.
+  leftLcd_->setShutdownReboot(data.getLeftLcdData().lShutdown,
+                              data.getLeftLcdData().lReboot);
 
   // VERB 0 menu
   leftLcd_->setVerbList(data.getLeftLcdData());
