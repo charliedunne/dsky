@@ -59,6 +59,29 @@ bool ListOfActions::needNoun(int verb) {
     return true;
 }
 
+bool ListOfActions::needValue(int verb, int noun) {
+
+    /* Only the write-variable verb prompts for a value */
+    if (verb != WRITE_VAR_VERB) {
+        return false;
+    }
+
+    /* A value is needed only when an action is registered
+     * for this exact (verb, noun) pair */
+    for (int i = 0; i < actions_.size(); ++i)
+    {
+        if ((actions_[i].operator Action &().getVerb() == verb) &&
+            (actions_[i].operator Action &().getNoun() == noun))
+        {
+            return true;
+        }
+    }
+
+    /* Unregistered noun: no value prompt, the command will be
+     * rejected later with ExcInvalidCommand in run() */
+    return false;
+}
+
 std::vector<std::string> ListOfActions::describe() const {
 
     // Build a sortable list of pointers to the registered actions

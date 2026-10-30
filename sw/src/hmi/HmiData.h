@@ -32,6 +32,9 @@ typedef struct
     int nR2;
     int nR3;
 
+    // R1 string value (max 5 chars + NUL). Empty ('\0') when unused.
+    char sR1[6];
+
     // Modes for Values
     DrawMode nProgMode;
     DrawMode nVerbMode;
@@ -118,6 +121,13 @@ public:
     void rSetnVerb(int nVerb, DrawMode mode);
     void rSetnNoun(int nNoun, DrawMode mode);
     void rSetnR1(int nR1, DrawMode mode);
+
+    /**
+     * @brief Set the R1 field to a string (letters + digits), max 5 chars.
+     *        Longer input is truncated with a warning. Clears the integer value.
+     */
+    void rSetStrR1(const std::string &s, DrawMode mode);
+
     void rSetnR2(int nR2, DrawMode mode);
     void rSetnR3(int nR3, DrawMode mode);
 

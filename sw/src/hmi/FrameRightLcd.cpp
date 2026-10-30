@@ -254,7 +254,18 @@ void FrameRightLcd::setNoun(const int value, DrawMode const mode)
 
 void FrameRightLcd::setR1(const int value, DrawMode const mode)
 {
+  nR1_->enableSign();
   nR1_->setValue(std::to_string(value).c_str());
+  nR1_->setMode(mode);
+}
+
+/**
+ * @brief Set the R1 field to a string (letters + digits), max 5 chars.
+ */
+void FrameRightLcd::setR1(const std::string &value, DrawMode const mode)
+{
+  nR1_->disableSign();
+  nR1_->setValue(value);
   nR1_->setMode(mode);
 }
 

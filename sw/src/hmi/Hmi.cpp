@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 
 #include "Hmi.h"
 #include "SDL2/SDL.h"
@@ -106,7 +107,11 @@ void Hmi::update(HmiData &data) {
   rightLcd_->setProg(data.getRightLcdData().nProg, data.getRightLcdData().nProgMode);
   rightLcd_->setVerb(data.getRightLcdData().nVerb, data.getRightLcdData().nVerbMode);
   rightLcd_->setNoun(data.getRightLcdData().nNoun, data.getRightLcdData().nNounMode);
-  rightLcd_->setR1(data.getRightLcdData().nR1, data.getRightLcdData().nR1Mode);
+  if (data.getRightLcdData().sR1[0] != '\0') {
+    rightLcd_->setR1(std::string(data.getRightLcdData().sR1), data.getRightLcdData().nR1Mode);
+  } else {
+    rightLcd_->setR1(data.getRightLcdData().nR1, data.getRightLcdData().nR1Mode);
+  }
   rightLcd_->setR2(data.getRightLcdData().nR2, data.getRightLcdData().nR2Mode);
   rightLcd_->setR3(data.getRightLcdData().nR3, data.getRightLcdData().nR3Mode);
 

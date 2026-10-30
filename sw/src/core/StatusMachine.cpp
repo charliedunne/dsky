@@ -33,6 +33,10 @@ std::string StatusMachine::to_string()
         return std::string("N_INPUT");
         break;
 
+        case MODE_VALUE_INPUT:
+        return std::string("VALUE_INPUT");
+        break;
+
         case MODE_RUN:
         return std::string("RUN");
         break;
@@ -62,6 +66,7 @@ void StatusMachine::transit(Mode_e dstMode)
 
         case MODE_V_INPUT:
         case MODE_N_INPUT:
+        case MODE_VALUE_INPUT:
         case MODE_RUN:
         case MODE_ERROR:
             LogDebug << "Transit to IDLE" << std::endl;
@@ -82,6 +87,7 @@ void StatusMachine::transit(Mode_e dstMode)
 
         case MODE_IDLE:
         case MODE_N_INPUT:
+        case MODE_VALUE_INPUT:
             LogDebug << "Transit to V_INPUT" << std::endl;
             /* Transit */
             mode_ = MODE_V_INPUT;
@@ -116,6 +122,27 @@ void StatusMachine::transit(Mode_e dstMode)
         }    
         break;
 
+    case MODE_VALUE_INPUT:
+
+        switch (mode_)
+        {
+
+        case MODE_VALUE_INPUT:
+            /* Do nothing */
+            break;
+
+        case MODE_N_INPUT:
+            LogDebug << "Transit to VALUE_INPUT" << std::endl;
+            /* Transit */
+            mode_ = MODE_VALUE_INPUT;
+            break;
+
+        case MODE_RUN:
+            throw std::domain_error("Invalid transition from RUN -> VALUE_INPUT");
+            break;
+        }
+        break;
+
     case MODE_RUN:
 
         switch (mode_)
@@ -127,6 +154,7 @@ void StatusMachine::transit(Mode_e dstMode)
 
         case MODE_V_INPUT:
         case MODE_N_INPUT:
+        case MODE_VALUE_INPUT:
 
             LogDebug << "Transit to RUN" << std::endl;        
             /* Transit */

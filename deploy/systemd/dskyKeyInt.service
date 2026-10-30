@@ -17,7 +17,7 @@ StartLimitBurst=10
 Type=simple
 # SysV IPC queue keys derive from ftok() of these marker files (IDs 10 and 12).
 # They persist on disk; the mkdir+touch is boot robustness for a fresh filesystem.
-ExecStartPre=/usr/bin/install -d /var/local
+ExecStartPre=/usr/bin/install -d -o pi -g pi /var/local
 ExecStartPre=/usr/bin/touch /var/local/dskykeyint /var/local/dskycmd
 ExecStart=/home/pi/run/dskyKeyInt
 WorkingDirectory=/home/pi/run

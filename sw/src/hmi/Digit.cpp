@@ -129,7 +129,6 @@ static std::vector<bool> getSegmentsFromChar(const char c)
     segments[5] = 1;
     break;
 
-  case 'd':
   case 'D':
     segments[1] = 1;
     segments[2] = 1;
@@ -166,11 +165,47 @@ static std::vector<bool> getSegmentsFromChar(const char c)
     segments[6] = 0;
     break;
 
-  default:
+  case 'o':
     segments[2] = 1;
     segments[3] = 1;
     segments[4] = 1;
     segments[6] = 1;
+    break;
+
+  case 'u':
+    segments[2] = 1;
+    segments[3] = 1;
+    segments[4] = 1;
+    break;
+
+  case 't':
+    segments[3] = 1;
+    segments[4] = 1;
+    segments[5] = 1;
+    segments[6] = 1;
+    break;
+
+  case 'i':
+    segments[2] = 1;
+    break;
+
+  case 'n':
+    segments[2] = 1;
+    segments[4] = 1;
+    segments[6] = 1;
+    break;
+
+  case 'd':
+    segments[1] = 1;
+    segments[2] = 1;
+    segments[3] = 1;
+    segments[4] = 1;
+    segments[6] = 1;
+    break;
+
+  default:
+    segments[0] = 1;
+    segments[3] = 1;
     break;
   }
 

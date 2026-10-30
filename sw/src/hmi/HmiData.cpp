@@ -18,6 +18,7 @@ void HmiData::resetRightLcdData()
     rLcdData_.nR1 = UNASIGNED;
     rLcdData_.nR2 = UNASIGNED;
     rLcdData_.nR3 = UNASIGNED;
+    rLcdData_.sR1[0] = '\0';
 
     rLcdData_.nProgMode = DRAW_OFF;
     rLcdData_.nVerbMode = DRAW_OFF;
@@ -184,6 +185,28 @@ void HmiData::rSetnR1(int nR1, DrawMode mode)
     mutex_.lock();
 
     rLcdData_.nR1 = nR1;
+    rLcdData_.nR1Mode = mode;
+    rLcdData_.sR1[0] = '\0';
+
+    mutex_.unlock();
+}
+
+/**
+ * @brief Set the R1 field to a string (letters + digits), max 5 chars.
+ *        Longer input is truncated with a warning. Clears the integer value.
+ */
+void HmiData::rSetStrR1(const std::string &s, DrawMode mode)
+{
+    mutex_.lock();
+
+    const size_t len = (s.size() > 5) ? 5 : s.size();
+    if (s.size() > 5) {
+        LogWarning << "HmiData: rSetStrR1 truncated to 5 chars: " << s << std::endl;
+    }
+    memcpy(rLcdData_.sR1, s.c_str(), len);
+    rLcdData_.sR1[len] = '\0';
+
+    rLcdData_.nR1 = UNASIGNED;
     rLcdData_.nR1Mode = mode;
 
     mutex_.unlock();
