@@ -110,7 +110,8 @@ void Hmi::update(HmiData &data) {
   rightLcd_->setVerb(data.getRightLcdData().nVerb, data.getRightLcdData().nVerbMode);
   rightLcd_->setNoun(data.getRightLcdData().nNoun, data.getRightLcdData().nNounMode);
   if (data.getRightLcdData().sR1[0] != '\0') {
-    rightLcd_->setR1(std::string(data.getRightLcdData().sR1), data.getRightLcdData().nR1Mode);
+    rightLcd_->setR1(std::string(data.getRightLcdData().sR1), data.getRightLcdData().nR1Mode,
+                     data.getRightLcdData().bR1ShowSign);
   } else {
     rightLcd_->setR1(data.getRightLcdData().nR1, data.getRightLcdData().nR1Mode);
   }

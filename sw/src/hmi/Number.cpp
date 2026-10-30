@@ -107,7 +107,8 @@ void Number::drawOn()
     for (int i = 0; i < digits_.size(); ++i)
     {
 
-      const int nPadding = digits_.size() - value_.size();
+      const int nPadding = digits_.size() - valueSize;
+      const bool negative = (value_[0] == '-');
 
       if (i < nPadding)
       {
@@ -115,7 +116,8 @@ void Number::drawOn()
       }
       else
       {
-        digits_[i]->draw(value_[i - nPadding]);
+        // Skip the leading '-' so the digits stay right-aligned.
+        digits_[i]->draw(value_[(i - nPadding) + (negative ? 1 : 0)]);
       }
     }
   }
@@ -123,6 +125,11 @@ void Number::drawOn()
 
 void Number::drawOff()
 {
+  // Blank the sign too so it does not persist from a previous drawOn().
+  if (showSign_)
+  {
+    sign_->draw(' ');
+  }
 
   for (int i = 0; i < digits_.size(); ++i)
   {

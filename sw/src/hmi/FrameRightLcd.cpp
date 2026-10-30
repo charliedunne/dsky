@@ -261,10 +261,15 @@ void FrameRightLcd::setR1(const int value, DrawMode const mode)
 
 /**
  * @brief Set the R1 field to a string (letters + digits), max 5 chars.
+ *        When showSign is true the number widget shows its +/- sign.
  */
-void FrameRightLcd::setR1(const std::string &value, DrawMode const mode)
+void FrameRightLcd::setR1(const std::string &value, DrawMode const mode, bool showSign)
 {
-  nR1_->disableSign();
+  if (showSign) {
+    nR1_->enableSign();
+  } else {
+    nR1_->disableSign();
+  }
   nR1_->setValue(value);
   nR1_->setMode(mode);
 }

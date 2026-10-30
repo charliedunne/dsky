@@ -28,7 +28,7 @@ constexpr std::array<Sensor, TEMP_MONITOR_NOUN_MAX + 1> SENSORS = {{
     {2, "LIVING", 22},
     {3, "BEDROOM", 21},
     {4, "GARAGE", 12},
-    {5, "OUTSIDE", 8},
+    {5, "OUTSIDE", -5},
 }};
 
 /**
@@ -160,7 +160,8 @@ void TempMonitor::operation()
     hmiData_.rSetnNoun(sel + 1, DRAW_ON);
     hmiData_.rSetR1Label(DRAW_ON);
     // String form so we can append the "ºC" suffix (max 5 chars).
-    hmiData_.rSetStrR1(std::to_string(SENSORS[sel].tempC) + "ºC", DRAW_ON);
+    // showSign=true lets the Sign widget render a '-' for negative temps.
+    hmiData_.rSetStrR1(std::to_string(SENSORS[sel].tempC) + "ºC", DRAW_ON, /*showSign=*/true);
   } else if (entryDigits_.load() == 0) {
     // Waiting for the first digit: everything blank.
     hmiData_.rSetNounLabel(DRAW_OFF);
