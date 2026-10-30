@@ -25,6 +25,7 @@
 /* Nouns used by the variable read/write verbs */
 #define VAR_NOUN_KEYPAD_LIGHT 2
 #define VAR_NOUN_SCREENSAVER 3
+#define VAR_NOUN_SCREENSAVER_TIMER 4
 
 /*
  * Add here more Actions
