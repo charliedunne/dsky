@@ -70,6 +70,7 @@ typedef struct
     char     lVerbListLines[2][20][28];        // up to 20 lines per page, max 27 chars + NUL
     int      lVerbListCount[2];                // number of valid lines per page (0..20)
     int      lVerbListPage;                    // active page index (0 or 1)
+    char     lVerbListHeader[2][28];           // optional header line per page (empty = default)
 
 } LeftLcdData;
 
@@ -116,6 +117,12 @@ public:
      * @brief Switch the active VERB 0 menu page (wraps modulo 2).
      */
     void lSetVerbListPage(int page);
+
+    /**
+     * @brief Set the header line of one list page.
+     *        An empty string restores the default header for that page.
+     */
+    void lSetVerbListHeader(int page, const char *header);
 
     /**
      * @brief Hide/clear the VERB 0 menu (does not touch alarm flags).

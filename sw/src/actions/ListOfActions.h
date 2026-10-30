@@ -30,6 +30,11 @@
 #define TEMP_MONITOR_VERB 10
 #define TEMP_MONITOR_NOUN -1
 
+/* Highest valid sensor (NOUN) ID for the TEMP_MONITOR verb.
+ * Sensor IDs are in a per-verb namespace, so they may overlap with
+ * nouns of other verbs. */
+#define TEMP_MONITOR_NOUN_MAX 4
+
 /*
  * Add here more Actions
  */

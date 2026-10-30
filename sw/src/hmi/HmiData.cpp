@@ -50,6 +50,7 @@ void HmiData::resetLeftLcdData()
     lLcdData_.lVerbListCount[0] = 0;
     lLcdData_.lVerbListCount[1] = 0;
     lLcdData_.lVerbListPage = 0;
+    std::memset(lLcdData_.lVerbListHeader, 0, sizeof(lLcdData_.lVerbListHeader));
 }
 
 HmiData::HmiData()
@@ -411,6 +412,23 @@ void HmiData::clearVerbList()
     lLcdData_.lVerbListCount[0] = 0;
     lLcdData_.lVerbListCount[1] = 0;
     lLcdData_.lVerbListPage = 0;
+    std::memset(lLcdData_.lVerbListHeader, 0, sizeof(lLcdData_.lVerbListHeader));
+
+    mutex_.unlock();
+}
+
+void HmiData::lSetVerbListHeader(int page, const char *header)
+{
+    mutex_.lock();
+
+    // Clamp the page index to the two available pages.
+    if (page < 0 || page > 1) {
+        mutex_.unlock();
+        return;
+    }
+
+    std::strncpy(lLcdData_.lVerbListHeader[page], header, 27);
+    lLcdData_.lVerbListHeader[page][27] = '\0';
 
     mutex_.unlock();
 }

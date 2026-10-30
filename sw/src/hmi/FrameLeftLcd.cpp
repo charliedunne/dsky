@@ -178,6 +178,9 @@ void FrameLeftLcd::setVerbList(const LeftLcdData &d)
     for (int i = 0; i < count && i < 20; ++i) {
         verbListLines_.push_back(std::string(d.lVerbListLines[verbListPage_][i]));
     }
+
+    // Copy the header of the active page (empty string = default header).
+    verbListHeader_ = std::string(d.lVerbListHeader[verbListPage_]);
 }
 
 void FrameLeftLcd::drawVerbList()
@@ -190,9 +193,12 @@ void FrameLeftLcd::drawVerbList()
     const int lineHeight = (int)(32 * scale) + 6;   // glyph height + gap (tune later)
     const Color green(0, 255, 0, 255);
 
-    // Header line: page 0 = verb list, page 1 = variable list.
+    // Header line: use the data-provided header when set, otherwise fall back
+    // to the defaults (page 0 = verb list, page 1 = variable list).
     int y = y_ + 8;                                  // top margin (tune later)
-    const char *header = (verbListPage_ == 0) ? "VERB LIST" : "VARIABLE LIST";
+    const char *header = verbListHeader_.empty()
+        ? ((verbListPage_ == 0) ? "VERB LIST" : "VARIABLE LIST")
+        : verbListHeader_.c_str();
     verbListFont_->drawText(header, x_ + 10, y, green, scale);
     y += lineHeight;
 
