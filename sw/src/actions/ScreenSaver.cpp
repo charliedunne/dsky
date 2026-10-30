@@ -290,6 +290,15 @@ bool ScreenSaver::isEnabled() const
     return enabled_;
 }
 
+void ScreenSaver::setTimer(int seconds)
+{
+    // Clamp to a sane minimum so a zero/negative value cannot blank the
+    // screen immediately.
+    int clamped = (seconds < 1) ? 1 : seconds;
+    timerSeconds_.store(clamped);
+    LogInfo << "ScreenSaver: idle timer set to " << clamped << "s" << std::endl;
+}
+
 bool ScreenSaver::isScreenOn() const
 {
     std::lock_guard<std::mutex> lock(screenMutex_);
@@ -312,7 +321,7 @@ void ScreenSaver::run()
         }
 
         auto idle = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - last).count();
-        if (idle >= SCREENSAVER_TIMER) {
+        if (idle >= timerSeconds_.load()) {
             setScreen(false);
         }
     }

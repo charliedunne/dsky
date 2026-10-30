@@ -103,6 +103,11 @@ int main( int argc, char * argv[], char *envp[] ) {
     screenSaver.setEnabled(value != 0);
   });
 
+  // NOUN 4: screensaver idle timer [seconds]. Apply updates the running timer.
+  store.registerVar(VAR_NOUN_SCREENSAVER_TIMER, "screensaverTimer", "SCREENSAVER TIMER", VAR_INT, SCREENSAVER_TIMER, [&screenSaver](int value) {
+    screenSaver.setTimer(value);
+  });
+
   // Restore persisted values, then re-apply them to hardware.
   store.load();
   store.applyAll();
@@ -118,6 +123,8 @@ int main( int argc, char * argv[], char *envp[] ) {
   WriteVar a_WriteKeyLight(store, VAR_NOUN_KEYPAD_LIGHT, data);
   ReadVar a_ReadScreenSaver(store, VAR_NOUN_SCREENSAVER, data);
   WriteVar a_WriteScreenSaver(store, VAR_NOUN_SCREENSAVER, data);
+  ReadVar a_ReadScreenSaverTimer(store, VAR_NOUN_SCREENSAVER_TIMER, data);
+  WriteVar a_WriteScreenSaverTimer(store, VAR_NOUN_SCREENSAVER_TIMER, data);
 
   /* Actions registration */
   logic.registerAction(a_Clock);
@@ -127,6 +134,8 @@ int main( int argc, char * argv[], char *envp[] ) {
   logic.registerAction(a_WriteKeyLight);
   logic.registerAction(a_ReadScreenSaver);
   logic.registerAction(a_WriteScreenSaver);
+  logic.registerAction(a_ReadScreenSaverTimer);
+  logic.registerAction(a_WriteScreenSaverTimer);
 
   // VERB 0: list all implemented verb/noun combos on the left panel.
   // Registered last so its menu can describe every other action.

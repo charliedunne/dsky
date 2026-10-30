@@ -15,7 +15,11 @@
 #define SCREENSAVER_DEFAULT 1
 
 /**
- * @brief Idle time before the screen is turned off [seconds].
+ * @brief Default idle time before the screen is turned off [seconds].
+ *
+ * This is only the compile-time default. The effective value is stored in the
+ * ScreenSaver timerSeconds_ member and can be changed at runtime through the
+ * persistent variable system (VERB 8/9, NOUN VAR_NOUN_SCREENSAVER_TIMER).
  */
 #define SCREENSAVER_TIMER 30
 
@@ -75,6 +79,14 @@ class ScreenSaver {
      * @brief Screensaver enable state (toggled by VERB 3 actions)
      */
     std::atomic<bool> enabled_;
+
+    /**
+     * @brief Idle time before the screen is turned off [seconds]. Defaults to
+     *        SCREENSAVER_TIMER; updated at runtime through the persistent
+     *        variable system via setTimer(). Atomic because it is written by
+     *        the main thread and read by the tick thread.
+     */
+    std::atomic<int> timerSeconds_{SCREENSAVER_TIMER};
 
     /**
      * @brief Cached screen power state, guarded by screenMutex_
@@ -197,6 +209,17 @@ class ScreenSaver {
      * @return true if enabled, false otherwise
      */
     bool isEnabled() const;
+
+    /**
+     * @brief Set the idle time before the screen is turned off [seconds].
+     *
+     * Called by the persistent variable system when NOUN 4 is written. Values
+     * below 1 are clamped to 1 so a zero or negative timeout cannot blank the
+     * screen immediately.
+     *
+     * @param[in] seconds idle time in seconds, minimum 1
+     */
+    void setTimer(int seconds);
 
     /**
      * @brief Query whether the physical screen is currently on.
