@@ -15,7 +15,7 @@ namespace {
  * @brief A dummy sensor entry in the device list.
  */
 struct Sensor {
-  int id;         //!< NOUN ID (0..TEMP_MONITOR_NOUN_MAX)
+  int id;         //!< NOUN ID (1..TEMP_MONITOR_NOUN_MAX + 1)
   const char *name;  //!< Display name (up to 7 chars)
   int tempC;      //!< Constant temperature value (deg C)
 };
@@ -24,11 +24,11 @@ struct Sensor {
  * @brief Table of dummy sensors shown during VERB 10.
  */
 constexpr std::array<Sensor, TEMP_MONITOR_NOUN_MAX + 1> SENSORS = {{
-    {0, "KITCHEN", 19},
-    {1, "LIVING", 22},
-    {2, "BEDROOM", 21},
-    {3, "GARAGE", 12},
-    {4, "OUTSIDE", 8},
+    {1, "KITCHEN", 19},
+    {2, "LIVING", 22},
+    {3, "BEDROOM", 21},
+    {4, "GARAGE", 12},
+    {5, "OUTSIDE", 8},
 }};
 
 /**
@@ -43,7 +43,7 @@ std::vector<std::string> buildListLines(int selected)
   lines.reserve(SENSORS.size());
   char line[28];
   for (const auto &s : SENSORS) {
-    snprintf(line, sizeof(line), "%c %d %-7s %dC", s.id == selected ? '>' : ' ', s.id, s.name, s.tempC);
+    snprintf(line, sizeof(line), "%c %d %-7s %dC", (s.id - 1) == selected ? '>' : ' ', s.id, s.name, s.tempC);
     lines.emplace_back(line);
   }
   return lines;
@@ -101,8 +101,8 @@ bool TempMonitor::handleKey(EventId_t key)
         return true;
       }
       const int v = entryValue_.load();
-      if (v <= TEMP_MONITOR_NOUN_MAX) {
-        selected_.store(v);
+      if (v >= 1 && v <= TEMP_MONITOR_NOUN_MAX + 1) {
+        selected_.store(v - 1);
         entering_.store(false);
         entryValue_.store(0);
         entryDigits_.store(0);
@@ -157,7 +157,7 @@ void TempMonitor::operation()
   hmiData_.rSetCompActLabel(DRAW_ON);
   if (!entering_.load()) {
     hmiData_.rSetNounLabel(DRAW_ON);
-    hmiData_.rSetnNoun(sel, DRAW_ON);
+    hmiData_.rSetnNoun(sel + 1, DRAW_ON);
     hmiData_.rSetR1Label(DRAW_ON);
     hmiData_.rSetnR1(SENSORS[sel].tempC, DRAW_ON);
   } else if (entryDigits_.load() == 0) {
