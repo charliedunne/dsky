@@ -45,7 +45,7 @@ Label::Label(SDL_Renderer *r,
     SDL_FreeSurface(surface);
 }
 
-void drawLabel(SDL_Renderer *r, SDL_Texture *t, const int x, const int y, const int w, const int h, const Color c, const LabelType lType)
+void drawLabel(SDL_Renderer *r, SDL_Texture *t, const int x, const int y, const int w, const int h, const Color c, const LabelType lType, const bool drawText)
 {
     // Create output rectange for drawing
     SDL_Rect dest = {x, y, w, h};
@@ -59,7 +59,7 @@ void drawLabel(SDL_Renderer *r, SDL_Texture *t, const int x, const int y, const 
              x + w, y + h,
              c);
 
-    if (lType != LABEL_LINE)
+    if (lType != LABEL_LINE && drawText)
     {
 
         // Calculate Source based on the Label Type
@@ -108,12 +108,14 @@ void drawLabel(SDL_Renderer *r, SDL_Texture *t, const int x, const int y, const 
 void Label::drawOn()
 {
 
-    drawLabel(r_, labelTx_, x_, y_, w_, h_, fgColor_, lType_);
+    drawLabel(r_, labelTx_, x_, y_, w_, h_, fgColor_, lType_, true);
 }
 
 void Label::drawOff()
 {
-    drawLabel(r_, labelTx_, x_, y_, w_, h_, bgColor_, lType_);
+    // Off state: only the (faint) box is drawn, the text is skipped so the
+    // field reads as blank instead of a lit label.
+    drawLabel(r_, labelTx_, x_, y_, w_, h_, bgColor_, lType_, false);
 }
 
 void Label::setColor(const Color fgColor, const Color bgColor)
