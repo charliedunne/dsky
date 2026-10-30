@@ -10,7 +10,9 @@ static std::vector<bool> getSegmentsFromChar(const char c)
 
   std::vector<bool> segments = {0, 0, 0, 0, 0, 0, 0};
 
-  switch (c)
+  // Cast to unsigned char so high-bit bytes (e.g. the degree sentinel 0xBA)
+  // match their case labels regardless of the platform's char signedness.
+  switch (static_cast<unsigned char>(c))
   {
 
   case 'x':
@@ -202,6 +204,15 @@ static std::vector<bool> getSegmentsFromChar(const char c)
     segments[4] = 1;
     segments[6] = 1;
     break;
+
+  // Degree sign sentinel (see Number::setValue UTF-8 conversion)
+  case '\xBA':
+    segments[0] = 1;
+    segments[1] = 1;
+    segments[5] = 1;
+    segments[6] = 1;
+    break;
+
 
   default:
     segments[0] = 1;

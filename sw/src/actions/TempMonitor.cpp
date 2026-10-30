@@ -159,7 +159,8 @@ void TempMonitor::operation()
     hmiData_.rSetNounLabel(DRAW_ON);
     hmiData_.rSetnNoun(sel + 1, DRAW_ON);
     hmiData_.rSetR1Label(DRAW_ON);
-    hmiData_.rSetnR1(SENSORS[sel].tempC, DRAW_ON);
+    // String form so we can append the "ºC" suffix (max 5 chars).
+    hmiData_.rSetStrR1(std::to_string(SENSORS[sel].tempC) + "ºC", DRAW_ON);
   } else if (entryDigits_.load() == 0) {
     // Waiting for the first digit: everything blank.
     hmiData_.rSetNounLabel(DRAW_OFF);

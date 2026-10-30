@@ -45,7 +45,28 @@ Number::Number(SDL_Renderer *r, const int digits, const int x, const int y, cons
 
 void Number::setValue(const std::string s)
 {
-  value_ = s;
+  // Convert the UTF-8 degree sign (0xC2 0xBA) to a single sentinel byte.
+  // The 7-segment renderer dispatches one byte per digit position, so a
+  // multi-byte sequence would otherwise occupy two positions.
+  static const char utf8Degree[2] = {0xC2, 0xBA};
+
+  std::string converted;
+  converted.reserve(s.size());
+
+  for (size_t i = 0; i < s.size(); ++i)
+  {
+    if (s[i] == utf8Degree[0] && i + 1 < s.size() && s[i + 1] == utf8Degree[1])
+    {
+      converted.push_back('\xBA');
+      ++i;
+    }
+    else
+    {
+      converted.push_back(s[i]);
+    }
+  }
+
+  value_ = converted;
 }
 
 void Number::drawOn()
