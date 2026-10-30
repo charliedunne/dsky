@@ -63,6 +63,7 @@ typedef struct
     DrawMode lKeyErr;
     DrawMode lOpErr;
     DrawMode lShutdown;
+    DrawMode lReboot;
 
     // VERB 0 menu: two pages — page 0 = verb list, page 1 = variable list
     DrawMode lVerbList;                        // DRAW_ON while the list is shown
@@ -155,6 +156,11 @@ public:
      * @brief Set the SHUTDOWN alarm label draw mode (VERB 99 countdown).
      */
     void lSetShutdown(DrawMode mode);
+
+    /**
+     * @brief Set the REBOOT alarm label draw mode (VERB 98 countdown).
+     */
+    void lSetReboot(DrawMode mode);
 
     void _debugPrintLcdData();
 };

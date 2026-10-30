@@ -30,6 +30,9 @@
  * Add here more Actions
  */
 
+#define REBOOT_VERB 98
+#define REBOOT_NOUN -1
+
 #define SHUTDOWN_VERB 99
 #define SHUTDOWN_NOUN -1
 

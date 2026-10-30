@@ -38,6 +38,7 @@ target_sources(dsky PRIVATE
   src/actions/ListOfActions.cpp
   src/actions/ActionClock.cpp
   src/actions/ActionVerbList.cpp
+  src/actions/SystemReboot.cpp
   src/actions/SystemShutdown.cpp
   src/actions/ScreenSaver.cpp
   src/actions/ReadVar.cpp

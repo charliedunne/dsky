@@ -86,6 +86,11 @@ void AlarmLabel::setBgColor(const Color bgColor)
     bgColor_ = bgColor;
 }
 
+void AlarmLabel::setText(const std::string &text)
+{
+    text_ = text;
+}
+
 void AlarmLabel::setTargetCenter(const int cx, const int cy)
 {
     targetCx_ = cx;

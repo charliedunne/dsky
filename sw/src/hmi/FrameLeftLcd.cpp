@@ -152,6 +152,15 @@ void FrameLeftLcd::drawLabels()
 
   void FrameLeftLcd::setShutdown(DrawMode mode)
   {
+    // The label is shared with REBOOT; restore the SHUTDOWN text.
+    shutdown->setText("SHTDWN");
+    shutdown->setMode(mode);
+  }
+
+  void FrameLeftLcd::setReboot(DrawMode mode)
+  {
+    // Shared label: show REBOOT text while VERB 98 is active.
+    shutdown->setText("REBOOT");
     shutdown->setMode(mode);
   }
 

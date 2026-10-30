@@ -47,6 +47,7 @@ public:
   void setKeyErr(DrawMode);
   void setOpErr(DrawMode);
   void setShutdown(DrawMode);
+  void setReboot(DrawMode);
 
   /**
    * @brief Update the VERB 0 menu content from the left LCD data.

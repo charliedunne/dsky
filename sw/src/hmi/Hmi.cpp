@@ -96,6 +96,8 @@ void Hmi::update(HmiData &data) {
   leftLcd_->setKeyErr(data.getLeftLcdData().lKeyErr);
   leftLcd_->setOpErr(data.getLeftLcdData().lOpErr);
   leftLcd_->setShutdown(data.getLeftLcdData().lShutdown);
+  // Reboot is applied after shutdown so the last active verb wins.
+  leftLcd_->setReboot(data.getLeftLcdData().lReboot);
 
   // VERB 0 menu
   leftLcd_->setVerbList(data.getLeftLcdData());
