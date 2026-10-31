@@ -377,5 +377,31 @@ void Digit::draw(std::vector<bool> seg)
 void Digit::draw(const char c)
 {
 
+  // The decimal point cannot be expressed with the seven segments, so
+  // render a blank cell and overlay a small filled square at the
+  // bottom-right corner of the digit area.
+  if (c == '.')
+  {
+
+    Digit::draw(getSegmentsFromChar('x'));
+
+    const int dotW = w_ / 5;
+    const int dotH = h_ / 6;
+
+    SDL_Rect dot = {x_ + w_ - dotW - w_ / 10, y_ + h_ - dotH - h_ / 8, dotW, dotH};
+
+    // Approximate the segment glow with a larger, faint halo.
+    if (glow_)
+    {
+      SDL_Rect halo = {dot.x - dotW / 2, dot.y - dotH / 2, dotW * 2, dotH * 2};
+      SDL_SetRenderDrawColor(r_, fgColor_.r(), fgColor_.g(), fgColor_.b(), 64);
+      SDL_RenderFillRect(r_, &halo);
+    }
+
+    SDL_SetRenderDrawColor(r_, fgColor_.r(), fgColor_.g(), fgColor_.b(), fgColor_.a());
+    SDL_RenderFillRect(r_, &dot);
+    return;
+  }
+
   Digit::draw(getSegmentsFromChar(c));
 }
