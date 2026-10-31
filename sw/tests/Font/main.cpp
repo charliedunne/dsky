@@ -224,4 +224,51 @@ TEST(parse_fnt_no_glyphs_throws_runtime_error) {
       "Font::parseFnt: no glyphs parsed"));
 }
 
+// Regression: the '*' (id=42) glyph must be parsed from the Gorton .fnt.
+// estimateSize counts a char only when getW/getH both resolve, using the
+// cell width (not xadvance). A=21, *=20, B=19 => w=60 if stored, 40 if not.
+TEST(asterisk_glyph_parsed_by_estimate_size) {
+  auto font = makeFont();
+  CHECK(font != nullptr);
+  if (!font) return;
+  int w = -1, h = -1;
+  font->estimateSize("A*B", &w, &h);
+  CHECK(w == 60);
+  int w2 = -1, h2 = -1;
+  font->estimateSize("*", &w2, &h2);
+  CHECK(w2 == 20);
+}
+
+// Regression: drawText must actually blit the '*' cell. Draws at pen (10,10)
+// scale 1.0 => dest x[10..30) y[10..42); counts non-black pixels (~287).
+TEST(asterisk_glyph_renders_pixels) {
+  CHECK(renderer() != nullptr);
+  if (renderer() == nullptr) return;
+  auto font = makeFont();
+  CHECK(font != nullptr);
+  if (!font) return;
+
+  SDL_SetRenderDrawColor(renderer(), 0, 0, 0, 255);
+  SDL_RenderClear(renderer());
+  font->drawText("*", 10, 10, Color(255, 255, 255, 255), 1.0f);
+  SDL_RenderPresent(renderer());
+
+  SDL_Surface *shot =
+      SDL_CreateRGBSurfaceWithFormat(0, 800, 640, 32, SDL_PIXELFORMAT_ARGB8888);
+  CHECK(shot != nullptr);
+  if (shot) {
+    SDL_RenderReadPixels(renderer(), nullptr, SDL_PIXELFORMAT_ARGB8888, shot->pixels, shot->pitch);
+    int lit = 0;
+    for (int y = 10; y < 42; ++y) {
+      const Uint32 *row = (const Uint32 *)(shot->pixels + y * shot->pitch);
+      for (int x = 10; x < 30; ++x) {
+        Uint32 px = row[x];
+        if (((px >> 16) & 0xFFu) || ((px >> 8) & 0xFFu) || (px & 0xFFu)) ++lit;
+      }
+    }
+    CHECK(lit > 100);
+    SDL_FreeSurface(shot);
+  }
+}
+
 TESTS_MAIN;
