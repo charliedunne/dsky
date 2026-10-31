@@ -165,10 +165,10 @@ void TempMonitor::operation()
   // Right screen: three display states.
   //  - Normal (a sensor is selected): NOUN field shows the selected ID, R1
   //    shows its temperature.
-  //  - Entry, digit(s) typed: NOUN shows the pending value live; R1 stays off
-  //    until ENTER confirms the selection.
-  //  - Otherwise (nothing selected yet, or waiting for the first digit):
-  //    all four fields blank.
+  //  - Entry mode: NOUN label lit to indicate a device ID is expected; once
+  //    digits are typed the pending value is shown live in the NOUN field.
+  //    R1 stays off until ENTER confirms the selection.
+  //  - Otherwise (nothing selected yet): all four fields blank.
   hmiData_.rSetCompActLabel(DRAW_ON);
   if (!entering_.load() && sel >= 0) {
     hmiData_.rSetNounLabel(DRAW_ON);
@@ -177,10 +177,15 @@ void TempMonitor::operation()
     // String form so we can append the "ºC" suffix (max 5 chars).
     // showSign=true lets the Sign widget render a '-' for negative temps.
     hmiData_.rSetStrR1(std::to_string(SENSORS[sel].tempC) + "ºC", DRAW_ON, /*showSign=*/true);
-  } else if (entering_.load() && entryDigits_.load() > 0) {
-    // Digits typed: pending value shown live in the NOUN field.
+  } else if (entering_.load()) {
+    // Entry mode: NOUN label always lit as a prompt for the device ID.
     hmiData_.rSetNounLabel(DRAW_ON);
-    hmiData_.rSetnNoun(entryValue_.load(), DRAW_ON);
+    if (entryDigits_.load() > 0) {
+      // Digits typed: pending value shown live in the NOUN field.
+      hmiData_.rSetnNoun(entryValue_.load(), DRAW_ON);
+    } else {
+      hmiData_.rSetnNoun(0, DRAW_OFF);
+    }
     hmiData_.rSetR1Label(DRAW_OFF);
     hmiData_.rSetnR1(0, DRAW_OFF);
   } else {
