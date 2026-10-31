@@ -17,6 +17,9 @@
 #include "WriteVar.h"
 #include "TempMonitor.h"
 
+// Database client (live temp sensor data for VERB 10)
+#include "DbClient.h"
+
 // HMI
 #include "Hmi.h"
 #include "HmiLogic.h"
@@ -116,6 +119,16 @@ int main( int argc, char * argv[], char *envp[] ) {
   // Instance of the logic
   HmiLogic logic(store);
 
+  // Background DB client for live temperature sensor data (VERB 10).
+  // Runs its own refresh thread; a missing/unreadable config is non-fatal —
+  // TempMonitor simply shows no data until a successful fetch occurs.
+  DbClient dbClient;
+  if (!dbClient.loadConfig(DB_CONF_FILE)) {
+    LogError << "Failed to load DB config from " << DB_CONF_FILE << "; temperature monitor will have no data" << std::endl;
+  } else {
+    dbClient.start();
+  }
+
   /* Actions */
   ActionClock a_Clock(data);
   SystemReboot a_SystemReboot(data);
@@ -126,7 +139,7 @@ int main( int argc, char * argv[], char *envp[] ) {
   WriteVar a_WriteScreenSaver(store, VAR_NOUN_SCREENSAVER, data);
   ReadVar a_ReadScreenSaverTimer(store, VAR_NOUN_SCREENSAVER_TIMER, data);
   WriteVar a_WriteScreenSaverTimer(store, VAR_NOUN_SCREENSAVER_TIMER, data);
-  TempMonitor a_TempMonitor(data);
+  TempMonitor a_TempMonitor(data, dbClient);
 
   /* Actions registration */
   logic.registerAction(a_Clock);
@@ -192,6 +205,10 @@ int main( int argc, char * argv[], char *envp[] ) {
     }
 
   }
+
+  // Stop the DB refresh thread before actions are stopped so no consumer can
+  // observe a half-torn-down cache during shutdown.
+  dbClient.stop();
 
   // Stop all actions before they are destroyed below. A periodic action that
   // is still running can wake up during destruction and virtually dispatch

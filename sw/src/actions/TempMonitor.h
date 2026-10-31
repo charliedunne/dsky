@@ -5,11 +5,19 @@
 
 #include "Action.h"
 
+class DbClient;
+
 class TempMonitor : public Action {
 
  public:
 
-  TempMonitor(HmiData & data);
+  /**
+   * @brief Constructor for the TEMP_MONITOR action.
+   *
+   * @param data HMI data shared with the display thread.
+   * @param db Database client providing live sensor readings (must outlive this action).
+   */
+  TempMonitor(HmiData & data, DbClient & db);
 
   /**
    * @brief Handle a keypad event while the action is running.
@@ -53,6 +61,8 @@ class TempMonitor : public Action {
    * waiting for the next tick.
    */
   void updateScreens();
+
+  DbClient &db_;                      //!< Live sensor readings source
 
   std::atomic<int> selected_{-1};     //!< Index of the currently selected sensor (-1 = none)
   std::atomic<bool> entering_{false}; //!< True while a NOUN value is being entered

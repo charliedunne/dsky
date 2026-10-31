@@ -186,6 +186,14 @@ rm -f /tmp/dsky-deploy-dsky
 if systemctl is-active --quiet dsky.service; then sudo systemctl restart dsky && echo "dsky restarted"; else echo "WARN: dsky service not active (run install-services.sh)"; fi'
 }
 
+deploy_dbconf() {
+  echo "==> Deploying dskydb.conf to ${PI_HOST}:/var/local/dskydb.conf..."
+  rsync -avz "$ROOT/deploy/dskydb.conf" "$PI_HOST:/tmp/dsky-deploy-dskydb.conf"
+  ssh_pi 'sudo mkdir -p /var/local
+ sudo install -m 644 /tmp/dsky-deploy-dskydb.conf /var/local/dskydb.conf
+ rm -f /tmp/dsky-deploy-dskydb.conf'
+}
+
 deploy_resources() {
   echo "==> Syncing resources to ${PI_HOST}:/home/pi/run/resources/..."
   rsync -avz "$SW/resources/" "$PI_HOST:/home/pi/run/resources/"
@@ -202,6 +210,7 @@ else
   if [ "$DEPLOY" = 1 ]; then
     [ "$SYNC_RESOURCES" = 1 ] && deploy_resources
     [ "$BUILD_DAEMON" = 1 ] && deploy_daemon
+    [ "$BUILD_APP" = 1 ] && deploy_dbconf
     [ "$BUILD_APP" = 1 ] && deploy_app
   else
     echo "==> --no-deploy: skipping Pi deployment."
