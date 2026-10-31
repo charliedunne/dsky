@@ -17,18 +17,18 @@ namespace {
 struct Sensor {
   int id;         //!< NOUN ID (1..TEMP_MONITOR_NOUN_MAX + 1)
   const char *name;  //!< Display name (up to 7 chars)
-  int tempC;      //!< Constant temperature value (deg C)
+  float tempC;    //!< Constant temperature value (deg C)
 };
 
 /**
  * @brief Table of dummy sensors shown during VERB 10.
  */
 constexpr std::array<Sensor, TEMP_MONITOR_NOUN_MAX + 1> SENSORS = {{
-    {1, "KITCHEN", 19},
-    {2, "LIVING", 22},
-    {3, "BEDROOM", 21},
-    {4, "GARAGE", 12},
-    {5, "OUTSIDE", -5},
+    {1, "KITCHEN", 19.40f},
+    {2, "LIVING", 22.50f},
+    {3, "BEDROOM", 21.75f},
+    {4, "GARAGE", 12.30f},
+    {5, "OUTSIDE", -5.20f},
 }};
 
 /**
@@ -43,7 +43,7 @@ std::vector<std::string> buildListLines(int selected)
   lines.reserve(SENSORS.size());
   char line[28];
   for (const auto &s : SENSORS) {
-    snprintf(line, sizeof(line), "%c %d %-7s %dC", (s.id - 1) == selected ? '>' : ' ', s.id, s.name, s.tempC);
+    snprintf(line, sizeof(line), "%c %d %-7s %+5.2fC", (s.id - 1) == selected ? '>' : ' ', s.id, s.name, s.tempC);
     lines.emplace_back(line);
   }
   return lines;
@@ -178,20 +178,35 @@ void TempMonitor::updateScreens()
   hmiData_.lSetVerbList(buildListLines(sel), {});
 
   // Right screen: three display states.
-  //  - Normal (a sensor is selected): NOUN field shows the selected ID, R1
-  //    shows its temperature.
+  //  - Normal (a sensor is selected): NOUN field shows the selected ID, and
+  //    the temperature is split across R1 (integer part, with sign), R2
+  //    (".XX" fraction) and R3 (unit).
   //  - Entry mode: NOUN label lit to indicate a device ID is expected; once
   //    digits are typed the pending value is shown live in the NOUN field.
-  //    R1 stays off until ENTER confirms the selection.
-  //  - Otherwise (nothing selected yet): all four fields blank.
+  //    R1/R2/R3 stay off until ENTER confirms the selection.
+  //  - Otherwise (nothing selected yet): all fields blank.
   hmiData_.rSetCompActLabel(DRAW_ON);
   if (!entering_.load() && sel >= 0) {
     hmiData_.rSetNounLabel(DRAW_ON);
     hmiData_.rSetnNoun(sel + 1, DRAW_ON);
     hmiData_.rSetR1Label(DRAW_ON);
-    // String form so we can append the "ºC" suffix (max 5 chars).
-    // showSign=true lets the Sign widget render a '-' for negative temps.
-    hmiData_.rSetStrR1(std::to_string(SENSORS[sel].tempC) + "ºC", DRAW_ON, /*showSign=*/true);
+    hmiData_.rSetR2Label(DRAW_ON);
+    hmiData_.rSetR3Label(DRAW_ON);
+    // Split the temperature across three rows: R1 = integer part (with sign),
+    // R2 = ".XX" fraction, R3 = unit. %.2f guarantees a dot is present.
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%+.2f", SENSORS[sel].tempC);
+    std::string full(buf);
+    const size_t dot = full.find('.');
+    // The Sign widget renders the sign itself; strip a leading '+' from R1.
+    std::string r1 = full.substr(0, dot);
+    if (!r1.empty() && r1[0] == '+') {
+      r1.erase(0, 1);
+    }
+    const std::string r2 = full.substr(dot); // includes the '.'
+    hmiData_.rSetStrR1(r1, DRAW_ON, /*showSign=*/true);
+    hmiData_.rSetStrR2(r2, DRAW_ON);
+    hmiData_.rSetStrR3("\xC2\xBA C", DRAW_ON); // UTF-8 "º C" -> sentinel byte
   } else if (entering_.load()) {
     // Entry mode: NOUN label always lit as a prompt for the device ID.
     hmiData_.rSetNounLabel(DRAW_ON);
@@ -203,11 +218,19 @@ void TempMonitor::updateScreens()
     }
     hmiData_.rSetR1Label(DRAW_OFF);
     hmiData_.rSetnR1(0, DRAW_OFF);
+    hmiData_.rSetR2Label(DRAW_OFF);
+    hmiData_.rSetnR2(0, DRAW_OFF);
+    hmiData_.rSetR3Label(DRAW_OFF);
+    hmiData_.rSetnR3(0, DRAW_OFF);
   } else {
     // Nothing selected yet, or waiting for the first digit: all blank.
     hmiData_.rSetNounLabel(DRAW_OFF);
     hmiData_.rSetnNoun(0, DRAW_OFF);
     hmiData_.rSetR1Label(DRAW_OFF);
     hmiData_.rSetnR1(0, DRAW_OFF);
+    hmiData_.rSetR2Label(DRAW_OFF);
+    hmiData_.rSetnR2(0, DRAW_OFF);
+    hmiData_.rSetR3Label(DRAW_OFF);
+    hmiData_.rSetnR3(0, DRAW_OFF);
   }
 }
