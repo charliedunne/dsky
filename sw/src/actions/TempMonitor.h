@@ -25,6 +25,14 @@ class TempMonitor : public Action {
 
  protected:
 
+  /**
+   * @brief Reset per-run state at the start of every run.
+   *
+   * Clears any selection or pending NOUN entry left over from a
+   * previous run so VERB 10 always starts with nothing selected.
+   */
+  void start() override;
+
   void operation() override;
 
  private:
@@ -37,7 +45,7 @@ class TempMonitor : public Action {
    */
   bool enterDigit(int d);
 
-  std::atomic<int> selected_{0};      //!< Index of the currently selected sensor
+  std::atomic<int> selected_{-1};     //!< Index of the currently selected sensor (-1 = none)
   std::atomic<bool> entering_{false}; //!< True while a NOUN value is being entered
   std::atomic<int> entryValue_{0};    //!< Pending NOUN value under entry
   std::atomic<int> entryDigits_{0};   //!< Number of digits accepted so far

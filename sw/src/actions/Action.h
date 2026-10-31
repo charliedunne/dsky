@@ -168,6 +168,16 @@ public:
 
 protected:
   /**
+   * @brief Per-run initialization hook.
+   *
+   * Called once by run() before the action is marked as running, so
+   * key handlers never observe stale state from a previous run. Derived
+   * classes that keep member state across runs should reset it here so
+   * every run starts from a clean state.
+   */
+  virtual void start() {}
+
+  /**
    * @brief Define in derived classes the operation to do in the thread
    */
   virtual void operation() = 0;
