@@ -276,13 +276,35 @@ void FrameRightLcd::setR1(const std::string &value, DrawMode const mode, bool sh
 
 void FrameRightLcd::setR2(const int value, DrawMode const mode)
 {
+  nR2_->enableSign();
   nR2_->setValue(std::to_string(value).c_str());
+  nR2_->setMode(mode);
+}
+
+/**
+ * @brief Set the R2 field to a string (letters + digits), max 5 chars.
+ */
+void FrameRightLcd::setR2(const std::string &value, DrawMode const mode)
+{
+  nR2_->disableSign();
+  nR2_->setValue(value);
   nR2_->setMode(mode);
 }
 
 void FrameRightLcd::setR3(const int value, DrawMode const mode)
 {
+  nR3_->enableSign();
   nR3_->setValue(std::to_string(value).c_str());
+  nR3_->setMode(mode);
+}
+
+/**
+ * @brief Set the R3 field to a string (letters + digits), max 5 chars.
+ */
+void FrameRightLcd::setR3(const std::string &value, DrawMode const mode)
+{
+  nR3_->disableSign();
+  nR3_->setValue(value);
   nR3_->setMode(mode);
 }
 

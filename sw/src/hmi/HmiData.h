@@ -38,6 +38,12 @@ typedef struct
     // Whether the R1 number widget shows its +/- sign (string values only).
     bool bR1ShowSign;
 
+    // R2 string value (max 5 chars + NUL). Empty ('\0') when unused.
+    char sR2[6];
+
+    // R3 string value (max 5 chars + NUL). Empty ('\0') when unused.
+    char sR3[6];
+
     // Modes for Values
     DrawMode nProgMode;
     DrawMode nVerbMode;
@@ -147,7 +153,20 @@ public:
     void rSetStrR1(const std::string &s, DrawMode mode, bool showSign = false);
 
     void rSetnR2(int nR2, DrawMode mode);
+
+    /**
+     * @brief Set the R2 field to a string (letters + digits), max 5 chars.
+     *        Longer input is truncated with a warning. Clears the integer value.
+     */
+    void rSetStrR2(const std::string &s, DrawMode mode);
+
     void rSetnR3(int nR3, DrawMode mode);
+
+    /**
+     * @brief Set the R3 field to a string (letters + digits), max 5 chars.
+     *        Longer input is truncated with a warning. Clears the integer value.
+     */
+    void rSetStrR3(const std::string &s, DrawMode mode);
 
     void rSetProgLabel(DrawMode mode);
     void rSetVerbLabel(DrawMode mode);
