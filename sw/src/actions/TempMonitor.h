@@ -45,6 +45,15 @@ class TempMonitor : public Action {
    */
   bool enterDigit(int d);
 
+  /**
+   * @brief Redraw both LCD screens from the current state.
+   *
+   * Called by operation() on every period tick and by handleKey() after any
+   * accepted key, so the display reacts to keypresses immediately instead of
+   * waiting for the next tick.
+   */
+  void updateScreens();
+
   std::atomic<int> selected_{-1};     //!< Index of the currently selected sensor (-1 = none)
   std::atomic<bool> entering_{false}; //!< True while a NOUN value is being entered
   std::atomic<int> entryValue_{0};    //!< Pending NOUN value under entry

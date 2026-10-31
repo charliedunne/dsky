@@ -102,7 +102,12 @@ bool TempMonitor::handleKey(EventId_t key)
 
   if (entering_.load()) {
     if (d >= 0) {
-      return enterDigit(d);
+      const bool ok = enterDigit(d);
+      // Redraw immediately so the digit appears without waiting for the tick.
+      if (ok) {
+        updateScreens();
+      }
+      return ok;
     }
     if (key == E_KEY_ENTR) {
       // ENTER with no digits typed: do nothing, stay in entry mode.
@@ -115,6 +120,7 @@ bool TempMonitor::handleKey(EventId_t key)
         entering_.store(false);
         entryValue_.store(0);
         entryDigits_.store(0);
+        updateScreens();
         return true;
       }
       // Out of range: stay in entry mode, keeping the pending value.
@@ -125,6 +131,7 @@ bool TempMonitor::handleKey(EventId_t key)
       entering_.store(false);
       entryValue_.store(0);
       entryDigits_.store(0);
+      updateScreens();
       return true;
     }
     return false;
@@ -136,24 +143,32 @@ bool TempMonitor::handleKey(EventId_t key)
     // First press selects device 1; afterwards cycle with wrap-around.
     const int cur = selected_.load();
     selected_.store(cur < 0 ? 0 : (cur + 1) % count);
+    updateScreens();
     return true;
   }
   if (key == E_KEY_MINUS) {
     // First press selects the last device; afterwards cycle with wrap-around.
     const int cur = selected_.load();
     selected_.store(cur < 0 ? count - 1 : (cur - 1 + count) % count);
+    updateScreens();
     return true;
   }
   if (key == E_KEY_CLR || key == E_KEY_NOUN) {
     entering_.store(true);
     entryValue_.store(0);
     entryDigits_.store(0);
+    updateScreens();
     return true;
   }
   return false;
 }
 
 void TempMonitor::operation()
+{
+  updateScreens();
+}
+
+void TempMonitor::updateScreens()
 {
   const int sel = selected_.load();
 
