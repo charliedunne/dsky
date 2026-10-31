@@ -34,8 +34,8 @@ constexpr std::array<Sensor, TEMP_MONITOR_NOUN_MAX + 1> SENSORS = {{
 /**
  * @brief Build the left-screen device list lines.
  *
- * Each line has the form "<marker> <id> <NAME> <temp>C" where the marker is
- * '>' on the selected line and a space otherwise.
+ * Each line has the form "<id> <NAME>". The selected line's name is wrapped
+ * in asterisks, e.g. "2 *LIVING*"; unselected lines are plain, e.g. "1 KITCHEN".
  */
 std::vector<std::string> buildListLines(int selected)
 {
@@ -43,7 +43,8 @@ std::vector<std::string> buildListLines(int selected)
   lines.reserve(SENSORS.size());
   char line[28];
   for (const auto &s : SENSORS) {
-    snprintf(line, sizeof(line), "%c %d %-7s %+5.2fC", (s.id - 1) == selected ? '>' : ' ', s.id, s.name, s.tempC);
+    const bool sel = (s.id - 1) == selected;
+    snprintf(line, sizeof(line), "%d %s%s%s", s.id, sel ? "*" : "", s.name, sel ? "*" : "");
     lines.emplace_back(line);
   }
   return lines;
