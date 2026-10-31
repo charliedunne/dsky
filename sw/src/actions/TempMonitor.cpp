@@ -180,7 +180,7 @@ void TempMonitor::updateScreens()
   // Right screen: three display states.
   //  - Normal (a sensor is selected): NOUN field shows the selected ID, and
   //    the temperature is split across R1 (integer part, with sign), R2
-  //    (".XX" fraction) and R3 (unit).
+  //    (fraction digits, no dot) and R3 (unit "ºC").
   //  - Entry mode: NOUN label lit to indicate a device ID is expected; once
   //    digits are typed the pending value is shown live in the NOUN field.
   //    R1/R2/R3 stay off until ENTER confirms the selection.
@@ -193,7 +193,8 @@ void TempMonitor::updateScreens()
     hmiData_.rSetR2Label(DRAW_ON);
     hmiData_.rSetR3Label(DRAW_ON);
     // Split the temperature across three rows: R1 = integer part (with sign),
-    // R2 = ".XX" fraction, R3 = unit. %.2f guarantees a dot is present.
+    // R2 = fraction digits only (no dot, per user preference), R3 = unit.
+    // %.2f guarantees a dot is present.
     char buf[16];
     snprintf(buf, sizeof(buf), "%+.2f", SENSORS[sel].tempC);
     std::string full(buf);
@@ -203,10 +204,13 @@ void TempMonitor::updateScreens()
     if (!r1.empty() && r1[0] == '+') {
       r1.erase(0, 1);
     }
-    const std::string r2 = full.substr(dot); // includes the '.'
+    // Fraction without the dot (e.g. "50"); the Dot glyph is not used here.
+    const std::string r2 = full.substr(dot + 1);
     hmiData_.rSetStrR1(r1, DRAW_ON, /*showSign=*/true);
     hmiData_.rSetStrR2(r2, DRAW_ON);
-    hmiData_.rSetStrR3("\xC2\xBA C", DRAW_ON); // UTF-8 "º C" -> sentinel byte
+    // No space between º and C: ' ' is not a mapped Digit glyph and would
+    // render as garbage. UTF-8 "º" -> single sentinel byte.
+    hmiData_.rSetStrR3("\xC2\xBAC", DRAW_ON);
   } else if (entering_.load()) {
     // Entry mode: NOUN label always lit as a prompt for the device ID.
     hmiData_.rSetNounLabel(DRAW_ON);
