@@ -210,7 +210,10 @@ void TempMonitor::updateScreens()
     hmiData_.rSetStrR2(r2, DRAW_ON);
     // No space between º and C: ' ' is not a mapped Digit glyph and would
     // render as garbage. UTF-8 "º" -> single sentinel byte.
-    hmiData_.rSetStrR3("\xC2\xBAC", DRAW_ON);
+    // The two literals are concatenated on purpose: in "\xBAC" the hex
+    // escape greedily consumes the trailing 'C' (a hex digit) and yields
+    // 0xAC instead of 0xBA followed by 'C'.
+    hmiData_.rSetStrR3("\xC2\xBA" "C", DRAW_ON);
   } else if (entering_.load()) {
     // Entry mode: NOUN label always lit as a prompt for the device ID.
     hmiData_.rSetNounLabel(DRAW_ON);
