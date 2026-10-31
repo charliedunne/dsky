@@ -204,8 +204,9 @@ void TempMonitor::updateScreens()
   // Right screen: three display states.
   //  - Normal (a sensor is selected): NOUN field shows the selected position,
   //    and the temperature is split across R1 (integer part, with sign), R2
-  //    (fraction digits, no dot) and R3 (unit "ºC", or "STALE" when the last
-  //    reading is older than TEMP_STALE_THRESHOLD_S). A sensor that has never
+  //    (fraction digits, no dot) and R3 (unit "ºC", or an 'o' stale marker in
+  //    the leftmost digit slot when the last reading is older than
+  //    TEMP_STALE_THRESHOLD_S). A sensor that has never
   //    delivered a valid reading keeps its labels lit but shows blank values.
   //  - Entry mode: NOUN label lit to indicate a device ID is expected; once
   //    digits are typed the pending value is shown live in the NOUN field.
@@ -244,8 +245,13 @@ void TempMonitor::updateScreens()
       hmiData_.rSetStrR1(r1, DRAW_ON, /*showSign=*/true);
       hmiData_.rSetStrR2(r2, DRAW_ON);
       if (stale) {
-        // Keep the last known value but flag it as stale.
-        hmiData_.rSetStrR3("STALE", DRAW_ON);
+        // Keep the last known value but flag it as stale: an 'o' ring in the
+        // leftmost digit slot with the unit kept at the right end. The row is
+        // right-aligned and exactly 5 digits wide, so pass a full 5-byte value
+        // ('x' = blank glyph) to pin 'o' into the first position. The degree
+        // sign is passed as the raw sentinel byte (not UTF-8) to keep the
+        // total at 5 bytes; a lone 0xBA passes through Number::setValue().
+        hmiData_.rSetStrR3("oxx" "\xBA" "C", DRAW_ON);
       } else {
         // No space between º and C: ' ' is not a mapped Digit glyph and would
         // render as garbage. UTF-8 "º" -> single sentinel byte.
