@@ -59,6 +59,10 @@ void HmiLogic::updateHmiData(HmiData &data)
       valueInput(data);
       break;
 
+    case MODE_PROG_INPUT:
+      programInput(data);
+      break;
+
     case MODE_RUN:
       run(data);
       break;
@@ -101,6 +105,14 @@ void HmiLogic::idle(HmiData &data)
     data.rSetVerbLabel(DRAW_ON);
 
     status_.transit(MODE_V_INPUT);
+  }
+  else if (key == E_KEY_PRO)
+  {
+    LogTrace << "PRO" << std::endl;
+
+    data.rSetProgLabel(DRAW_ON);
+
+    status_.transit(MODE_PROG_INPUT);
   }
   else if (data.getLeftLcdData().lVerbList == DRAW_ON)
   {
@@ -197,6 +209,69 @@ void HmiLogic::verbInput(HmiData &data)
   default:
     /* Keys not part of the input flow cancel back to IDLE */
     LogTrace << "Cancel verb input, move to IDLE" << std::endl;
+    data.resetRightLcdData();
+    status_.transit(MODE_IDLE);
+    break;
+  }
+}
+
+void HmiLogic::programInput(HmiData &data)
+{
+  /* Copy the Event key received */
+  EventId_t eventKey = keyEvents_[0].getEvent();
+
+  switch (eventKey)
+  {
+
+  case E_KEY_ENTR:
+
+    LogTrace << "Enter Program input" << std::endl;
+
+    try
+    {
+      /* Launch the program in the background and return to IDLE so the
+       * post-loop run() check is not triggered */
+      programs_(data.getRightLcdData().nProg).start();
+      status_.transit(MODE_IDLE);
+      LogTrace << "Program started [id: " << data.getRightLcdData().nProg << "]" << std::endl;
+    }
+    catch (const ExcInvalidCommand &e)
+    {
+      LogTrace << "Invalid Program command" << std::endl;
+      data.lSetOpErr(DRAW_BLINK);
+      status_.transit(MODE_ERROR);
+    }
+
+    break;
+
+  case E_KEY_0:
+  case E_KEY_1:
+  case E_KEY_2:
+  case E_KEY_3:
+  case E_KEY_4:
+  case E_KEY_5:
+  case E_KEY_6:
+  case E_KEY_7:
+  case E_KEY_8:
+  case E_KEY_9:
+
+    if (data.getRightLcdData().nProgMode == DRAW_OFF)
+    {
+
+      data.rSetnProg(key(eventKey), DRAW_ON);
+    }
+    else
+    {
+      data.rSetnProg(data.getRightLcdData().nProg * 10 + key(eventKey),
+                     DRAW_ON);
+    }
+    break;
+
+  case E_KEY_RSET:
+  case E_KEY_CLR:
+  default:
+    /* Keys not part of the input flow cancel back to IDLE */
+    LogTrace << "Cancel program input, move to IDLE" << std::endl;
     data.resetRightLcdData();
     status_.transit(MODE_IDLE);
     break;
@@ -475,6 +550,16 @@ void HmiLogic::registerAction(Action &action)
 ListOfActions &HmiLogic::getActions()
 {
   return actions_;
+}
+
+void HmiLogic::registerProgram(Program &program)
+{
+  programs_.registerProgram(program);
+}
+
+ListOfPrograms &HmiLogic::getPrograms()
+{
+  return programs_;
 }
 
 int key(EventId_t id)

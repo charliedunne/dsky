@@ -44,6 +44,9 @@ target_sources(dsky PRIVATE
   src/actions/ReadVar.cpp
   src/actions/WriteVar.cpp
   src/actions/TempMonitor.cpp
+  src/programs/Program.cpp
+  src/programs/DummyProgram.cpp
+  src/programs/ListOfPrograms.cpp
   src/db/DbClient.cpp
   src/drivers/dskyKeyInt/MsgQueue.cpp
 )
@@ -96,6 +99,7 @@ include_directories(src/common)
 include_directories(src/common/exceptions)
 include_directories(src/core)
 include_directories(src/actions)
+include_directories(src/programs)
 include_directories(src/db)
 include_directories(3rdparty/simple-cpp-logger/include)
 include_directories(src/drivers/dskyKeyInt)

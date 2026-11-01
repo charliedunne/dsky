@@ -37,6 +37,10 @@ std::string StatusMachine::to_string()
         return std::string("VALUE_INPUT");
         break;
 
+        case MODE_PROG_INPUT:
+        return std::string("PROG_INPUT");
+        break;
+
         case MODE_RUN:
         return std::string("RUN");
         break;
@@ -67,6 +71,7 @@ void StatusMachine::transit(Mode_e dstMode)
         case MODE_V_INPUT:
         case MODE_N_INPUT:
         case MODE_VALUE_INPUT:
+        case MODE_PROG_INPUT:
         case MODE_RUN:
         case MODE_ERROR:
             LogDebug << "Transit to IDLE" << std::endl;
@@ -139,6 +144,27 @@ void StatusMachine::transit(Mode_e dstMode)
 
         case MODE_RUN:
             throw std::domain_error("Invalid transition from RUN -> VALUE_INPUT");
+            break;
+        }
+        break;
+
+    case MODE_PROG_INPUT:
+
+        switch (mode_)
+        {
+
+        case MODE_PROG_INPUT:
+            /* Do nothing */
+            break;
+
+        case MODE_IDLE:
+            LogDebug << "Transit to PROG_INPUT" << std::endl;
+            /* Transit */
+            mode_ = MODE_PROG_INPUT;
+            break;
+
+        default:
+            throw std::domain_error("Invalid transition to PROG_INPUT");
             break;
         }
         break;

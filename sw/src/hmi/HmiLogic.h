@@ -15,6 +15,9 @@
 // Actions 
 #include "ListOfActions.h"
 
+// Programs
+#include "ListOfPrograms.h"
+
 class HmiLogic {
 
  private:
@@ -33,6 +36,11 @@ class HmiLogic {
    * @brief List of actions registered
    */
   ListOfActions actions_;
+
+  /**
+   * @brief List of background programs registered
+   */
+  ListOfPrograms programs_;
 
   /**
    * @brief Persistent variable store (used to validate bool digit input)
@@ -73,12 +81,25 @@ class HmiLogic {
    */
   ListOfActions &getActions();
 
+  /**
+   * @brief Register a background program in the logic
+   *
+   * @param program Program to register
+   */
+  void registerProgram(Program &program);
+
+  /**
+   * @brief Access the registered background programs
+   */
+  ListOfPrograms &getPrograms();
+
  private:
 
   void idle(HmiData &data);
   void verbInput(HmiData &data);
   void nounInput(HmiData &data);
   void valueInput(HmiData &data);
+  void programInput(HmiData &data);
   void run(HmiData &data);
   void error(HmiData &data);
 };

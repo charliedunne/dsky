@@ -17,6 +17,9 @@
 #include "WriteVar.h"
 #include "TempMonitor.h"
 
+// Programs
+#include "DummyProgram.h"
+
 // Database client (live temp sensor data for VERB 10)
 #include "DbClient.h"
 
@@ -141,6 +144,9 @@ int main( int argc, char * argv[], char *envp[] ) {
   WriteVar a_WriteScreenSaverTimer(store, VAR_NOUN_SCREENSAVER_TIMER, data);
   TempMonitor a_TempMonitor(data, dbClient);
 
+  /* Programs */
+  DummyProgram p_Dummy(data);
+
   /* Actions registration */
   logic.registerAction(a_Clock);
   logic.registerAction(a_SystemReboot);
@@ -152,6 +158,9 @@ int main( int argc, char * argv[], char *envp[] ) {
   logic.registerAction(a_ReadScreenSaverTimer);
   logic.registerAction(a_WriteScreenSaverTimer);
   logic.registerAction(a_TempMonitor);
+
+  /* Programs registration */
+  logic.registerProgram(p_Dummy);
 
   // VERB 0: list all implemented verb/noun combos on the left panel.
   // Registered last so its menu can describe every other action.
@@ -215,6 +224,10 @@ int main( int argc, char * argv[], char *envp[] ) {
   // operation() against the already-restored base vtable, hitting a
   // pure-virtual terminator and aborting the process.
   logic.getActions().stopAll();
+
+  // Stop all programs before they are destroyed below, for the same reason
+  // as actions above.
+  logic.getPrograms().stopAll();
 
   LogInfo << "Shutting down cleanly." << std::endl;
 }
