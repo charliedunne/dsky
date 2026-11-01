@@ -43,6 +43,8 @@ target_sources(dsky PRIVATE
   src/actions/ScreenSaver.cpp
   src/actions/ReadVar.cpp
   src/actions/WriteVar.cpp
+  src/actions/TempMonitor.cpp
+  src/db/DbClient.cpp
   src/drivers/dskyKeyInt/MsgQueue.cpp
 )
 
@@ -94,6 +96,7 @@ include_directories(src/common)
 include_directories(src/common/exceptions)
 include_directories(src/core)
 include_directories(src/actions)
+include_directories(src/db)
 include_directories(3rdparty/simple-cpp-logger/include)
 include_directories(src/drivers/dskyKeyInt)
 
@@ -123,4 +126,10 @@ target_link_libraries(dsky ${DSKY_DEPS_DIR}/lib/libSDL2_image.so)
 target_link_libraries(dsky ${DSKY_DEPS_DIR}/lib/libSDL2_gfx.so)
 target_link_libraries(dsky pthread)
 target_link_libraries(dsky drm)
+# MariaDB client (live temp sensor data). Name-based: the toolchain puts the
+# sysroot multiarch dir on -L, where libmariadb.so -> libmariadb.so.3 lives;
+# at runtime the Pi's system libmariadb3 satisfies it. Headers come from
+# <sysroot>/usr/include/mariadb (GCC searches the sysroot include path
+# automatically). No extra include/link dirs needed — verified by smoke test.
+target_link_libraries(dsky mariadb)
 

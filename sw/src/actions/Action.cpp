@@ -101,6 +101,10 @@ void Action::run()
     thread_.join();
   }
 
+  /* Reset per-run state before the action becomes visible as running,
+   * so key handlers never observe stale state from a previous run */
+  start();
+
   /* Set flag to running */
   running_ = true;
   finished_ = false;

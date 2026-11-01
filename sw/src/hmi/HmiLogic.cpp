@@ -412,6 +412,13 @@ void HmiLogic::run(HmiData &data)
       return;
 
     default:
+      /* Forward the key to a running action that wants to handle it.
+       * A periodic action keeps running after this, so no new action is
+       * started below and the frame simply re-renders */
+      if (action.isRunning())
+      {
+        action.handleKey(eventKey);
+      }
       break;
     }
   }

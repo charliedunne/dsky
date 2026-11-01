@@ -110,12 +110,21 @@ void Hmi::update(HmiData &data) {
   rightLcd_->setVerb(data.getRightLcdData().nVerb, data.getRightLcdData().nVerbMode);
   rightLcd_->setNoun(data.getRightLcdData().nNoun, data.getRightLcdData().nNounMode);
   if (data.getRightLcdData().sR1[0] != '\0') {
-    rightLcd_->setR1(std::string(data.getRightLcdData().sR1), data.getRightLcdData().nR1Mode);
+    rightLcd_->setR1(std::string(data.getRightLcdData().sR1), data.getRightLcdData().nR1Mode,
+                     data.getRightLcdData().bR1ShowSign);
   } else {
     rightLcd_->setR1(data.getRightLcdData().nR1, data.getRightLcdData().nR1Mode);
   }
-  rightLcd_->setR2(data.getRightLcdData().nR2, data.getRightLcdData().nR2Mode);
-  rightLcd_->setR3(data.getRightLcdData().nR3, data.getRightLcdData().nR3Mode);
+  if (data.getRightLcdData().sR2[0] != '\0') {
+    rightLcd_->setR2(std::string(data.getRightLcdData().sR2), data.getRightLcdData().nR2Mode);
+  } else {
+    rightLcd_->setR2(data.getRightLcdData().nR2, data.getRightLcdData().nR2Mode);
+  }
+  if (data.getRightLcdData().sR3[0] != '\0') {
+    rightLcd_->setR3(std::string(data.getRightLcdData().sR3), data.getRightLcdData().nR3Mode);
+  } else {
+    rightLcd_->setR3(data.getRightLcdData().nR3, data.getRightLcdData().nR3Mode);
+  }
 
   // Set Numbers mode
   

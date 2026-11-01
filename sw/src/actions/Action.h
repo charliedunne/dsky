@@ -3,6 +3,7 @@
 
 /* HMI Definitions */
 #include "HmiData.h"
+#include "Event.h"
 
 /* STL */
 #include <atomic>
@@ -151,7 +152,31 @@ public:
    */
   virtual void cancel();
 
+  /**
+   * @brief Forward a keypad event to a running action.
+   *
+   * Called from the HMI loop for any key that is not consumed by the
+   * global key handling (RSET, VERB, NOUN, ENTER...). The default
+   * implementation ignores the key so existing actions are unaffected.
+   *
+   * @param key Key event received while this action is running
+   *
+   * @return true If the key was handled by the action
+   * @return false If the key should be ignored
+   */
+  virtual bool handleKey(EventId_t key) { return false; }
+
 protected:
+  /**
+   * @brief Per-run initialization hook.
+   *
+   * Called once by run() before the action is marked as running, so
+   * key handlers never observe stale state from a previous run. Derived
+   * classes that keep member state across runs should reset it here so
+   * every run starts from a clean state.
+   */
+  virtual void start() {}
+
   /**
    * @brief Define in derived classes the operation to do in the thread
    */

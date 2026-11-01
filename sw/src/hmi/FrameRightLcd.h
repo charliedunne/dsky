@@ -66,11 +66,23 @@ class FrameRightLcd : public Frame {
 
   /**
    * @brief Set the R1 field to a string of letters + digits (max 5 chars).
+   *        When showSign is true the number widget shows its +/- sign.
    */
-  void setR1(const std::string &value, DrawMode const mode = DRAW_ON);
+  void setR1(const std::string &value, DrawMode const mode = DRAW_ON, bool showSign = false);
 
   void setR2(const int value, DrawMode const mode = DRAW_ON);
+
+  /**
+   * @brief Set the R2 field to a string of letters + digits (max 5 chars).
+   */
+  void setR2(const std::string &value, DrawMode const mode = DRAW_ON);
+
   void setR3(const int value, DrawMode const mode = DRAW_ON);
+
+  /**
+   * @brief Set the R3 field to a string of letters + digits (max 5 chars).
+   */
+  void setR3(const std::string &value, DrawMode const mode = DRAW_ON);
 
   // Setters for Labels
   void setProgStatus(DrawMode);

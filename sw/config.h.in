@@ -56,3 +56,6 @@
 
 // Variable store persistence file
 #define VAR_STORE_FILE "/var/local/dskyvars.json"
+
+// Database connection configuration file (key=value format)
+#define DB_CONF_FILE "/var/local/dskydb.conf"

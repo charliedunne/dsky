@@ -45,7 +45,28 @@ Number::Number(SDL_Renderer *r, const int digits, const int x, const int y, cons
 
 void Number::setValue(const std::string s)
 {
-  value_ = s;
+  // Convert the UTF-8 degree sign (0xC2 0xBA) to a single sentinel byte.
+  // The 7-segment renderer dispatches one byte per digit position, so a
+  // multi-byte sequence would otherwise occupy two positions.
+  static const char utf8Degree[2] = {0xC2, 0xBA};
+
+  std::string converted;
+  converted.reserve(s.size());
+
+  for (size_t i = 0; i < s.size(); ++i)
+  {
+    if (s[i] == utf8Degree[0] && i + 1 < s.size() && s[i + 1] == utf8Degree[1])
+    {
+      converted.push_back('\xBA');
+      ++i;
+    }
+    else
+    {
+      converted.push_back(s[i]);
+    }
+  }
+
+  value_ = converted;
 }
 
 void Number::drawOn()
@@ -86,7 +107,8 @@ void Number::drawOn()
     for (int i = 0; i < digits_.size(); ++i)
     {
 
-      const int nPadding = digits_.size() - value_.size();
+      const int nPadding = digits_.size() - valueSize;
+      const bool negative = (value_[0] == '-');
 
       if (i < nPadding)
       {
@@ -94,7 +116,8 @@ void Number::drawOn()
       }
       else
       {
-        digits_[i]->draw(value_[i - nPadding]);
+        // Skip the leading '-' so the digits stay right-aligned.
+        digits_[i]->draw(value_[(i - nPadding) + (negative ? 1 : 0)]);
       }
     }
   }
@@ -102,6 +125,11 @@ void Number::drawOn()
 
 void Number::drawOff()
 {
+  // Blank the sign too so it does not persist from a previous drawOn().
+  if (showSign_)
+  {
+    sign_->draw(' ');
+  }
 
   for (int i = 0; i < digits_.size(); ++i)
   {

@@ -27,6 +27,14 @@
 #define VAR_NOUN_SCREENSAVER 3
 #define VAR_NOUN_SCREENSAVER_TIMER 4
 
+#define TEMP_MONITOR_VERB 10
+#define TEMP_MONITOR_NOUN -1
+
+/* Highest valid sensor (NOUN) ID for the TEMP_MONITOR verb.
+ * Sensor IDs are in a per-verb namespace, so they may overlap with
+ * nouns of other verbs. */
+#define TEMP_MONITOR_NOUN_MAX 7
+
 /*
  * Add here more Actions
  */
@@ -69,9 +77,17 @@ class ListOfActions {
     void registerAction(Action &action);
 
     /**
-     * @brief Overload to the operator() to make a functor
-     * 
+     * @brief Overload to the operator() to make a functor.
+     *
+     * Resolves the command in two passes: first an exact (verb, noun) match;
+     * then a verb-only action (registered with noun -1), which matches any
+     * current noun for its verb so that actions mirroring their own state into
+     * the NOUN display field keep resolving while running.
+     *
      * @param data[in] Hmi data required for the action
+     *
+     * @return Reference to the matching registered Action
+     * @throws ExcInvalidCommand If no action matches the (verb, noun) command
      */
     Action & operator()(HmiData &data);
 
@@ -108,6 +124,16 @@ class ListOfActions {
      * @return One string per action, e.g. "V01 CLOCK" or "V02 N00 KEYPAD OFF"
      */
     std::vector<std::string> describe() const;
+
+    /**
+     * @brief Stop every registered action.
+     *
+     * Called during shutdown so that no periodic action keeps running while
+     * the action objects are being destroyed (a late virtual call of
+     * operation() on a half-destroyed object would hit a pure-virtual
+     * terminator and abort). Safe on actions that were never started.
+     */
+    void stopAll();
 
 };
 

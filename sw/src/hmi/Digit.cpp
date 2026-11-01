@@ -10,7 +10,12 @@ static std::vector<bool> getSegmentsFromChar(const char c)
 
   std::vector<bool> segments = {0, 0, 0, 0, 0, 0, 0};
 
-  switch (c)
+  // Promote to unsigned char so the switch value is a positive int for
+  // high-bit bytes (e.g. the degree sentinel 0xBA). Note: casting only the
+  // expression is NOT enough — each case label must also be written as an
+  // unsigned value, because a char literal like '\xBA' is a *signed* char
+  // (-70) on this platform and would never match (see the degree case below).
+  switch (static_cast<unsigned char>(c))
   {
 
   case 'x':
@@ -203,6 +208,18 @@ static std::vector<bool> getSegmentsFromChar(const char c)
     segments[6] = 1;
     break;
 
+  // Degree sign sentinel (see Number::setValue UTF-8 conversion).
+  // Written as the explicit unsigned value 0xBA: a char literal '\xBA' is a
+  // signed char (-70) here and would never match the unsigned switch value
+  // (186), silently falling through to default.
+  case 0xBA:
+    segments[0] = 1;
+    segments[1] = 1;
+    segments[5] = 1;
+    segments[6] = 1;
+    break;
+
+
   default:
     segments[0] = 1;
     segments[3] = 1;
@@ -365,6 +382,32 @@ void Digit::draw(std::vector<bool> seg)
 
 void Digit::draw(const char c)
 {
+
+  // The decimal point cannot be expressed with the seven segments, so
+  // render a blank cell and overlay a small filled square at the
+  // bottom-right corner of the digit area.
+  if (c == '.')
+  {
+
+    Digit::draw(getSegmentsFromChar('x'));
+
+    const int dotW = w_ / 5;
+    const int dotH = h_ / 6;
+
+    SDL_Rect dot = {x_ + w_ - dotW - w_ / 10, y_ + h_ - dotH - h_ / 8, dotW, dotH};
+
+    // Approximate the segment glow with a larger, faint halo.
+    if (glow_)
+    {
+      SDL_Rect halo = {dot.x - dotW / 2, dot.y - dotH / 2, dotW * 2, dotH * 2};
+      SDL_SetRenderDrawColor(r_, fgColor_.r(), fgColor_.g(), fgColor_.b(), 64);
+      SDL_RenderFillRect(r_, &halo);
+    }
+
+    SDL_SetRenderDrawColor(r_, fgColor_.r(), fgColor_.g(), fgColor_.b(), fgColor_.a());
+    SDL_RenderFillRect(r_, &dot);
+    return;
+  }
 
   Digit::draw(getSegmentsFromChar(c));
 }

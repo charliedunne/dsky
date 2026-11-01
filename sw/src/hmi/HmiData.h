@@ -35,6 +35,15 @@ typedef struct
     // R1 string value (max 5 chars + NUL). Empty ('\0') when unused.
     char sR1[6];
 
+    // Whether the R1 number widget shows its +/- sign (string values only).
+    bool bR1ShowSign;
+
+    // R2 string value (max 5 chars + NUL). Empty ('\0') when unused.
+    char sR2[6];
+
+    // R3 string value (max 5 chars + NUL). Empty ('\0') when unused.
+    char sR3[6];
+
     // Modes for Values
     DrawMode nProgMode;
     DrawMode nVerbMode;
@@ -70,6 +79,7 @@ typedef struct
     char     lVerbListLines[2][20][28];        // up to 20 lines per page, max 27 chars + NUL
     int      lVerbListCount[2];                // number of valid lines per page (0..20)
     int      lVerbListPage;                    // active page index (0 or 1)
+    char     lVerbListHeader[2][28];           // optional header line per page (empty = default)
 
 } LeftLcdData;
 
@@ -118,6 +128,12 @@ public:
     void lSetVerbListPage(int page);
 
     /**
+     * @brief Set the header line of one list page.
+     *        An empty string restores the default header for that page.
+     */
+    void lSetVerbListHeader(int page, const char *header);
+
+    /**
      * @brief Hide/clear the VERB 0 menu (does not touch alarm flags).
      */
     void clearVerbList();
@@ -134,10 +150,23 @@ public:
      * @brief Set the R1 field to a string (letters + digits), max 5 chars.
      *        Longer input is truncated with a warning. Clears the integer value.
      */
-    void rSetStrR1(const std::string &s, DrawMode mode);
+    void rSetStrR1(const std::string &s, DrawMode mode, bool showSign = false);
 
     void rSetnR2(int nR2, DrawMode mode);
+
+    /**
+     * @brief Set the R2 field to a string (letters + digits), max 5 chars.
+     *        Longer input is truncated with a warning. Clears the integer value.
+     */
+    void rSetStrR2(const std::string &s, DrawMode mode);
+
     void rSetnR3(int nR3, DrawMode mode);
+
+    /**
+     * @brief Set the R3 field to a string (letters + digits), max 5 chars.
+     *        Longer input is truncated with a warning. Clears the integer value.
+     */
+    void rSetStrR3(const std::string &s, DrawMode mode);
 
     void rSetProgLabel(DrawMode mode);
     void rSetVerbLabel(DrawMode mode);
