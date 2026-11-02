@@ -55,7 +55,10 @@ bool ListOfActions::needNoun(int verb) {
         if (actions_[i].operator Action &().getVerb() == verb)
         {
             if (actions_[i].operator Action &().getNoun() == -1) {
-                return false;
+                /* Noun -1 normally means "no noun needed", but some actions
+                 * (e.g. STOP_BG) require a typed noun even though they accept
+                 * any value; consult the per-action flag in that case. */
+                return actions_[i].operator Action &().getNeedsTypedNoun();
             }
             else
             {

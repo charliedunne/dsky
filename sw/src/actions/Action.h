@@ -54,6 +54,14 @@ private:
   std::string label_;
 
   /**
+   * @brief When true, a noun must be typed even if the registered noun is -1.
+   *
+   * Actions registered with noun -1 normally accept any (or no) typed noun;
+   * set this flag to force the HMI to require a typed noun before dispatch.
+   */
+  bool needsTypedNoun_ = false;
+
+  /**
    * @brief Flag to determine if the thread must continue its execution
    *
    */
@@ -100,6 +108,20 @@ public:
    * @return Label
    */
   const std::string& getLabel() const;
+
+  /**
+   * @brief Require (or not) a typed noun when the registered noun is -1
+   *
+   * @param[in] needs true to force the HMI to collect a typed noun
+   */
+  void setNeedsTypedNoun(bool needs);
+
+  /**
+   * @brief Getter for the typed-noun requirement flag
+   *
+   * @return true if a typed noun is required, false otherwise
+   */
+  bool getNeedsTypedNoun() const;
 
   /**
    * @brief Getter for Action Schedule type

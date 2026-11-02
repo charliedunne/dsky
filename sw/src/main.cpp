@@ -16,6 +16,7 @@
 #include "ReadVar.h"
 #include "WriteVar.h"
 #include "TempMonitor.h"
+#include "StopBgProg.h"
 
 // Programs
 #include "DummyProgram.h"
@@ -161,6 +162,11 @@ int main( int argc, char * argv[], char *envp[] ) {
 
   /* Programs registration */
   logic.registerProgram(p_Dummy);
+
+  /* VERB 7: stop a running background program by its ID. Needs the program
+   * registry, so it is instantiated after the programs are registered. */
+  StopBgProg a_StopBg(logic.getPrograms(), data);
+  logic.registerAction(a_StopBg);
 
   // VERB 0: list all implemented verb/noun combos on the left panel.
   // Registered last so its menu can describe every other action.
