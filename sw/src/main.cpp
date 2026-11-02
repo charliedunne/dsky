@@ -17,6 +17,7 @@
 #include "WriteVar.h"
 #include "TempMonitor.h"
 #include "StopBgProg.h"
+#include "ListBgProg.h"
 
 // Programs
 #include "DummyProgram.h"
@@ -167,6 +168,11 @@ int main( int argc, char * argv[], char *envp[] ) {
    * registry, so it is instantiated after the programs are registered. */
   StopBgProg a_StopBg(logic.getPrograms(), data);
   logic.registerAction(a_StopBg);
+
+  /* VERB 6: list currently running background programs on the left LCD.
+   * Verb-only action; needs the program registry like StopBgProg above. */
+  ListBgProg a_ListBg(logic.getPrograms(), data);
+  logic.registerAction(a_ListBg);
 
   // VERB 0: list all implemented verb/noun combos on the left panel.
   // Registered last so its menu can describe every other action.

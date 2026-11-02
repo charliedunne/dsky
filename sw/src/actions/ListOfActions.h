@@ -41,6 +41,11 @@
 #define STOP_BG_VERB 7
 #define STOP_BG_NOUN -1
 
+/* VERB 6: list currently running background programs on the left LCD.
+ * Verb-only action (noun -1, no typed noun required). */
+#define LIST_BG_VERB 6
+#define LIST_BG_NOUN -1
+
 /*
  * Add here more Actions
  */

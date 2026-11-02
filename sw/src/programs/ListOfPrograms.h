@@ -59,6 +59,15 @@ class ListOfPrograms {
     std::vector<std::string> describe() const;
 
     /**
+     * @brief Human-readable description of the currently running programs,
+     *        sorted by id ascending. Returns a single "NONE" line when no
+     *        program is running.
+     *
+     * @return One string per running program, e.g. "P01 DUMMY"
+     */
+    std::vector<std::string> describeRunning() const;
+
+    /**
      * @brief Stop every registered program.
      *
      * Called during shutdown so that no background program keeps running while

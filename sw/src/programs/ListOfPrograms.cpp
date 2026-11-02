@@ -55,6 +55,39 @@ std::vector<std::string> ListOfPrograms::describe() const {
     return out;
 }
 
+std::vector<std::string> ListOfPrograms::describeRunning() const {
+
+    std::vector<std::string> out;
+
+    // Build a sortable list of pointers to the running programs only
+    std::vector<const Program*> sorted;
+    for (const auto &it : programs_) {
+        if (it.get().isRunning()) {
+            sorted.push_back(&it.get());
+        }
+    }
+
+    // Sort by id ascending so the listing is deterministic
+    std::sort(sorted.begin(), sorted.end(),
+              [](const Program *a, const Program *b) {
+                  return a->getId() < b->getId();
+              });
+
+    if (sorted.empty()) {
+        out.push_back("NONE");
+        return out;
+    }
+
+    // Format entries as "Pxx LABEL" (one line per running program)
+    for (const auto *p : sorted) {
+        char buf[64];
+        std::snprintf(buf, sizeof(buf), "P%02d %s", p->getId(), p->getLabel().c_str());
+        out.push_back(std::string(buf));
+    }
+
+    return out;
+}
+
 void ListOfPrograms::stopAll() {
     for (const auto &it : programs_) {
         it.get().stop();
