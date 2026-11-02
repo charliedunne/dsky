@@ -68,6 +68,17 @@ class ListOfPrograms {
     std::vector<std::string> describeRunning() const;
 
     /**
+     * @brief Ids of the currently running programs, sorted by id ascending.
+     *
+     * Same order as describeRunning(), so a caller can pair line i of that
+     * list with the id at index i here without parsing the formatted strings.
+     * Returns an empty vector when no program is running.
+     *
+     * @return One int per running program, e.g. {1} for DUMMY running alone
+     */
+    std::vector<int> runningIds() const;
+
+    /**
      * @brief Stop every registered program.
      *
      * Called during shutdown so that no background program keeps running while

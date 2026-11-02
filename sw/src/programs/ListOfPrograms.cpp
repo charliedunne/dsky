@@ -88,6 +88,22 @@ std::vector<std::string> ListOfPrograms::describeRunning() const {
     return out;
 }
 
+std::vector<int> ListOfPrograms::runningIds() const {
+
+    std::vector<int> ids;
+
+    for (const auto &it : programs_) {
+        if (it.get().isRunning()) {
+            ids.push_back(it.get().getId());
+        }
+    }
+
+    // Sort by id ascending to match the order of describeRunning()
+    std::sort(ids.begin(), ids.end());
+
+    return ids;
+}
+
 void ListOfPrograms::stopAll() {
     for (const auto &it : programs_) {
         it.get().stop();

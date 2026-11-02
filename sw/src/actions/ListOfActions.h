@@ -35,9 +35,9 @@
  * nouns of other verbs. */
 #define TEMP_MONITOR_NOUN_MAX 7
 
-/* VERB 7: stop a running background program by its ID.
- * Noun -1 lets the dispatcher resolve it for any typed N; the target
- * program ID is read from the HMI data (nNoun) at execution time. */
+/* VERB 7: stop a running background program.
+ * Verb-only action (noun -1, no typed noun required); +/- cycle the
+ * selection over the running-programs list on the left LCD and ENTER stops it. */
 #define STOP_BG_VERB 7
 #define STOP_BG_NOUN -1
 

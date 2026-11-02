@@ -200,6 +200,16 @@ protected:
   virtual void start() {}
 
   /**
+   * @brief Signal that this run has completed successfully.
+   *
+   * For periodic actions the loop keeps running until stop() is called,
+   * so a self-terminating action (e.g. ENTER confirmed in StopBgProg)
+   * uses this to mark itself finished and stop the worker thread. The
+   * HMI loop reaps the finished action via its existing finished() check.
+   */
+  void finish() { finished_ = true; running_ = false; }
+
+  /**
    * @brief Define in derived classes the operation to do in the thread
    */
   virtual void operation() = 0;
