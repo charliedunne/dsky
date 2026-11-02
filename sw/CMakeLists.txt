@@ -45,6 +45,8 @@ target_sources(dsky PRIVATE
   src/actions/WriteVar.cpp
   src/actions/TempMonitor.cpp
   src/programs/Program.cpp
+  src/programs/BgProgram.cpp
+  src/programs/FgProgram.cpp
   src/programs/DummyProgram.cpp
   src/programs/ListOfPrograms.cpp
   src/db/DbClient.cpp

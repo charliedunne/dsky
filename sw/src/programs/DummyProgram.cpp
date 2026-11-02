@@ -7,11 +7,7 @@
 #define DUMMY_PROGRAM_PERIOD 5000
 
 DummyProgram::DummyProgram(HmiData &data) :
-    Program(DUMMY_PROGRAM, data, "DUMMY", DUMMY_PROGRAM_PERIOD), cycle_(0)
-{
-}
-
-DummyProgram::~DummyProgram()
+    BgProgram(DUMMY_PROGRAM, data, "DUMMY", DUMMY_PROGRAM_PERIOD), cycle_(0)
 {
 }
 

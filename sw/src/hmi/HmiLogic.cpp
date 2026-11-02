@@ -67,6 +67,10 @@ void HmiLogic::updateHmiData(HmiData &data)
       run(data);
       break;
 
+    case MODE_PROG_RUN:
+      programRun(data);
+      break;
+
     case MODE_ERROR:
       error(data);
       break;
@@ -87,6 +91,11 @@ void HmiLogic::updateHmiData(HmiData &data)
   if (status_() == MODE_RUN)
   {
     run(data);
+  }
+
+  if (status_() == MODE_PROG_RUN)
+  {
+    programRun(data);
   }
 
   /* Publish the data */
@@ -229,11 +238,22 @@ void HmiLogic::programInput(HmiData &data)
 
     try
     {
-      /* Launch the program in the background and return to IDLE so the
-       * post-loop run() check is not triggered */
-      programs_(data.getRightLcdData().nProg).start();
-      status_.transit(MODE_IDLE);
+      /* Launch the program. A background program returns to IDLE so the
+       * post-loop run() check is not triggered; a foreground program enters
+       * the modal MODE_PROG_RUN state, which owns the HMI until it finishes */
+      Program &prog = programs_(data.getRightLcdData().nProg);
+      prog.start();
       LogTrace << "Program started [id: " << data.getRightLcdData().nProg << "]" << std::endl;
+
+      if (prog.foreground())
+      {
+        fgActive_ = static_cast<FgProgram *>(&prog);
+        status_.transit(MODE_PROG_RUN);
+      }
+      else
+      {
+        status_.transit(MODE_IDLE);
+      }
     }
     catch (const ExcInvalidCommand &e)
     {
@@ -530,6 +550,59 @@ void HmiLogic::run(HmiData &data)
     }
 
     actions_(data).run();
+  }
+}
+
+void HmiLogic::programRun(HmiData &data)
+{
+  /* The foreground program currently owning the HMI must be valid; if it is
+   * missing something went wrong, so bail back to IDLE */
+  if (fgActive_ == nullptr)
+  {
+    LogError << "No foreground program active in MODE_PROG_RUN" << std::endl;
+    data.resetRightLcdData();
+    data.resetLeftLcdData();
+    status_.transit(MODE_IDLE);
+    return;
+  }
+
+  if (keyEvents_.size() > 0)
+  {
+    /* Copy the Event key received */
+    EventId_t eventKey = keyEvents_[0].getEvent();
+
+    LogTrace << "Key detected in foreground program" << std::endl;
+
+    /* A running cancellable foreground program is aborted by ANY key press.
+     * cancel() is non-blocking, unlike stop(), so the HMI loop never freezes */
+    if (fgActive_->isRunning() && fgActive_->cancellable())
+    {
+      LogTrace << "Key detected while cancellable foreground program running, cancelling" << std::endl;
+      fgActive_->cancel();
+      data.resetRightLcdData();
+      data.resetLeftLcdData();
+      status_.transit(MODE_IDLE);
+      return;
+    }
+
+    /* Otherwise forward the key to the running foreground program */
+    if (fgActive_->isRunning())
+    {
+      fgActive_->pushKey(eventKey);
+    }
+  }
+
+  /* A finished foreground program: release the HMI. stop() is a safe no-op
+   * join-wise here because the worker already cleared running_ on natural
+   * exit, so the thread is reaped later by start() or the destructor */
+  if (!fgActive_->isRunning())
+  {
+    LogTrace << "Foreground program finished, releasing HMI" << std::endl;
+    fgActive_->stop();
+    fgActive_ = nullptr;
+    data.resetRightLcdData();
+    data.resetLeftLcdData();
+    status_.transit(MODE_IDLE);
   }
 }
 

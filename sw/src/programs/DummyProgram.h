@@ -1,7 +1,7 @@
 #ifndef _DUMMYPROGRAM_H_
 #define _DUMMYPROGRAM_H_
 
-#include "Program.h"
+#include "BgProgram.h"
 
 /* Program id selected on the keypad to launch the dummy program */
 #define DUMMY_PROGRAM 1
@@ -13,7 +13,7 @@
  * the heartbeat can be observed while confirming that VERB actions still run
  * concurrently in the foreground.
  */
-class DummyProgram : public Program {
+class DummyProgram : public BgProgram {
 
   private:
 
@@ -24,8 +24,6 @@ class DummyProgram : public Program {
 
   public:
   DummyProgram(HmiData &data);
-
-  virtual ~DummyProgram();
 
   /**
    * @brief Emit a heartbeat trace line (runs once per period).

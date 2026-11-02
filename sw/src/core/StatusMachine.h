@@ -12,6 +12,7 @@ typedef enum
     MODE_VALUE_INPUT,
     MODE_PROG_INPUT,
     MODE_RUN,
+    MODE_PROG_RUN,
     MODE_ERROR,
 
 } Mode_e;

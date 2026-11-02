@@ -17,6 +17,7 @@
 
 // Programs
 #include "ListOfPrograms.h"
+#include "FgProgram.h"
 
 class HmiLogic {
 
@@ -38,9 +39,14 @@ class HmiLogic {
   ListOfActions actions_;
 
   /**
-   * @brief List of background programs registered
+   * @brief List of programs registered (background and foreground)
    */
   ListOfPrograms programs_;
+
+  /**
+   * @brief Foreground program currently owning the HMI (MODE_PROG_RUN)
+   */
+  FgProgram *fgActive_ = nullptr;
 
   /**
    * @brief Persistent variable store (used to validate bool digit input)
@@ -101,6 +107,7 @@ class HmiLogic {
   void valueInput(HmiData &data);
   void programInput(HmiData &data);
   void run(HmiData &data);
+  void programRun(HmiData &data);
   void error(HmiData &data);
 };
 

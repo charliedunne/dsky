@@ -1,0 +1,73 @@
+#include "BgProgram.h"
+
+// STL
+#include <chrono>
+
+// Logging
+#include "Logger.h"
+
+BgProgram::BgProgram(int id, HmiData &data, const std::string& label, int period) :
+    Program(id, data, label, period)
+{
+}
+
+BgProgram::~BgProgram()
+{
+  /* Never destroy a joinable std::thread: that calls std::terminate.
+   * A finished thread joins instantly. */
+  if (thread_.joinable())
+  {
+    thread_.join();
+  }
+}
+
+void BgProgram::start()
+{
+  /* Reap a previous completed thread so the assignment below never
+   * targets a joinable thread (which would call std::terminate) */
+  if (thread_.joinable())
+  {
+    thread_.join();
+  }
+
+  /* Mark running via the base, then spawn the worker thread */
+  Program::start();
+  thread_ = std::thread(&BgProgram::loop, this);
+}
+
+void BgProgram::stop()
+{
+  if (!isRunning())
+  {
+    return;
+  }
+
+  /* Clear the running flag via the base, then join the worker */
+  Program::stop();
+  if (thread_.joinable())
+  {
+    thread_.join();
+  }
+}
+
+void BgProgram::loop()
+{
+  LogTrace << "Program " << getId() << " started" << std::endl;
+
+  while (isRunning())
+  {
+    /* Get time when the thread must stop */
+    const auto next = std::chrono::steady_clock::now() +
+                      std::chrono::milliseconds(getPeriod());
+
+    operation();
+
+    // Wait for next cycle.
+    if (getPeriod() > 0)
+    {
+      std::this_thread::sleep_until(next);
+    }
+  }
+
+  LogTrace << "Program " << getId() << " stopped" << std::endl;
+}

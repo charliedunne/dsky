@@ -2,30 +2,24 @@
 #define _PROGRAM_H_
 
 #include <string>
-#include <thread>
 #include <atomic>
 #include "HmiData.h"
 
 /**
- * @brief Base class for background programs.
+ * @brief Base class for all programs.
  *
- * A program is a long-running activity launched from the HMI (PRO key + ID)
- * that runs on its own thread, independently of VERB/Action execution. The
- * user can keep operating the unit while a program is active.
+ * A program is an activity launched from the HMI (PRO key + ID). The base
+ * class only holds identity, period and run state; it does not own a worker
+ * thread. Concrete execution models are provided by the derived classes:
+ *  - BgProgram: periodic background loop on its own thread, no user input.
+ *  - FgProgram: modal, user-driven, requires keypad input while running.
  *
- * The execution model mirrors Action: start() spawns a thread that calls
- * loop(), which invokes operation() repeatedly with a fixed period until
- * stop() is called. Unlike an Action, a program has no single/periodic
- * schedule distinction: it is inherently long-running and periodic.
+ * start()/stop() are virtual (non-pure) so ListOfPrograms::stopAll() can drive
+ * every program uniformly at shutdown without touching a half-destroyed object.
  */
 class Program {
 
   private:
-
-  /**
-   * @brief Thread executing the program
-   */
-  std::thread thread_;
 
   /**
    * @brief Program identifier (selected on the keypad)
@@ -64,6 +58,13 @@ class Program {
   void setPeriod(int period);
 
   /**
+   * @brief Getter for the execution period in milliseconds.
+   *
+   * @return Period (in milliseconds)
+   */
+  int getPeriod() const;
+
+  /**
    * @brief Getter for the program id
    *
    * @return Program id
@@ -78,40 +79,45 @@ class Program {
   const std::string& getLabel() const;
 
   /**
-   * @brief Start the program in the background.
+   * @brief Start the program.
    *
-   * If a previous run has completed, its thread is reaped before starting
-   * so the assignment below never targets a joinable thread.
+   * The base implementation only marks the program as running. Derived classes
+   * that own a worker thread override this to spawn it. Kept virtual (non-pure)
+   * so ListOfPrograms::stopAll() can drive every program uniformly.
    */
-  void start();
+  virtual void start();
 
   /**
-   * @brief Stop the program and wait for its thread to finish.
+   * @brief Stop the program and wait for it to finish.
+   *
+   * The base implementation only clears the running flag. Derived classes that
+   * own a worker thread override this to join it. No-op if not running.
    */
-  void stop();
+  virtual void stop();
 
   /**
-   * @brief Getter for running state
+   * @brief Check whether the program is currently running
    *
-   * @return true if the program is running, false otherwise
+   * @return True if running, false otherwise
    */
   bool isRunning() const;
 
   /**
-   * @brief Operation to execute on each cycle.
+   * @brief Whether this program requires user input while running.
    *
-   * Pure virtual: each concrete program implements its own work here.
+   * Foreground programs run modally: the HMI forwards keypad events to them
+   * until they finish. Background programs keep the HMI free. Default false.
+   */
+  virtual bool foreground() const { return false; }
+
+  /**
+   * @brief Operation executed while the program is running.
+   *
+   * Derived classes implement their behaviour here. How it is driven (once per
+   * period on a worker thread, or once per user input) depends on the concrete
+   * execution model.
    */
   virtual void operation() = 0;
-
-  protected:
-  /**
-   * @brief Main loop executed by the thread.
-   *
-   * Calls operation() repeatedly, sleeping for period_ milliseconds between
-   * cycles, until stop() clears running_.
-   */
-  void loop();
 };
 
 #endif /* _PROGRAM_H_ */
