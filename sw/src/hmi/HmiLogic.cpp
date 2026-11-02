@@ -130,6 +130,14 @@ void HmiLogic::idle(HmiData &data)
 
     status_.transit(MODE_PROG_INPUT);
   }
+  else if (key == E_KEY_RSET)
+  {
+    /* RSET clears any persistent left-LCD alarm (e.g. OP ERROR blink from an
+     * action error), returning the display to the clean boot screen */
+    LogTrace << "RSET in IDLE, clearing left LCD" << std::endl;
+
+    data.resetLeftLcdData();
+  }
   else if (data.getLeftLcdData().lVerbList == DRAW_ON)
   {
     /* + / - flip between the verb list and variable list pages (wraps around) */
