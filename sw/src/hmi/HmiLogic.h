@@ -2,6 +2,7 @@
 #define _HMILOGIC_H_
 
 // STL
+#include <chrono>
 #include <vector>
 
 // Core
@@ -47,6 +48,21 @@ class HmiLogic {
    * @brief Foreground program currently owning the HMI (MODE_PROG_RUN)
    */
   FgProgram *fgActive_ = nullptr;
+
+  /**
+   * @brief True while a background program start is waiting out its downcount
+   */
+  bool bgCountdownActive_ = false;
+
+  /**
+   * @brief ID of the background program scheduled to start when the count hits zero
+   */
+  int bgCountdownProgId_ = 0;
+
+  /**
+   * @brief Time at which the background program downcount started
+   */
+  std::chrono::steady_clock::time_point bgCountdownStart_;
 
   /**
    * @brief Persistent variable store (used to validate bool digit input)
@@ -109,6 +125,14 @@ class HmiLogic {
   void run(HmiData &data);
   void programRun(HmiData &data);
   void error(HmiData &data);
+
+  /**
+   * @brief Advance the background-program start downcount by one frame.
+   *
+   * While active, updates R1 with the remaining whole seconds and starts the
+   * scheduled program once the count reaches zero.
+   */
+  void bgCountdownTick(HmiData &data);
 };
 
 #endif /* _HMILOGIC_H_ */

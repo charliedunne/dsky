@@ -98,6 +98,13 @@ void HmiLogic::updateHmiData(HmiData &data)
     programRun(data);
   }
 
+  /* Drive the background-program start countdown, if active. Keys are
+   * processed before this tick, so a cancel wins in the same frame */
+  if (bgCountdownActive_)
+  {
+    bgCountdownTick(data);
+  }
+
   /* Publish the data */
   // data = data_;
   // std::memcpy(data, &data_, sizeof(HmiData));
@@ -224,10 +231,54 @@ void HmiLogic::verbInput(HmiData &data)
   }
 }
 
+void HmiLogic::bgCountdownTick(HmiData &data)
+{
+  const auto now = std::chrono::steady_clock::now();
+  const int remaining = 5 - static_cast<int>(std::chrono::duration_cast<std::chrono::seconds>(now - bgCountdownStart_).count());
+
+  if (remaining <= 0)
+  {
+    /* Countdown complete: start the scheduled program and clear the display */
+    LogTrace << "Background countdown complete, starting program [id: " << bgCountdownProgId_ << "]" << std::endl;
+    bgCountdownActive_ = false;
+    data.resetRightLcdData();
+
+    try
+    {
+      Program &prog = programs_(bgCountdownProgId_);
+      prog.start();
+    }
+    catch (const ExcInvalidCommand &e)
+    {
+      LogTrace << "Invalid Program command" << std::endl;
+      data.lSetOpErr(DRAW_BLINK);
+      status_.transit(MODE_ERROR);
+      return;
+    }
+
+    status_.transit(MODE_IDLE);
+  }
+  else
+  {
+    data.rSetnR1(remaining, DRAW_ON);
+  }
+}
+
 void HmiLogic::programInput(HmiData &data)
 {
   /* Copy the Event key received */
   EventId_t eventKey = keyEvents_[0].getEvent();
+
+  /* While a background program is counting down, any key cancels it. The key
+   * itself is consumed by the post-loop keyEvents_.clear() and never reprocessed */
+  if (bgCountdownActive_)
+  {
+    LogTrace << "Cancel background program countdown [id: " << bgCountdownProgId_ << "]" << std::endl;
+    bgCountdownActive_ = false;
+    data.resetRightLcdData();
+    status_.transit(MODE_IDLE);
+    return;
+  }
 
   switch (eventKey)
   {
@@ -238,21 +289,27 @@ void HmiLogic::programInput(HmiData &data)
 
     try
     {
-      /* Launch the program. A background program returns to IDLE so the
-       * post-loop run() check is not triggered; a foreground program enters
-       * the modal MODE_PROG_RUN state, which owns the HMI until it finishes */
+      /* Resolve the program first so an invalid ID throws before any state change */
       Program &prog = programs_(data.getRightLcdData().nProg);
-      prog.start();
-      LogTrace << "Program started [id: " << data.getRightLcdData().nProg << "]" << std::endl;
 
       if (prog.foreground())
       {
+        /* Foreground programs start immediately and own the HMI until they finish */
+        prog.start();
+        LogTrace << "Program started [id: " << data.getRightLcdData().nProg << "]" << std::endl;
         fgActive_ = static_cast<FgProgram *>(&prog);
         status_.transit(MODE_PROG_RUN);
       }
       else
       {
-        status_.transit(MODE_IDLE);
+        /* Background programs are deferred behind a 5->0 downcount shown in R1.
+         * Stay in MODE_PROG_INPUT: the tick hook drives the countdown and any
+         * key press cancels it */
+        bgCountdownActive_ = true;
+        bgCountdownProgId_ = data.getRightLcdData().nProg;
+        bgCountdownStart_ = std::chrono::steady_clock::now();
+        data.rSetnR1(5, DRAW_ON);
+        LogTrace << "Program scheduled [id: " << data.getRightLcdData().nProg << "], starting in 5s" << std::endl;
       }
     }
     catch (const ExcInvalidCommand &e)
