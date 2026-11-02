@@ -179,6 +179,18 @@ void HmiLogic::verbInput(HmiData &data)
         status_.transit(MODE_N_INPUT);
         data.rSetNounLabel(DRAW_ON);
         LogTrace << "Go no Noun input" << std::endl;
+
+        // For STOP BG, show the running programs on the left LCD so the user
+        // knows which IDs are available to stop. The list persists during noun
+        // entry because digit keys only update the right LCD.
+        if (data.getRightLcdData().nVerb == STOP_BG_VERB)
+        {
+          std::vector<std::string> lines = programs_.describeRunning();
+          LogTrace << "STOP BG: showing " << lines.size() << " running program(s)" << std::endl;
+          data.resetLeftLcdData();
+          data.lSetVerbListHeader(0, "RUNNING");
+          data.lSetVerbList(lines, {});
+        }
       }
       else
       {
