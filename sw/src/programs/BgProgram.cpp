@@ -23,6 +23,15 @@ BgProgram::~BgProgram()
 
 void BgProgram::start()
 {
+  /* Defensive guard: if already running, joining the still-running worker
+   * would block forever. The HMI normally rejects re-triggering, but this
+   * keeps start() safe for any caller */
+  if (isRunning())
+  {
+    LogTrace << "BgProgram::start ignored, already running [id: " << getId() << "]" << std::endl;
+    return;
+  }
+
   /* Reap a previous completed thread so the assignment below never
    * targets a joinable thread (which would call std::terminate) */
   if (thread_.joinable())

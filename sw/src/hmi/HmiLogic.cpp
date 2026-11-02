@@ -310,6 +310,17 @@ void HmiLogic::programInput(HmiData &data)
       }
       else
       {
+        /* Re-triggering an already-running background program would end in a
+         * join deadlock on the HMI thread, so reject it with the standard
+         * error feedback (cleared by any key press) */
+        if (prog.isRunning())
+        {
+          LogTrace << "Program already running, re-trigger rejected [id: " << data.getRightLcdData().nProg << "]" << std::endl;
+          data.lSetOpErr(DRAW_BLINK);
+          status_.transit(MODE_ERROR);
+          return;
+        }
+
         /* Background programs are deferred behind a 5->0 downcount shown in R1.
          * Stay in MODE_PROG_INPUT: the tick hook drives the countdown and any
          * key press cancels it */
