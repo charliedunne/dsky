@@ -63,6 +63,7 @@ bool DbClient::loadConfig(const std::string &path)
   std::ifstream file(path);
   if (!file.is_open()) {
     LogError << "DbClient: cannot open config file: " << path << std::endl;
+    lastOk_ = false;
     return false;
   }
 
@@ -95,6 +96,7 @@ bool DbClient::loadConfig(const std::string &path)
 
   if (!haveHost || !haveUser || !haveDb) {
     LogError << "DbClient: config file missing required keys (host/user/database): " << path << std::endl;
+    lastOk_ = false;
     return false;
   }
 
@@ -166,6 +168,7 @@ void DbClient::threadFunc()
 void DbClient::refreshCycle()
 {
   if (!ensureConnected()) {
+    lastOk_ = false;
     return;
   }
 
@@ -239,6 +242,13 @@ void DbClient::refreshCycle()
       it->valid = true;
     }
   }
+
+  /*
+   * Health = connection alive AND the device-list query succeeded. Per-device
+   * queryLatest() failures are deliberately ignored: a missing row (a sensor
+   * that never logged) is a data condition, not an access failure.
+   */
+  lastOk_ = devsOk;
 }
 
 /**

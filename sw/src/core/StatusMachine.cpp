@@ -142,6 +142,7 @@ void StatusMachine::transit(Mode_e dstMode)
             break;
 
         case MODE_N_INPUT:
+        case MODE_PROG_INPUT:
             LogDebug << "Transit to VALUE_INPUT" << std::endl;
             /* Transit */
             mode_ = MODE_VALUE_INPUT;
@@ -163,6 +164,7 @@ void StatusMachine::transit(Mode_e dstMode)
             break;
 
         case MODE_IDLE:
+        case MODE_VALUE_INPUT:
             LogDebug << "Transit to PROG_INPUT" << std::endl;
             /* Transit */
             mode_ = MODE_PROG_INPUT;

@@ -65,6 +65,16 @@ class HmiLogic {
   std::chrono::steady_clock::time_point bgCountdownStart_;
 
   /**
+   * @brief True while prompting for the optional DBMONITOR period in R2
+   */
+  bool bgPeriodInput_ = false;
+
+  /**
+   * @brief ID of the background program awaiting its period input
+   */
+  int bgPeriodProgId_ = 0;
+
+  /**
    * @brief Persistent variable store (used to validate bool digit input)
    */
   VariableStore &store_;

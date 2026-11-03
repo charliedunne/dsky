@@ -47,6 +47,7 @@ target_sources(dsky PRIVATE
   src/programs/BgProgram.cpp
   src/programs/FgProgram.cpp
   src/programs/DummyProgram.cpp
+  src/programs/DbMonitorProgram.cpp
   src/programs/ListOfPrograms.cpp
   src/db/DbClient.cpp
   src/drivers/dskyKeyInt/MsgQueue.cpp
@@ -109,7 +110,7 @@ include_directories(src/drivers/dskyKeyInt)
 target_include_directories(dsky PRIVATE ${CMAKE_BINARY_DIR})
 
 # Logger definitions
-add_definitions( -D LOGGER_MAX_LOG_LEVEL_PRINTED=4 )
+add_definitions( -D LOGGER_MAX_LOG_LEVEL_PRINTED=6 )
 add_definitions( -D LOGGER_PREFIX_LEVEL=2 )
 add_definitions( -D LOGGER_ENABLE_COLORS=0 )
 add_definitions( -D LOGGER_ENABLE_COLORS_ON_USER_HEADER=0 )

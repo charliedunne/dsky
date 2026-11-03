@@ -6,6 +6,9 @@
 #include "HmiData.h"
 #include "Logger.h"
 
+// Programs
+#include "DbMonitorProgram.h"
+
 // Exceptions
 #include "ExcInvalidCommand.h"
 
@@ -107,6 +110,13 @@ void HmiLogic::updateHmiData(HmiData &data)
     bgCountdownTick(data);
   }
 
+  /* Derive condition-based left-LCD alarms from live source state each frame.
+   * The TEMP alarm reflects database health: it blinks while the DB is down
+   * and clears when it recovers. Re-deriving every frame also makes RSET
+   * wipes self-healing — a cleared condition alarm reappears in this same
+   * frame if its underlying error is still active */
+  data.lSetTemp(data.isDbHealthy() ? DRAW_OFF : DRAW_BLINK);
+
   /* Publish the data */
   // data = data_;
   // std::memcpy(data, &data_, sizeof(HmiData));
@@ -134,8 +144,10 @@ void HmiLogic::idle(HmiData &data)
   }
   else if (key == E_KEY_RSET)
   {
-    /* RSET clears any persistent left-LCD alarm (e.g. OP ERROR blink from an
-     * action error), returning the display to the clean boot screen */
+    /* RSET clears transient/action left-LCD alarms (e.g. OP ERROR blink from
+     * an action error), returning the display to the clean boot screen.
+     * Condition-based alarms (TEMP/DB health) are re-derived in
+     * updateHmiData() this same frame, so they survive if the error persists */
     LogTrace << "RSET in IDLE, clearing left LCD" << std::endl;
 
     data.resetLeftLcdData();
@@ -322,6 +334,20 @@ void HmiLogic::programInput(HmiData &data)
           LogTrace << "Program already running, re-trigger rejected [id: " << data.getRightLcdData().nProg << "]" << std::endl;
           data.lSetOpErr(DRAW_BLINK);
           status_.transit(MODE_ERROR);
+          return;
+        }
+
+        /* DBMONITOR asks for an optional period in R2 before scheduling.
+         * ENTER with an empty R2 keeps the stored variable value */
+        if (data.getRightLcdData().nProg == DBMONITOR_PROGRAM)
+        {
+          LogTrace << "DBMONITOR period prompt" << std::endl;
+          bgPeriodInput_ = true;
+          bgPeriodProgId_ = data.getRightLcdData().nProg;
+          status_.transit(MODE_VALUE_INPUT);
+          data.rSetR2Label(DRAW_BLINK);
+          data.rSetR1Label(DRAW_ON);
+          data.rSetStrR1("in", DRAW_ON);
           return;
         }
 
@@ -560,6 +586,29 @@ void HmiLogic::valueInput(HmiData &data)
 
   case E_KEY_ENTR:
 
+    if (bgPeriodInput_)
+    {
+      /* DBMONITOR period prompt: an empty R2 keeps the stored variable,
+       * otherwise the typed value is persisted before the start */
+      bgPeriodInput_ = false;
+      if (data.getRightLcdData().nR2 != UNASIGNED)
+      {
+        store_.set(VAR_NOUN_DBMONITOR_PERIOD, data.getRightLcdData().nR2);
+        LogTrace << "DBMONITOR period stored [value: " << data.getRightLcdData().nR2 << "]" << std::endl;
+      }
+      /* Clear the prompt so the countdown display matches a normal
+       * background trigger, then schedule the start behind the downcount */
+      data.rSetStrR1("", DRAW_OFF);
+      data.rSetnR2(UNASIGNED, DRAW_OFF);
+      data.rSetR2Label(DRAW_OFF);
+      bgCountdownActive_ = true;
+      bgCountdownProgId_ = bgPeriodProgId_;
+      bgCountdownStart_ = std::chrono::steady_clock::now();
+      data.rSetnR1(5, DRAW_ON);
+      status_.transit(MODE_PROG_INPUT);
+      break;
+    }
+
     if (data.getRightLcdData().nR2 == UNASIGNED)
     {
       /* No value typed yet, stay in the prompt */
@@ -601,6 +650,14 @@ void HmiLogic::valueInput(HmiData &data)
     break;
 
   case E_KEY_VERB:
+    if (bgPeriodInput_)
+    {
+      /* Cancel the period prompt and return to IDLE */
+      bgPeriodInput_ = false;
+      data.resetRightLcdData();
+      status_.transit(MODE_IDLE);
+      break;
+    }
     data.rSetnVerb(UNASIGNED, DRAW_OFF);
     data.rSetnNoun(UNASIGNED, DRAW_OFF);
     data.rSetNounLabel(DRAW_OFF);
@@ -617,6 +674,7 @@ void HmiLogic::valueInput(HmiData &data)
     break;
 
   case E_KEY_RSET:
+    bgPeriodInput_ = false;
     data.resetRightLcdData();
     data.resetLeftLcdData();
     status_.transit(MODE_IDLE);
@@ -625,6 +683,7 @@ void HmiLogic::valueInput(HmiData &data)
   default:
     /* Keys not part of the input flow cancel back to IDLE */
     LogTrace << "Cancel value input, move to IDLE" << std::endl;
+    bgPeriodInput_ = false;
     data.resetRightLcdData();
     status_.transit(MODE_IDLE);
     break;

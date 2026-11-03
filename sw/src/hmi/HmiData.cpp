@@ -61,6 +61,9 @@ HmiData::HmiData()
     /* Set Default values */
     resetRightLcdData();
     resetLeftLcdData();
+
+    /* Assume the database is healthy until DbMonitorProgram publishes otherwise */
+    dbHealthy_ = true;
 }
 
 HmiData::~HmiData() {}
@@ -405,6 +408,35 @@ void HmiData::lSetReboot(DrawMode mode)
     lLcdData_.lReboot = mode;
 
     mutex_.unlock();
+}
+
+/**
+ * @brief Publish the database health condition (source of the TEMP alarm).
+ *        The displayed lTemp flag is derived from this each frame.
+ */
+void HmiData::setDbHealthy(bool healthy)
+{
+    mutex_.lock();
+
+    dbHealthy_ = healthy;
+
+    mutex_.unlock();
+}
+
+/**
+ * @brief Read the published database health condition.
+ *
+ * @return true while the database is reachable, false otherwise
+ */
+bool HmiData::isDbHealthy()
+{
+    mutex_.lock();
+
+    bool healthy = dbHealthy_;
+
+    mutex_.unlock();
+
+    return healthy;
 }
 
 namespace {
