@@ -11,6 +11,7 @@ dsky can be built for two targets; both are documented below:
 
 - [Building (native, x86_64)](#building-native-x86_64)
 - [Cross-compiling for Raspberry Pi (aarch64)](#cross-compiling-for-raspberry-pi-aarch64)
+- [Compilation time logging configuration](#compilation-time-logging-configuration)
 - [Unit tests](#unit-tests)
 
 ## Building (native, x86_64)
@@ -214,6 +215,65 @@ On ARM targets CMake sets `SDL_WINDOW_FULLSCREEN`, so the app starts full-screen
 The sysroot is bullseye, which matches the Pi's OS (Raspberry Pi OS 64-bit, Debian 11 based);
 the runtime only needs the system X11/EGL libraries that ship with the desktop
 image.
+
+## Compilation time logging configuration
+
+Logging goes through [simple-cpp-logger](sw/3rdparty/simple-cpp-logger), a
+header-only library whose behaviour is fixed at **compile time** by four
+preprocessor macros. Each target defines them in its CMakeLists (see
+`sw/CMakeLists.txt` and `sw/src/drivers/dskyKeyInt/CMakeLists.txt`); any macro
+left undefined falls back to the library default in
+`include/implementation/LoggerParameters.h`.
+
+| Macro | Deployed value | Library default | Effect |
+|---|---|---|---|
+| `LOGGER_MAX_LOG_LEVEL_PRINTED` | `4` (INFO) | `6` (TRACE) | Cap on the level actually printed; anything above it is dropped before formatting |
+| `LOGGER_PREFIX_LEVEL` | `2` (PRODUCTION) | `2` (PRODUCTION) | Which prefix tags are filled in (see below) |
+| `LOGGER_ENABLE_COLORS` | `0` | `1` | Emit ANSI color codes for the severity label, file:line and thread id |
+| `LOGGER_ENABLE_COLORS_ON_USER_HEADER` | `0` | `0` | Also color the user header (requires `LOGGER_ENABLE_COLORS`; no-op here since no user header is set) |
+
+### Log levels (`Logger::LogLevel`)
+
+| Value | Name | Meaning |
+|---|---|---|
+| 0 | FATAL | unrecoverable failure |
+| 1 | ERROR | serious problem |
+| 2 | ALERT | condition requiring attention |
+| 3 | WARNING | something unexpected but handled |
+| 4 | INFO | normal operational messages |
+| 5 | DEBUG | diagnostic detail |
+| 6 | TRACE | fine-grained tracing (max verbosity) |
+
+The gate in `Logger.impl.h` is simply
+`if (_currentLogLevel_ > _maxLogLevel_) return;`, so with the deployed cap of
+INFO, `DEBUG`/`TRACE` calls still compile but produce **no output at all**
+(not even the prefix). Dev/test builds keep the library default (TRACE) for
+full verbosity.
+
+### Prefix levels (`Logger::PrefixLevel`)
+
+The prefix is built from `LOGGER_PREFIX_FORMAT`
+(default `{TIME} {USER_HEADER} {SEVERITY} {FILELINE} {THREAD}`); tags whose
+level requirement is not met are stripped along with the extra spaces they
+leave behind.
+
+| Value | Name | Adds to the prefix |
+|---|---|---|
+| 0 | NONE | user header only |
+| 1 | MINIMAL | + severity label (padded to 5 chars) |
+| 2 | PRODUCTION | + timestamp (`LOGGER_TIME_FORMAT`, default `%H:%M:%S`) |
+| 3 | DEBUG | + `file:line` (grey when colors are on) |
+| 4 | FULL | + `(thread: <id>)` (grey when colors are on) |
+
+With the deployed settings (PRODUCTION, no colors), a log line looks like:
+
+```
+12:34:56 INFO: message text
+```
+
+Dev/test builds typically use `LOGGER_MAX_LOG_LEVEL_PRINTED=6` with
+`LOGGER_ENABLE_COLORS=1`, which adds color to the severity label and, at
+prefix level DEBUG or above, grey file:line and thread tags.
 
 ## Running as services (systemd, recommended)
 
