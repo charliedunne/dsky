@@ -160,7 +160,7 @@ int main( int argc, char * argv[], char *envp[] ) {
 
   /* Programs */
   DummyProgram p_Dummy(data);
-  DbMonitorProgram p_DbMonitor(data, store);
+  DbMonitorProgram p_DbMonitor(data, store, dbClient);
 
   /* Actions registration */
   logic.registerAction(a_Clock);

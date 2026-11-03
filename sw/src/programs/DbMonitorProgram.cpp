@@ -6,12 +6,15 @@
 // Noun selector for the period variable (VERB 8/9)
 #include "ListOfActions.h"
 
+// DB client whose health is reported on the TEMP alarm label
+#include "DbClient.h"
+
 /* Minimum period in seconds, guards against a zero/negative stored value */
 #define DBMONITOR_MIN_PERIOD 1
 
-DbMonitorProgram::DbMonitorProgram(HmiData &data, VariableStore &store) :
+DbMonitorProgram::DbMonitorProgram(HmiData &data, VariableStore &store, DbClient &db) :
     BgProgram(DBMONITOR_PROGRAM, data, "DBMONITOR", DBMONITOR_DEFAULT_PERIOD * 1000),
-    store_(store), cycle_(0)
+    store_(store), db_(db), cycle_(0)
 {
 }
 
@@ -31,8 +34,12 @@ void DbMonitorProgram::start()
 
 void DbMonitorProgram::operation()
 {
-  /* Do nothing but report a heartbeat so the background execution can be
-   * observed in the journal while VERB actions run concurrently. */
+  /* Blink the TEMP alarm while the database is not accessible, turn it off
+   * when reachable. HmiData setters are mutex-guarded, so calling them from
+   * this worker thread is safe. */
+  hmiData_.lSetTemp(db_.isHealthy() ? DRAW_OFF : DRAW_BLINK);
+
   cycle_++;
-  LogTrace << "DbMonitorProgram heartbeat, cycle " << cycle_ << std::endl;
+  LogTrace << "DbMonitorProgram heartbeat, cycle " << cycle_
+           << ", db " << (db_.isHealthy() ? "ok" : "DOWN") << std::endl;
 }

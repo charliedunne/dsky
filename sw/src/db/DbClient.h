@@ -58,6 +58,18 @@ public:
    */
   std::vector<DbReading> snapshot() const;
 
+  /**
+   * @brief Report whether the database is currently reachable.
+   *
+   * The flag starts true (no false alarm before the first refresh) and is
+   * updated at the end of every refresh cycle to reflect whether the connection
+   * stayed alive and the device-list query succeeded; per-device reading failures
+   * are ignored so a sensor that never logged does not trip it. A failed
+   * loadConfig() also forces it to false so a missing/bad config file is reported
+   * as "DB not accessible".
+   */
+  bool isHealthy() const { return lastOk_.load(); }
+
 private:
   void threadFunc();
   void refreshCycle();
@@ -80,6 +92,9 @@ private:
   /* DB handle – touched only by the refresh thread and by stop() after join */
   st_mysql *mysql_ = nullptr;
   bool connFailLogged_ = false;
+
+  /* Health flag: true when the last refresh succeeded (or before the first one) */
+  std::atomic<bool> lastOk_{true};
 
   /* Cache */
   mutable std::mutex cacheMutex_;
