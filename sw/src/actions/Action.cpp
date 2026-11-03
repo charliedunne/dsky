@@ -61,6 +61,17 @@ const std::string& Action::getLabel() const
   return label_;
 }
 
+void Action::setNeedsTypedNoun(bool needs)
+{
+  /* Store the typed-noun requirement flag */
+  needsTypedNoun_ = needs;
+}
+
+bool Action::getNeedsTypedNoun() const
+{
+  return needsTypedNoun_;
+}
+
 ActionSchedule_e Action::getSchedule()
 {
 

@@ -2,6 +2,7 @@
 // Standard lib
 #include <iostream>
 #include <string>
+#include <cstdio>
 
 // Configuration
 #include "config.h"
@@ -16,6 +17,11 @@
 #include "ReadVar.h"
 #include "WriteVar.h"
 #include "TempMonitor.h"
+#include "StopBgProg.h"
+#include "ListBgProg.h"
+
+// Programs
+#include "DummyProgram.h"
 
 // Database client (live temp sensor data for VERB 10)
 #include "DbClient.h"
@@ -54,9 +60,13 @@ void handler(int s) {
 
 int main( int argc, char * argv[], char *envp[] ) {
 
-  // Make stdout line-buffered so journalctl shows log lines in real time
-  // instead of after the block buffer fills.
-  std::cout << std::unitbuf;
+  // Line-buffer stdout at the C level (FILE*). The logger writes through a
+  // custom streambuf that sputc()s straight into cout's underlying filebuf,
+  // so std::unitbuf on std::cout never triggers: no << operator is ever
+  // invoked on cout itself. Under journald (pipe) glibc would otherwise
+  // block-buffer stdout (~4 KB), delaying log lines until the buffer fills
+  // or the process exits. setvbuf must run before any output.
+  setvbuf(stdout, NULL, _IOLBF, 0);
 
   // Initialize core
   LogInfo << "Initializing core...\n";
@@ -141,6 +151,9 @@ int main( int argc, char * argv[], char *envp[] ) {
   WriteVar a_WriteScreenSaverTimer(store, VAR_NOUN_SCREENSAVER_TIMER, data);
   TempMonitor a_TempMonitor(data, dbClient);
 
+  /* Programs */
+  DummyProgram p_Dummy(data);
+
   /* Actions registration */
   logic.registerAction(a_Clock);
   logic.registerAction(a_SystemReboot);
@@ -152,6 +165,22 @@ int main( int argc, char * argv[], char *envp[] ) {
   logic.registerAction(a_ReadScreenSaverTimer);
   logic.registerAction(a_WriteScreenSaverTimer);
   logic.registerAction(a_TempMonitor);
+
+  /* Programs registration */
+  logic.registerProgram(p_Dummy);
+
+  /* VERB 7: stop a running background program selected via the noun field
+   * (+/- cycling or typed ID). Needs the program registry, so it is
+   * instantiated after the programs are registered. */
+  StopBgProg a_StopBg(logic.getPrograms(), data);
+  /* Select the target program through the noun input before running */
+  a_StopBg.setNeedsTypedNoun(true);
+  logic.registerAction(a_StopBg);
+
+  /* VERB 6: list currently running background programs on the left LCD.
+   * Verb-only action; needs the program registry like StopBgProg above. */
+  ListBgProg a_ListBg(logic.getPrograms(), data);
+  logic.registerAction(a_ListBg);
 
   // VERB 0: list all implemented verb/noun combos on the left panel.
   // Registered last so its menu can describe every other action.
@@ -215,6 +244,10 @@ int main( int argc, char * argv[], char *envp[] ) {
   // operation() against the already-restored base vtable, hitting a
   // pure-virtual terminator and aborting the process.
   logic.getActions().stopAll();
+
+  // Stop all programs before they are destroyed below, for the same reason
+  // as actions above.
+  logic.getPrograms().stopAll();
 
   LogInfo << "Shutting down cleanly." << std::endl;
 }

@@ -1,6 +1,8 @@
 #include "HmiLogic.h"
 
 // Logging
+#include <cstdio>
+
 #include "HmiData.h"
 #include "Logger.h"
 
@@ -59,8 +61,16 @@ void HmiLogic::updateHmiData(HmiData &data)
       valueInput(data);
       break;
 
+    case MODE_PROG_INPUT:
+      programInput(data);
+      break;
+
     case MODE_RUN:
       run(data);
+      break;
+
+    case MODE_PROG_RUN:
+      programRun(data);
       break;
 
     case MODE_ERROR:
@@ -85,6 +95,18 @@ void HmiLogic::updateHmiData(HmiData &data)
     run(data);
   }
 
+  if (status_() == MODE_PROG_RUN)
+  {
+    programRun(data);
+  }
+
+  /* Drive the background-program start countdown, if active. Keys are
+   * processed before this tick, so a cancel wins in the same frame */
+  if (bgCountdownActive_)
+  {
+    bgCountdownTick(data);
+  }
+
   /* Publish the data */
   // data = data_;
   // std::memcpy(data, &data_, sizeof(HmiData));
@@ -101,6 +123,22 @@ void HmiLogic::idle(HmiData &data)
     data.rSetVerbLabel(DRAW_ON);
 
     status_.transit(MODE_V_INPUT);
+  }
+  else if (key == E_KEY_PRO)
+  {
+    LogTrace << "PRO" << std::endl;
+
+    data.rSetProgLabel(DRAW_ON);
+
+    status_.transit(MODE_PROG_INPUT);
+  }
+  else if (key == E_KEY_RSET)
+  {
+    /* RSET clears any persistent left-LCD alarm (e.g. OP ERROR blink from an
+     * action error), returning the display to the clean boot screen */
+    LogTrace << "RSET in IDLE, clearing left LCD" << std::endl;
+
+    data.resetLeftLcdData();
   }
   else if (data.getLeftLcdData().lVerbList == DRAW_ON)
   {
@@ -142,7 +180,9 @@ void HmiLogic::verbInput(HmiData &data)
       {
         status_.transit(MODE_N_INPUT);
         data.rSetNounLabel(DRAW_ON);
-        LogTrace << "Go no Noun input" << std::endl;
+        if (data.getRightLcdData().nVerb == STOP_BG_VERB)
+          drawStopBgList(data);
+        LogTrace << "Go no Noun input [verb: " << data.getRightLcdData().nVerb << "]" << std::endl;
       }
       else
       {
@@ -197,6 +237,141 @@ void HmiLogic::verbInput(HmiData &data)
   default:
     /* Keys not part of the input flow cancel back to IDLE */
     LogTrace << "Cancel verb input, move to IDLE" << std::endl;
+    data.resetRightLcdData();
+    status_.transit(MODE_IDLE);
+    break;
+  }
+}
+
+void HmiLogic::bgCountdownTick(HmiData &data)
+{
+  const auto now = std::chrono::steady_clock::now();
+  const int remaining = 5 - static_cast<int>(std::chrono::duration_cast<std::chrono::seconds>(now - bgCountdownStart_).count());
+
+  if (remaining <= 0)
+  {
+    /* Countdown complete: start the scheduled program and clear the display */
+    LogTrace << "Background countdown complete, starting program [id: " << bgCountdownProgId_ << "]" << std::endl;
+    bgCountdownActive_ = false;
+    data.resetRightLcdData();
+
+    try
+    {
+      Program &prog = programs_(bgCountdownProgId_);
+      prog.start();
+    }
+    catch (const ExcInvalidCommand &e)
+    {
+      LogTrace << "Invalid Program command" << std::endl;
+      data.lSetOpErr(DRAW_BLINK);
+      status_.transit(MODE_ERROR);
+      return;
+    }
+
+    status_.transit(MODE_IDLE);
+  }
+  else
+  {
+    data.rSetnR1(remaining, DRAW_ON);
+  }
+}
+
+void HmiLogic::programInput(HmiData &data)
+{
+  /* Copy the Event key received */
+  EventId_t eventKey = keyEvents_[0].getEvent();
+
+  /* While a background program is counting down, any key cancels it. The key
+   * itself is consumed by the post-loop keyEvents_.clear() and never reprocessed */
+  if (bgCountdownActive_)
+  {
+    LogTrace << "Cancel background program countdown [id: " << bgCountdownProgId_ << "]" << std::endl;
+    bgCountdownActive_ = false;
+    data.resetRightLcdData();
+    status_.transit(MODE_IDLE);
+    return;
+  }
+
+  switch (eventKey)
+  {
+
+  case E_KEY_ENTR:
+
+    LogTrace << "Enter Program input" << std::endl;
+
+    try
+    {
+      /* Resolve the program first so an invalid ID throws before any state change */
+      Program &prog = programs_(data.getRightLcdData().nProg);
+
+      if (prog.foreground())
+      {
+        /* Foreground programs start immediately and own the HMI until they finish */
+        prog.start();
+        LogTrace << "Program started [id: " << data.getRightLcdData().nProg << "]" << std::endl;
+        fgActive_ = static_cast<FgProgram *>(&prog);
+        status_.transit(MODE_PROG_RUN);
+      }
+      else
+      {
+        /* Re-triggering an already-running background program would end in a
+         * join deadlock on the HMI thread, so reject it with the standard
+         * error feedback (cleared by any key press) */
+        if (prog.isRunning())
+        {
+          LogTrace << "Program already running, re-trigger rejected [id: " << data.getRightLcdData().nProg << "]" << std::endl;
+          data.lSetOpErr(DRAW_BLINK);
+          status_.transit(MODE_ERROR);
+          return;
+        }
+
+        /* Background programs are deferred behind a 5->0 downcount shown in R1.
+         * Stay in MODE_PROG_INPUT: the tick hook drives the countdown and any
+         * key press cancels it */
+        bgCountdownActive_ = true;
+        bgCountdownProgId_ = data.getRightLcdData().nProg;
+        bgCountdownStart_ = std::chrono::steady_clock::now();
+        data.rSetnR1(5, DRAW_ON);
+        LogTrace << "Program scheduled [id: " << data.getRightLcdData().nProg << "], starting in 5s" << std::endl;
+      }
+    }
+    catch (const ExcInvalidCommand &e)
+    {
+      LogTrace << "Invalid Program command" << std::endl;
+      data.lSetOpErr(DRAW_BLINK);
+      status_.transit(MODE_ERROR);
+    }
+
+    break;
+
+  case E_KEY_0:
+  case E_KEY_1:
+  case E_KEY_2:
+  case E_KEY_3:
+  case E_KEY_4:
+  case E_KEY_5:
+  case E_KEY_6:
+  case E_KEY_7:
+  case E_KEY_8:
+  case E_KEY_9:
+
+    if (data.getRightLcdData().nProgMode == DRAW_OFF)
+    {
+
+      data.rSetnProg(key(eventKey), DRAW_ON);
+    }
+    else
+    {
+      data.rSetnProg(data.getRightLcdData().nProg * 10 + key(eventKey),
+                     DRAW_ON);
+    }
+    break;
+
+  case E_KEY_RSET:
+  case E_KEY_CLR:
+  default:
+    /* Keys not part of the input flow cancel back to IDLE */
+    LogTrace << "Cancel program input, move to IDLE" << std::endl;
     data.resetRightLcdData();
     status_.transit(MODE_IDLE);
     break;
@@ -266,18 +441,24 @@ void HmiLogic::nounInput(HmiData &data)
                      DRAW_ON);
     }
 
+    if (data.getRightLcdData().nVerb == STOP_BG_VERB)
+      drawStopBgList(data);
+
     break;
 
   case E_KEY_VERB:
     data.rSetnVerb(UNASIGNED, DRAW_OFF);
     data.rSetnNoun(UNASIGNED, DRAW_OFF);
     data.rSetNounLabel(DRAW_OFF);
+    data.resetLeftLcdData();
     status_.transit(MODE_V_INPUT);
     break;
 
   case E_KEY_NOUN:
   case E_KEY_CLR:
     data.rSetnNoun(UNASIGNED, DRAW_OFF);
+    if (data.getRightLcdData().nVerb == STOP_BG_VERB)
+      drawStopBgList(data);
     break;
 
   case E_KEY_RSET:
@@ -286,13 +467,87 @@ void HmiLogic::nounInput(HmiData &data)
     status_.transit(MODE_IDLE);
     break;
 
+  case E_KEY_PLUS:
+  case E_KEY_MINUS:
+    if (data.getRightLcdData().nVerb == STOP_BG_VERB)
+    {
+      /* Cycle through running programs to pick the target */
+      const std::vector<int> ids = programs_.runningIds();
+      const int count = (int)ids.size();
+      if (count > 0)
+      {
+        int cur = data.getRightLcdData().nNoun;
+        int idx = -1;
+        for (int i = 0; i < count; ++i)
+          if (ids[i] == cur) { idx = i; break; }
+        if (eventKey == E_KEY_PLUS)
+          idx = (idx + 1) % count;
+        else
+          idx = (idx < 0) ? count - 1 : (idx - 1 + count) % count;
+        data.rSetnNoun(ids[idx], DRAW_ON);
+        drawStopBgList(data);
+      }
+    }
+    else
+    {
+      /* Keys not part of the input flow cancel back to IDLE */
+      LogTrace << "Cancel noun input, move to IDLE" << std::endl;
+      data.resetRightLcdData();
+      data.resetLeftLcdData();
+      status_.transit(MODE_IDLE);
+    }
+    break;
+
   default:
     /* Keys not part of the input flow cancel back to IDLE */
     LogTrace << "Cancel noun input, move to IDLE" << std::endl;
     data.resetRightLcdData();
+    data.resetLeftLcdData();
     status_.transit(MODE_IDLE);
     break;
   }
+}
+
+/**
+ * @brief Draw the list of running programs on the left LCD for VERB 7.
+ *
+ * Fills the verb-list widget with one line per running program, marking
+ * the entry whose ID matches the current noun field with '*' on both
+ * sides. Shows "NONE" when no program is running.
+ */
+void HmiLogic::drawStopBgList(HmiData &data)
+{
+  const std::vector<int> ids = programs_.runningIds();
+  const int count = (int)ids.size();
+
+  /* Find the index of the currently selected program (-1 if none) */
+  int selIdx = -1;
+  for (int i = 0; i < count; ++i)
+    if (ids[i] == data.getRightLcdData().nNoun) { selIdx = i; break; }
+
+  std::vector<std::string> lines;
+
+  if (count == 0)
+  {
+    lines.push_back("NONE");
+  }
+  else
+  {
+    /* describeRunning() entries pair 1:1 with runningIds() when non-empty */
+    const std::vector<std::string> entries = programs_.describeRunning();
+    lines.reserve(entries.size());
+    char line[28];
+    for (size_t i = 0; i < entries.size(); ++i)
+    {
+      const bool sel = (int)i == selIdx;
+      snprintf(line, sizeof(line), "%s%s%s", sel ? "*" : "", entries[i].c_str(), sel ? "*" : "");
+      lines.emplace_back(line);
+    }
+  }
+
+  data.resetLeftLcdData();
+  data.lSetVerbListHeader(0, "RUNNING");
+  data.lSetVerbList(lines, {});
 }
 
 void HmiLogic::valueInput(HmiData &data)
@@ -458,6 +713,59 @@ void HmiLogic::run(HmiData &data)
   }
 }
 
+void HmiLogic::programRun(HmiData &data)
+{
+  /* The foreground program currently owning the HMI must be valid; if it is
+   * missing something went wrong, so bail back to IDLE */
+  if (fgActive_ == nullptr)
+  {
+    LogError << "No foreground program active in MODE_PROG_RUN" << std::endl;
+    data.resetRightLcdData();
+    data.resetLeftLcdData();
+    status_.transit(MODE_IDLE);
+    return;
+  }
+
+  if (keyEvents_.size() > 0)
+  {
+    /* Copy the Event key received */
+    EventId_t eventKey = keyEvents_[0].getEvent();
+
+    LogTrace << "Key detected in foreground program" << std::endl;
+
+    /* A running cancellable foreground program is aborted by ANY key press.
+     * cancel() is non-blocking, unlike stop(), so the HMI loop never freezes */
+    if (fgActive_->isRunning() && fgActive_->cancellable())
+    {
+      LogTrace << "Key detected while cancellable foreground program running, cancelling" << std::endl;
+      fgActive_->cancel();
+      data.resetRightLcdData();
+      data.resetLeftLcdData();
+      status_.transit(MODE_IDLE);
+      return;
+    }
+
+    /* Otherwise forward the key to the running foreground program */
+    if (fgActive_->isRunning())
+    {
+      fgActive_->pushKey(eventKey);
+    }
+  }
+
+  /* A finished foreground program: release the HMI. stop() is a safe no-op
+   * join-wise here because the worker already cleared running_ on natural
+   * exit, so the thread is reaped later by start() or the destructor */
+  if (!fgActive_->isRunning())
+  {
+    LogTrace << "Foreground program finished, releasing HMI" << std::endl;
+    fgActive_->stop();
+    fgActive_ = nullptr;
+    data.resetRightLcdData();
+    data.resetLeftLcdData();
+    status_.transit(MODE_IDLE);
+  }
+}
+
 void HmiLogic::error(HmiData &data)
 {
   /* Any key press clears the error and returns to the clean IDLE state */
@@ -475,6 +783,16 @@ void HmiLogic::registerAction(Action &action)
 ListOfActions &HmiLogic::getActions()
 {
   return actions_;
+}
+
+void HmiLogic::registerProgram(Program &program)
+{
+  programs_.registerProgram(program);
+}
+
+ListOfPrograms &HmiLogic::getPrograms()
+{
+  return programs_;
 }
 
 int key(EventId_t id)

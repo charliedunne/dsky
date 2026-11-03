@@ -54,6 +54,14 @@ private:
   std::string label_;
 
   /**
+   * @brief When true, a noun must be typed even if the registered noun is -1.
+   *
+   * Actions registered with noun -1 normally accept any (or no) typed noun;
+   * set this flag to force the HMI to require a typed noun before dispatch.
+   */
+  bool needsTypedNoun_ = false;
+
+  /**
    * @brief Flag to determine if the thread must continue its execution
    *
    */
@@ -100,6 +108,20 @@ public:
    * @return Label
    */
   const std::string& getLabel() const;
+
+  /**
+   * @brief Require (or not) a typed noun when the registered noun is -1
+   *
+   * @param[in] needs true to force the HMI to collect a typed noun
+   */
+  void setNeedsTypedNoun(bool needs);
+
+  /**
+   * @brief Getter for the typed-noun requirement flag
+   *
+   * @return true if a typed noun is required, false otherwise
+   */
+  bool getNeedsTypedNoun() const;
 
   /**
    * @brief Getter for Action Schedule type
@@ -176,6 +198,16 @@ protected:
    * every run starts from a clean state.
    */
   virtual void start() {}
+
+  /**
+   * @brief Signal that this run has completed successfully.
+   *
+   * For periodic actions the loop keeps running until stop() is called,
+   * so a self-terminating action (e.g. ENTER confirmed in StopBgProg)
+   * uses this to mark itself finished and stop the worker thread. The
+   * HMI loop reaps the finished action via its existing finished() check.
+   */
+  void finish() { finished_ = true; running_ = false; }
 
   /**
    * @brief Define in derived classes the operation to do in the thread

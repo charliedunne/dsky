@@ -37,8 +37,16 @@ std::string StatusMachine::to_string()
         return std::string("VALUE_INPUT");
         break;
 
+        case MODE_PROG_INPUT:
+        return std::string("PROG_INPUT");
+        break;
+
         case MODE_RUN:
         return std::string("RUN");
+        break;
+
+        case MODE_PROG_RUN:
+        return std::string("PROG_RUN");
         break;
 
         case MODE_ERROR:
@@ -67,7 +75,9 @@ void StatusMachine::transit(Mode_e dstMode)
         case MODE_V_INPUT:
         case MODE_N_INPUT:
         case MODE_VALUE_INPUT:
+        case MODE_PROG_INPUT:
         case MODE_RUN:
+        case MODE_PROG_RUN:
         case MODE_ERROR:
             LogDebug << "Transit to IDLE" << std::endl;
             /* Transit */
@@ -143,6 +153,27 @@ void StatusMachine::transit(Mode_e dstMode)
         }
         break;
 
+    case MODE_PROG_INPUT:
+
+        switch (mode_)
+        {
+
+        case MODE_PROG_INPUT:
+            /* Do nothing */
+            break;
+
+        case MODE_IDLE:
+            LogDebug << "Transit to PROG_INPUT" << std::endl;
+            /* Transit */
+            mode_ = MODE_PROG_INPUT;
+            break;
+
+        default:
+            throw std::domain_error("Invalid transition to PROG_INPUT");
+            break;
+        }
+        break;
+
     case MODE_RUN:
 
         switch (mode_)
@@ -167,11 +198,33 @@ void StatusMachine::transit(Mode_e dstMode)
         }    
         break;
 
+    case MODE_PROG_RUN:
+
+        switch (mode_)
+        {
+
+        case MODE_PROG_RUN:
+            /* Do nothing */
+            break;
+
+        case MODE_IDLE:
+        case MODE_PROG_INPUT:
+            LogDebug << "Transit to PROG_RUN" << std::endl;
+            /* Transit */
+            mode_ = MODE_PROG_RUN;
+            break;
+
+        default:
+            throw std::domain_error("Invalid transition to PROG_RUN");
+            break;
+        }
+        break;
+
     case MODE_ERROR:
 
         mode_ = MODE_ERROR;
         break;
-        
+
     default:
         throw std::domain_error("Unknown Destination mode");
         break;

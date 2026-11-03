@@ -3,9 +3,6 @@ cmake_minimum_required(VERSION 3.18)
 # Project name
 project (dsky VERSION 0.1)
 
-# Debug/Release configuration
-set(LOG_LEVEL LOG_DEBUG)
-
 # Add executable
 add_executable(dsky "")
 
@@ -44,6 +41,13 @@ target_sources(dsky PRIVATE
   src/actions/ReadVar.cpp
   src/actions/WriteVar.cpp
   src/actions/TempMonitor.cpp
+  src/actions/StopBgProg.cpp
+  src/actions/ListBgProg.cpp
+  src/programs/Program.cpp
+  src/programs/BgProgram.cpp
+  src/programs/FgProgram.cpp
+  src/programs/DummyProgram.cpp
+  src/programs/ListOfPrograms.cpp
   src/db/DbClient.cpp
   src/drivers/dskyKeyInt/MsgQueue.cpp
 )
@@ -96,6 +100,7 @@ include_directories(src/common)
 include_directories(src/common/exceptions)
 include_directories(src/core)
 include_directories(src/actions)
+include_directories(src/programs)
 include_directories(src/db)
 include_directories(3rdparty/simple-cpp-logger/include)
 include_directories(src/drivers/dskyKeyInt)
@@ -104,9 +109,9 @@ include_directories(src/drivers/dskyKeyInt)
 target_include_directories(dsky PRIVATE ${CMAKE_BINARY_DIR})
 
 # Logger definitions
-add_definitions( -D LOGGER_MAX_LOG_LEVEL_PRINTED=7 )
+add_definitions( -D LOGGER_MAX_LOG_LEVEL_PRINTED=4 )
 add_definitions( -D LOGGER_PREFIX_LEVEL=2 )
-add_definitions( -D LOGGER_ENABLE_COLORS=1 )
+add_definitions( -D LOGGER_ENABLE_COLORS=0 )
 add_definitions( -D LOGGER_ENABLE_COLORS_ON_USER_HEADER=0 )
 
 # Libraries
