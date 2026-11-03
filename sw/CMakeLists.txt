@@ -47,7 +47,7 @@ target_sources(dsky PRIVATE
   src/programs/BgProgram.cpp
   src/programs/FgProgram.cpp
   src/programs/DummyProgram.cpp
-  src/programs/Prog2Program.cpp
+  src/programs/DbMonitorProgram.cpp
   src/programs/ListOfPrograms.cpp
   src/db/DbClient.cpp
   src/drivers/dskyKeyInt/MsgQueue.cpp

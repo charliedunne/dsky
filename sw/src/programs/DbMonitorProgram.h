@@ -1,24 +1,24 @@
-#ifndef _PROG2PROGRAM_H_
-#define _PROG2PROGRAM_H_
+#ifndef _DBMONITORPROGRAM_H_
+#define _DBMONITORPROGRAM_H_
 
 #include "BgProgram.h"
 #include "VariableStore.h"
 
-/* Program id selected on the keypad to launch PROG 2 */
-#define PROG2_PROGRAM 2
+/* Program id selected on the keypad to launch DBMONITOR */
+#define DBMONITOR_PROGRAM 2
 
 /* Default execution period in seconds, used when no persisted value exists */
-#define PROG2_DEFAULT_PERIOD 60
+#define DBMONITOR_DEFAULT_PERIOD 60
 
 /**
  * @brief Background program with a user-configurable execution period.
  *
- * The period is stored in the variable store under NOUN VAR_NOUN_PROG2_PERIOD
+ * The period is stored in the variable store under NOUN VAR_NOUN_DBMONITOR_PERIOD
  * (in seconds). On every start() the current variable value is read and used
  * as the execution period, so a change made via VERB 9 takes effect on the
- * next trigger. If no value is available, PROG2_DEFAULT_PERIOD is used.
+ * next trigger. If no value is available, DBMONITOR_DEFAULT_PERIOD is used.
  */
-class Prog2Program : public BgProgram {
+class DbMonitorProgram : public BgProgram {
 
   private:
 
@@ -33,7 +33,7 @@ class Prog2Program : public BgProgram {
   int cycle_;
 
   public:
-  Prog2Program(HmiData &data, VariableStore &store);
+  DbMonitorProgram(HmiData &data, VariableStore &store);
 
   /**
    * @brief Start the program.
@@ -50,4 +50,4 @@ class Prog2Program : public BgProgram {
   void operation() override;
 };
 
-#endif /* _PROG2PROGRAM_H_ */
+#endif /* _DBMONITORPROGRAM_H_ */

@@ -7,7 +7,7 @@
 #include "Logger.h"
 
 // Programs
-#include "Prog2Program.h"
+#include "DbMonitorProgram.h"
 
 // Exceptions
 #include "ExcInvalidCommand.h"
@@ -328,11 +328,11 @@ void HmiLogic::programInput(HmiData &data)
           return;
         }
 
-        /* PROG 2 asks for an optional period in R2 before scheduling.
+        /* DBMONITOR asks for an optional period in R2 before scheduling.
          * ENTER with an empty R2 keeps the stored variable value */
-        if (data.getRightLcdData().nProg == PROG2_PROGRAM)
+        if (data.getRightLcdData().nProg == DBMONITOR_PROGRAM)
         {
-          LogTrace << "PROG 2 period prompt" << std::endl;
+          LogTrace << "DBMONITOR period prompt" << std::endl;
           bgPeriodInput_ = true;
           bgPeriodProgId_ = data.getRightLcdData().nProg;
           status_.transit(MODE_VALUE_INPUT);
@@ -579,13 +579,13 @@ void HmiLogic::valueInput(HmiData &data)
 
     if (bgPeriodInput_)
     {
-      /* PROG 2 period prompt: an empty R2 keeps the stored variable,
+      /* DBMONITOR period prompt: an empty R2 keeps the stored variable,
        * otherwise the typed value is persisted before the start */
       bgPeriodInput_ = false;
       if (data.getRightLcdData().nR2 != UNASIGNED)
       {
-        store_.set(VAR_NOUN_PROG2_PERIOD, data.getRightLcdData().nR2);
-        LogTrace << "PROG 2 period stored [value: " << data.getRightLcdData().nR2 << "]" << std::endl;
+        store_.set(VAR_NOUN_DBMONITOR_PERIOD, data.getRightLcdData().nR2);
+        LogTrace << "DBMONITOR period stored [value: " << data.getRightLcdData().nR2 << "]" << std::endl;
       }
       /* Clear the prompt so the countdown display matches a normal
        * background trigger, then schedule the start behind the downcount */

@@ -65,7 +65,7 @@ class HmiLogic {
   std::chrono::steady_clock::time_point bgCountdownStart_;
 
   /**
-   * @brief True while prompting for the optional PROG 2 period in R2
+   * @brief True while prompting for the optional DBMONITOR period in R2
    */
   bool bgPeriodInput_ = false;
 

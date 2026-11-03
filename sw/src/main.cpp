@@ -22,7 +22,7 @@
 
 // Programs
 #include "DummyProgram.h"
-#include "Prog2Program.h"
+#include "DbMonitorProgram.h"
 
 // Database client (live temp sensor data for VERB 10)
 #include "DbClient.h"
@@ -123,9 +123,9 @@ int main( int argc, char * argv[], char *envp[] ) {
     screenSaver.setTimer(value);
   });
 
-  // NOUN 5: PROG 2 execution period [seconds]. No apply callback: the program
+  // NOUN 5: DBMONITOR execution period [seconds]. No apply callback: the program
   // reads this variable at start(), so a change takes effect on the next trigger.
-  store.registerVar(VAR_NOUN_PROG2_PERIOD, "prog2Period", "PROG2 PERIOD", VAR_INT, PROG2_DEFAULT_PERIOD);
+  store.registerVar(VAR_NOUN_DBMONITOR_PERIOD, "dbMonitorPeriod", "DBMONITOR PERIOD", VAR_INT, DBMONITOR_DEFAULT_PERIOD);
 
   // Restore persisted values, then re-apply them to hardware.
   store.load();
@@ -154,13 +154,13 @@ int main( int argc, char * argv[], char *envp[] ) {
   WriteVar a_WriteScreenSaver(store, VAR_NOUN_SCREENSAVER, data);
   ReadVar a_ReadScreenSaverTimer(store, VAR_NOUN_SCREENSAVER_TIMER, data);
   WriteVar a_WriteScreenSaverTimer(store, VAR_NOUN_SCREENSAVER_TIMER, data);
-  ReadVar a_ReadProg2Period(store, VAR_NOUN_PROG2_PERIOD, data);
-  WriteVar a_WriteProg2Period(store, VAR_NOUN_PROG2_PERIOD, data);
+  ReadVar a_ReadDbMonitorPeriod(store, VAR_NOUN_DBMONITOR_PERIOD, data);
+  WriteVar a_WriteDbMonitorPeriod(store, VAR_NOUN_DBMONITOR_PERIOD, data);
   TempMonitor a_TempMonitor(data, dbClient);
 
   /* Programs */
   DummyProgram p_Dummy(data);
-  Prog2Program p_Prog2(data, store);
+  DbMonitorProgram p_DbMonitor(data, store);
 
   /* Actions registration */
   logic.registerAction(a_Clock);
@@ -172,13 +172,13 @@ int main( int argc, char * argv[], char *envp[] ) {
   logic.registerAction(a_WriteScreenSaver);
   logic.registerAction(a_ReadScreenSaverTimer);
   logic.registerAction(a_WriteScreenSaverTimer);
-  logic.registerAction(a_ReadProg2Period);
-  logic.registerAction(a_WriteProg2Period);
+  logic.registerAction(a_ReadDbMonitorPeriod);
+  logic.registerAction(a_WriteDbMonitorPeriod);
   logic.registerAction(a_TempMonitor);
 
   /* Programs registration */
   logic.registerProgram(p_Dummy);
-  logic.registerProgram(p_Prog2);
+  logic.registerProgram(p_DbMonitor);
 
   /* VERB 7: stop a running background program selected via the noun field
    * (+/- cycling or typed ID). Needs the program registry, so it is
