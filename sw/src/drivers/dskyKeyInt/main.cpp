@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <csignal>
 #include <pthread.h>
+#include <cstdio>
 
 // KeyInt library
 #include "KeyInt.h"
@@ -59,10 +60,13 @@ int main(int argc, char *argv[])
     // installed below), so the handler always has a valid target.
     g_mainThreadId = pthread_self();
 
-    // Make stdout unit-buffered: under journald (pipe) std::cout would be
-    // block-buffered and KeyId lines would only appear on process exit,
-    // making live journal verification impossible.
-    std::cout << std::unitbuf;
+    // Line-buffer stdout at the C level (FILE*). The logger writes through a
+    // custom streambuf that sputc()s straight into cout's underlying filebuf,
+    // so std::unitbuf on std::cout never triggers: no << operator is ever
+    // invoked on cout itself. Under journald (pipe) glibc would otherwise
+    // block-buffer stdout (~4 KB), delaying KeyId lines until the buffer
+    // fills or the process exits. setvbuf must run before any output.
+    setvbuf(stdout, NULL, _IOLBF, 0);
 
     // Register handlers for SIGINT/SIGTERM with portable sigaction semantics.
     // SA_RESTART is deliberately not set so a blocked msgrcv returns EINTR

@@ -2,6 +2,7 @@
 // Standard lib
 #include <iostream>
 #include <string>
+#include <cstdio>
 
 // Configuration
 #include "config.h"
@@ -59,9 +60,13 @@ void handler(int s) {
 
 int main( int argc, char * argv[], char *envp[] ) {
 
-  // Make stdout line-buffered so journalctl shows log lines in real time
-  // instead of after the block buffer fills.
-  std::cout << std::unitbuf;
+  // Line-buffer stdout at the C level (FILE*). The logger writes through a
+  // custom streambuf that sputc()s straight into cout's underlying filebuf,
+  // so std::unitbuf on std::cout never triggers: no << operator is ever
+  // invoked on cout itself. Under journald (pipe) glibc would otherwise
+  // block-buffer stdout (~4 KB), delaying log lines until the buffer fills
+  // or the process exits. setvbuf must run before any output.
+  setvbuf(stdout, NULL, _IOLBF, 0);
 
   // Initialize core
   LogInfo << "Initializing core...\n";
