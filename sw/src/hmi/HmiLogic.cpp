@@ -6,6 +6,9 @@
 #include "HmiData.h"
 #include "Logger.h"
 
+// Programs
+#include "Prog2Program.h"
+
 // Exceptions
 #include "ExcInvalidCommand.h"
 
@@ -325,6 +328,20 @@ void HmiLogic::programInput(HmiData &data)
           return;
         }
 
+        /* PROG 2 asks for an optional period in R2 before scheduling.
+         * ENTER with an empty R2 keeps the stored variable value */
+        if (data.getRightLcdData().nProg == PROG2_PROGRAM)
+        {
+          LogTrace << "PROG 2 period prompt" << std::endl;
+          bgPeriodInput_ = true;
+          bgPeriodProgId_ = data.getRightLcdData().nProg;
+          status_.transit(MODE_VALUE_INPUT);
+          data.rSetR2Label(DRAW_BLINK);
+          data.rSetR1Label(DRAW_ON);
+          data.rSetStrR1("in", DRAW_ON);
+          return;
+        }
+
         /* Background programs are deferred behind a 5->0 downcount shown in R1.
          * Stay in MODE_PROG_INPUT: the tick hook drives the countdown and any
          * key press cancels it */
@@ -560,6 +577,29 @@ void HmiLogic::valueInput(HmiData &data)
 
   case E_KEY_ENTR:
 
+    if (bgPeriodInput_)
+    {
+      /* PROG 2 period prompt: an empty R2 keeps the stored variable,
+       * otherwise the typed value is persisted before the start */
+      bgPeriodInput_ = false;
+      if (data.getRightLcdData().nR2 != UNASIGNED)
+      {
+        store_.set(VAR_NOUN_PROG2_PERIOD, data.getRightLcdData().nR2);
+        LogTrace << "PROG 2 period stored [value: " << data.getRightLcdData().nR2 << "]" << std::endl;
+      }
+      /* Clear the prompt so the countdown display matches a normal
+       * background trigger, then schedule the start behind the downcount */
+      data.rSetStrR1("", DRAW_OFF);
+      data.rSetnR2(UNASIGNED, DRAW_OFF);
+      data.rSetR2Label(DRAW_OFF);
+      bgCountdownActive_ = true;
+      bgCountdownProgId_ = bgPeriodProgId_;
+      bgCountdownStart_ = std::chrono::steady_clock::now();
+      data.rSetnR1(5, DRAW_ON);
+      status_.transit(MODE_PROG_INPUT);
+      break;
+    }
+
     if (data.getRightLcdData().nR2 == UNASIGNED)
     {
       /* No value typed yet, stay in the prompt */
@@ -601,6 +641,14 @@ void HmiLogic::valueInput(HmiData &data)
     break;
 
   case E_KEY_VERB:
+    if (bgPeriodInput_)
+    {
+      /* Cancel the period prompt and return to IDLE */
+      bgPeriodInput_ = false;
+      data.resetRightLcdData();
+      status_.transit(MODE_IDLE);
+      break;
+    }
     data.rSetnVerb(UNASIGNED, DRAW_OFF);
     data.rSetnNoun(UNASIGNED, DRAW_OFF);
     data.rSetNounLabel(DRAW_OFF);
@@ -617,6 +665,7 @@ void HmiLogic::valueInput(HmiData &data)
     break;
 
   case E_KEY_RSET:
+    bgPeriodInput_ = false;
     data.resetRightLcdData();
     data.resetLeftLcdData();
     status_.transit(MODE_IDLE);
@@ -625,6 +674,7 @@ void HmiLogic::valueInput(HmiData &data)
   default:
     /* Keys not part of the input flow cancel back to IDLE */
     LogTrace << "Cancel value input, move to IDLE" << std::endl;
+    bgPeriodInput_ = false;
     data.resetRightLcdData();
     status_.transit(MODE_IDLE);
     break;
