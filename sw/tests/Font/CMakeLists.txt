@@ -4,9 +4,6 @@ cmake_minimum_required(VERSION 3.18)
 # build dir root)
 project (Font VERSION 1.0)
 
-# Debug/Release configuration
-set(LOG_LEVEL LOG_DEBUG)
-
 # Absolute resource dir so GORTON_FONT_* in the generated config.h resolve
 # correctly in this standalone test build.
 set(DSKY_RESOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../resources)

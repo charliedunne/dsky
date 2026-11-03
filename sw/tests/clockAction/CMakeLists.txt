@@ -3,9 +3,6 @@ cmake_minimum_required(VERSION 3.18)
 # Project name
 project (clockAction VERSION 1.0)
 
-# Debug/Release configuration
-set(LOG_LEVEL LOG_DEBUG)
-
 # Add executable
 add_executable(clockAction "")
 

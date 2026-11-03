@@ -3,9 +3,6 @@ cmake_minimum_required(VERSION 3.18)
 # Project name
 project (dsky VERSION 0.1)
 
-# Debug/Release configuration
-set(LOG_LEVEL LOG_DEBUG)
-
 # Add executable
 add_executable(dsky "")
 
@@ -112,9 +109,9 @@ include_directories(src/drivers/dskyKeyInt)
 target_include_directories(dsky PRIVATE ${CMAKE_BINARY_DIR})
 
 # Logger definitions
-add_definitions( -D LOGGER_MAX_LOG_LEVEL_PRINTED=7 )
+add_definitions( -D LOGGER_MAX_LOG_LEVEL_PRINTED=4 )
 add_definitions( -D LOGGER_PREFIX_LEVEL=2 )
-add_definitions( -D LOGGER_ENABLE_COLORS=1 )
+add_definitions( -D LOGGER_ENABLE_COLORS=0 )
 add_definitions( -D LOGGER_ENABLE_COLORS_ON_USER_HEADER=0 )
 
 # Libraries
