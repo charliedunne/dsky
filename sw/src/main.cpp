@@ -169,9 +169,12 @@ int main( int argc, char * argv[], char *envp[] ) {
   /* Programs registration */
   logic.registerProgram(p_Dummy);
 
-  /* VERB 7: stop a running background program by its ID. Needs the program
-   * registry, so it is instantiated after the programs are registered. */
+  /* VERB 7: stop a running background program selected via the noun field
+   * (+/- cycling or typed ID). Needs the program registry, so it is
+   * instantiated after the programs are registered. */
   StopBgProg a_StopBg(logic.getPrograms(), data);
+  /* Select the target program through the noun input before running */
+  a_StopBg.setNeedsTypedNoun(true);
   logic.registerAction(a_StopBg);
 
   /* VERB 6: list currently running background programs on the left LCD.

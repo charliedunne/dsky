@@ -1,6 +1,8 @@
 #include "HmiLogic.h"
 
 // Logging
+#include <cstdio>
+
 #include "HmiData.h"
 #include "Logger.h"
 
@@ -178,7 +180,9 @@ void HmiLogic::verbInput(HmiData &data)
       {
         status_.transit(MODE_N_INPUT);
         data.rSetNounLabel(DRAW_ON);
-        LogTrace << "Go no Noun input" << std::endl;
+        if (data.getRightLcdData().nVerb == STOP_BG_VERB)
+          drawStopBgList(data);
+        LogTrace << "Go no Noun input [verb: " << data.getRightLcdData().nVerb << "]" << std::endl;
       }
       else
       {
@@ -437,18 +441,24 @@ void HmiLogic::nounInput(HmiData &data)
                      DRAW_ON);
     }
 
+    if (data.getRightLcdData().nVerb == STOP_BG_VERB)
+      drawStopBgList(data);
+
     break;
 
   case E_KEY_VERB:
     data.rSetnVerb(UNASIGNED, DRAW_OFF);
     data.rSetnNoun(UNASIGNED, DRAW_OFF);
     data.rSetNounLabel(DRAW_OFF);
+    data.resetLeftLcdData();
     status_.transit(MODE_V_INPUT);
     break;
 
   case E_KEY_NOUN:
   case E_KEY_CLR:
     data.rSetnNoun(UNASIGNED, DRAW_OFF);
+    if (data.getRightLcdData().nVerb == STOP_BG_VERB)
+      drawStopBgList(data);
     break;
 
   case E_KEY_RSET:
@@ -457,13 +467,87 @@ void HmiLogic::nounInput(HmiData &data)
     status_.transit(MODE_IDLE);
     break;
 
+  case E_KEY_PLUS:
+  case E_KEY_MINUS:
+    if (data.getRightLcdData().nVerb == STOP_BG_VERB)
+    {
+      /* Cycle through running programs to pick the target */
+      const std::vector<int> ids = programs_.runningIds();
+      const int count = (int)ids.size();
+      if (count > 0)
+      {
+        int cur = data.getRightLcdData().nNoun;
+        int idx = -1;
+        for (int i = 0; i < count; ++i)
+          if (ids[i] == cur) { idx = i; break; }
+        if (eventKey == E_KEY_PLUS)
+          idx = (idx + 1) % count;
+        else
+          idx = (idx < 0) ? count - 1 : (idx - 1 + count) % count;
+        data.rSetnNoun(ids[idx], DRAW_ON);
+        drawStopBgList(data);
+      }
+    }
+    else
+    {
+      /* Keys not part of the input flow cancel back to IDLE */
+      LogTrace << "Cancel noun input, move to IDLE" << std::endl;
+      data.resetRightLcdData();
+      data.resetLeftLcdData();
+      status_.transit(MODE_IDLE);
+    }
+    break;
+
   default:
     /* Keys not part of the input flow cancel back to IDLE */
     LogTrace << "Cancel noun input, move to IDLE" << std::endl;
     data.resetRightLcdData();
+    data.resetLeftLcdData();
     status_.transit(MODE_IDLE);
     break;
   }
+}
+
+/**
+ * @brief Draw the list of running programs on the left LCD for VERB 7.
+ *
+ * Fills the verb-list widget with one line per running program, marking
+ * the entry whose ID matches the current noun field with '*' on both
+ * sides. Shows "NONE" when no program is running.
+ */
+void HmiLogic::drawStopBgList(HmiData &data)
+{
+  const std::vector<int> ids = programs_.runningIds();
+  const int count = (int)ids.size();
+
+  /* Find the index of the currently selected program (-1 if none) */
+  int selIdx = -1;
+  for (int i = 0; i < count; ++i)
+    if (ids[i] == data.getRightLcdData().nNoun) { selIdx = i; break; }
+
+  std::vector<std::string> lines;
+
+  if (count == 0)
+  {
+    lines.push_back("NONE");
+  }
+  else
+  {
+    /* describeRunning() entries pair 1:1 with runningIds() when non-empty */
+    const std::vector<std::string> entries = programs_.describeRunning();
+    lines.reserve(entries.size());
+    char line[28];
+    for (size_t i = 0; i < entries.size(); ++i)
+    {
+      const bool sel = (int)i == selIdx;
+      snprintf(line, sizeof(line), "%s%s%s", sel ? "*" : "", entries[i].c_str(), sel ? "*" : "");
+      lines.emplace_back(line);
+    }
+  }
+
+  data.resetLeftLcdData();
+  data.lSetVerbListHeader(0, "RUNNING");
+  data.lSetVerbList(lines, {});
 }
 
 void HmiLogic::valueInput(HmiData &data)

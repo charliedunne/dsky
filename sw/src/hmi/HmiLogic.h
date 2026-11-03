@@ -133,6 +133,15 @@ class HmiLogic {
    * scheduled program once the count reaches zero.
    */
   void bgCountdownTick(HmiData &data);
+
+  /**
+   * @brief Draw the list of running programs on the left LCD for VERB 7.
+   *
+   * Fills the verb-list widget with one line per running program, marking
+   * the entry whose ID matches the current noun field with '*' on both
+   * sides. Shows "NONE" when no program is running.
+   */
+  void drawStopBgList(HmiData &data);
 };
 
 #endif /* _HMILOGIC_H_ */
