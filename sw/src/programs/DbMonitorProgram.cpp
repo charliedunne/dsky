@@ -34,10 +34,10 @@ void DbMonitorProgram::start()
 
 void DbMonitorProgram::operation()
 {
-  /* Blink the TEMP alarm while the database is not accessible, turn it off
-   * when reachable. HmiData setters are mutex-guarded, so calling them from
-   * this worker thread is safe. */
-  hmiData_.lSetTemp(db_.isHealthy() ? DRAW_OFF : DRAW_BLINK);
+  /* Publish the database health condition. The TEMP alarm label is derived
+   * from this condition every frame by HmiLogic, so the blink persists across
+   * RSET wipes instead of waiting for the next monitor cycle. */
+  hmiData_.setDbHealthy(db_.isHealthy());
 
   cycle_++;
   LogTrace << "DbMonitorProgram heartbeat, cycle " << cycle_

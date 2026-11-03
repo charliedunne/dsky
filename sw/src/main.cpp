@@ -180,6 +180,11 @@ int main( int argc, char * argv[], char *envp[] ) {
   logic.registerProgram(p_Dummy);
   logic.registerProgram(p_DbMonitor);
 
+  /* Auto-start the DB monitor so it publishes database health from boot.
+   * The TEMP alarm label is derived from that condition every frame by
+   * HmiLogic, so without this the alarm would be dead in nominal mode. */
+  p_DbMonitor.start();
+
   /* VERB 7: stop a running background program selected via the noun field
    * (+/- cycling or typed ID). Needs the program registry, so it is
    * instantiated after the programs are registered. */

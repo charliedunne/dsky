@@ -110,6 +110,13 @@ void HmiLogic::updateHmiData(HmiData &data)
     bgCountdownTick(data);
   }
 
+  /* Derive condition-based left-LCD alarms from live source state each frame.
+   * The TEMP alarm reflects database health: it blinks while the DB is down
+   * and clears when it recovers. Re-deriving every frame also makes RSET
+   * wipes self-healing — a cleared condition alarm reappears in this same
+   * frame if its underlying error is still active */
+  data.lSetTemp(data.isDbHealthy() ? DRAW_OFF : DRAW_BLINK);
+
   /* Publish the data */
   // data = data_;
   // std::memcpy(data, &data_, sizeof(HmiData));
@@ -137,8 +144,10 @@ void HmiLogic::idle(HmiData &data)
   }
   else if (key == E_KEY_RSET)
   {
-    /* RSET clears any persistent left-LCD alarm (e.g. OP ERROR blink from an
-     * action error), returning the display to the clean boot screen */
+    /* RSET clears transient/action left-LCD alarms (e.g. OP ERROR blink from
+     * an action error), returning the display to the clean boot screen.
+     * Condition-based alarms (TEMP/DB health) are re-derived in
+     * updateHmiData() this same frame, so they survive if the error persists */
     LogTrace << "RSET in IDLE, clearing left LCD" << std::endl;
 
     data.resetLeftLcdData();

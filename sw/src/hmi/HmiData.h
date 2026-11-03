@@ -102,6 +102,13 @@ private:
      */
     LeftLcdData lLcdData_;
 
+    /**
+     * @brief Condition source for the TEMP alarm label. True while the
+     *        database is reachable (published by DbMonitorProgram).
+     *        The displayed lTemp flag is derived from this each frame.
+     */
+    bool dbHealthy_;
+
 public:
     HmiData();
     virtual ~HmiData();
@@ -190,6 +197,20 @@ public:
      * @brief Set the REBOOT alarm label draw mode (VERB 98 countdown).
      */
     void lSetReboot(DrawMode mode);
+
+    /**
+     * @brief Publish the database health condition (source of the TEMP alarm).
+     *        Called by DbMonitorProgram; the displayed lTemp flag is derived
+     *        from this value each frame by HmiLogic.
+     */
+    void setDbHealthy(bool healthy);
+
+    /**
+     * @brief Read the published database health condition.
+     *
+     * @return true while the database is reachable, false otherwise
+     */
+    bool isDbHealthy();
 
     void _debugPrintLcdData();
 };
