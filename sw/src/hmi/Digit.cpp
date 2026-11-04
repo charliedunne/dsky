@@ -324,14 +324,10 @@ static std::vector<bool> getSegmentsFromChar(const char c)
     segments[2] = 1;
     break;
 
-  // Lowercase n drawn as an H shape: with the short 'i' stroke it reads as
-  // "in", the only lowercase string rendered through this path.
   case 'n':
-    segments[1] = 1;
     segments[2] = 1;
-    segments[3] = 1;
     segments[4] = 1;
-    segments[5] = 1;
+    segments[6] = 1;
     break;
 
   case 'd':
