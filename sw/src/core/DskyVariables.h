@@ -28,6 +28,12 @@ public:
     /** NOUN 5: DBMONITOR execution period in seconds (int). */
     static constexpr int NOUN_DBMONITOR_PERIOD = 5;
 
+    /** NOUN 6: DummyProgram auto-start at boot (bool). Boot-only, no apply callback. */
+    static constexpr int NOUN_DUMMY_AUTOSTART = 6;
+
+    /** NOUN 7: DbMonitorProgram auto-start at boot (bool). Boot-only, no apply callback. */
+    static constexpr int NOUN_DBMONITOR_AUTOSTART = 7;
+
     /**
      * @brief Register all DSKY variables into the store.
      * @param store Store that will own the variable definitions

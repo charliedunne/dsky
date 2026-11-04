@@ -156,6 +156,10 @@ int main( int argc, char * argv[], char *envp[] ) {
   WriteVar a_WriteScreenSaverTimer(store, DskyVariables::NOUN_SCREENSAVER_TIMER, data);
   ReadVar a_ReadDbMonitorPeriod(store, DskyVariables::NOUN_DBMONITOR_PERIOD, data);
   WriteVar a_WriteDbMonitorPeriod(store, DskyVariables::NOUN_DBMONITOR_PERIOD, data);
+  ReadVar a_ReadDummyAutostart(store, DskyVariables::NOUN_DUMMY_AUTOSTART, data);
+  WriteVar a_WriteDummyAutostart(store, DskyVariables::NOUN_DUMMY_AUTOSTART, data);
+  ReadVar a_ReadDbMonitorAutostart(store, DskyVariables::NOUN_DBMONITOR_AUTOSTART, data);
+  WriteVar a_WriteDbMonitorAutostart(store, DskyVariables::NOUN_DBMONITOR_AUTOSTART, data);
   TempMonitor a_TempMonitor(data, dbClient);
 
   /* Programs */
@@ -174,16 +178,30 @@ int main( int argc, char * argv[], char *envp[] ) {
   logic.registerAction(a_WriteScreenSaverTimer);
   logic.registerAction(a_ReadDbMonitorPeriod);
   logic.registerAction(a_WriteDbMonitorPeriod);
+  logic.registerAction(a_ReadDummyAutostart);
+  logic.registerAction(a_WriteDummyAutostart);
+  logic.registerAction(a_ReadDbMonitorAutostart);
+  logic.registerAction(a_WriteDbMonitorAutostart);
   logic.registerAction(a_TempMonitor);
 
   /* Programs registration */
   logic.registerProgram(p_Dummy);
   logic.registerProgram(p_DbMonitor);
 
-  /* Auto-start the DB monitor so it publishes database health from boot.
-   * The TEMP alarm label is derived from that condition every frame by
-   * HmiLogic, so without this the alarm would be dead in nominal mode. */
-  p_DbMonitor.start();
+  /* Boot-time auto-start of background programs, controlled by DSKY variables.
+   * Both are boot-only: the values are read once here and changing them later
+   * (VERB 9) takes effect on the next boot. A program whose autostart flag is
+   * 0 can still be started manually from the keypad at any time. Note that if
+   * DbMonitor is not auto-started, the TEMP alarm stays dead until it is
+   * started manually, since HmiLogic derives that label from dbHealthy_. */
+  int dummyAutostart = 0;
+  if (store.get(DskyVariables::NOUN_DUMMY_AUTOSTART, dummyAutostart) && dummyAutostart != 0) {
+    p_Dummy.start();
+  }
+  int dbMonitorAutostart = 0;
+  if (store.get(DskyVariables::NOUN_DBMONITOR_AUTOSTART, dbMonitorAutostart) && dbMonitorAutostart != 0) {
+    p_DbMonitor.start();
+  }
 
   /* VERB 7: stop a running background program selected via the noun field
    * (+/- cycling or typed ID). Needs the program registry, so it is

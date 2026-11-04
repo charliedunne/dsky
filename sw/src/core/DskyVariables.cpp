@@ -19,4 +19,11 @@ DskyVariables::DskyVariables(VariableStore &store)
 
     // NOUN 5: DBMONITOR execution period in seconds. The program reads it at start().
     store.registerVar(NOUN_DBMONITOR_PERIOD, "dbMonitorPeriod", "DBMONITOR PERIOD", VAR_INT, DBMONITOR_DEFAULT_PERIOD);
+
+    // NOUN 6: DummyProgram auto-start at boot. Boot-only: main.cpp reads it once
+    // after registration; changing it later takes effect on the next boot. No apply callback.
+    store.registerVar(NOUN_DUMMY_AUTOSTART, "dummyAutostart", "DUMMY AUTOSTART", VAR_BOOL, 0);
+
+    // NOUN 7: DbMonitorProgram auto-start at boot. Boot-only, same semantics as NOUN 6.
+    store.registerVar(NOUN_DBMONITOR_AUTOSTART, "dbMonitorAutostart", "DBMONITOR AUTOSTART", VAR_BOOL, 0);
 }
