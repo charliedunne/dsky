@@ -22,11 +22,7 @@
 #define READ_VAR_VERB 8
 #define WRITE_VAR_VERB 9
 
-/* Nouns used by the variable read/write verbs */
-#define VAR_NOUN_KEYPAD_LIGHT 2
-#define VAR_NOUN_SCREENSAVER 3
-#define VAR_NOUN_SCREENSAVER_TIMER 4
-#define VAR_NOUN_DBMONITOR_PERIOD 5
+/* Nouns used by the variable read/write verbs are defined in DskyVariables.h */
 
 #define TEMP_MONITOR_VERB 10
 #define TEMP_MONITOR_NOUN -1

@@ -61,6 +61,15 @@ public:
     void registerVar(int noun, const std::string &name, const std::string &label, VarType_e type, int defaultValue, ApplyFn apply = nullptr);
 
     /**
+     * @brief Attach (or replace) the apply callback of an already registered variable.
+     *        Lets the caller wire hardware side effects after registration.
+     * @param noun NOUN selector for the variable
+     * @param apply Callback invoked on every set() and by applyAll() with the new value
+     * @return true if the NOUN is registered, false otherwise
+     */
+    bool setApply(int noun, ApplyFn apply);
+
+    /**
      * @brief Build a list of human-readable variable descriptions for display.
      *        One line per registered variable, in NOUN order: "VAR %d %s".
      * @return Vector of description lines (e.g. "VAR 2 KEYPAD LIGHT")

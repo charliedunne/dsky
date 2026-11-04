@@ -9,6 +9,9 @@
 // Programs
 #include "DbMonitorProgram.h"
 
+// Core
+#include "DskyVariables.h"
+
 // Exceptions
 #include "ExcInvalidCommand.h"
 
@@ -593,7 +596,7 @@ void HmiLogic::valueInput(HmiData &data)
       bgPeriodInput_ = false;
       if (data.getRightLcdData().nR2 != UNASIGNED)
       {
-        store_.set(VAR_NOUN_DBMONITOR_PERIOD, data.getRightLcdData().nR2);
+        store_.set(DskyVariables::NOUN_DBMONITOR_PERIOD, data.getRightLcdData().nR2);
         LogTrace << "DBMONITOR period stored [value: " << data.getRightLcdData().nR2 << "]" << std::endl;
       }
       /* Clear the prompt so the countdown display matches a normal

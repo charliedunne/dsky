@@ -35,6 +35,7 @@
 #include "Keyboard.h"
 #include "Keypad.h"
 #include "VariableStore.h"
+#include "DskyVariables.h"
 
 // Message Queue
 #include "MsgQueue.h"
@@ -103,8 +104,11 @@ int main( int argc, char * argv[], char *envp[] ) {
   /* Persistent variable store */
   VariableStore store(VAR_STORE_FILE);
 
+  // Register all DSKY variables (names, labels, types, defaults) in one place.
+  DskyVariables dskyVars(store);
+
   // NOUN 2: keypad light. Apply re-sends the state to dskyKeyInt via the message queue.
-  store.registerVar(VAR_NOUN_KEYPAD_LIGHT, "keypadLight", "KEYPAD LIGHT", VAR_BOOL, 0, [](int value) {
+  store.setApply(DskyVariables::NOUN_KEYPAD_LIGHT, [](int value) {
     MsgQueue msgQueue(CMD_MSG_QUEUE_FILE, CMD_MSG_QUEUE_ID, MSG_QUEUE_OUT);
     CommMsg_t cmd;
     cmd.mType = 1;
@@ -114,18 +118,14 @@ int main( int argc, char * argv[], char *envp[] ) {
   });
 
   // NOUN 3: screensaver. Apply enables/disables the saver directly.
-  store.registerVar(VAR_NOUN_SCREENSAVER, "screensaver", "SCREENSAVER", VAR_BOOL, 1, [&screenSaver](int value) {
+  store.setApply(DskyVariables::NOUN_SCREENSAVER, [&screenSaver](int value) {
     screenSaver.setEnabled(value != 0);
   });
 
   // NOUN 4: screensaver idle timer [seconds]. Apply updates the running timer.
-  store.registerVar(VAR_NOUN_SCREENSAVER_TIMER, "screensaverTimer", "SCREENSAVER TIMER", VAR_INT, SCREENSAVER_TIMER, [&screenSaver](int value) {
+  store.setApply(DskyVariables::NOUN_SCREENSAVER_TIMER, [&screenSaver](int value) {
     screenSaver.setTimer(value);
   });
-
-  // NOUN 5: DBMONITOR execution period [seconds]. No apply callback: the program
-  // reads this variable at start(), so a change takes effect on the next trigger.
-  store.registerVar(VAR_NOUN_DBMONITOR_PERIOD, "dbMonitorPeriod", "DBMONITOR PERIOD", VAR_INT, DBMONITOR_DEFAULT_PERIOD);
 
   // Restore persisted values, then re-apply them to hardware.
   store.load();
@@ -148,14 +148,14 @@ int main( int argc, char * argv[], char *envp[] ) {
   ActionClock a_Clock(data);
   SystemReboot a_SystemReboot(data);
   SystemShutdown a_SystemShutdown(data);
-  ReadVar a_ReadKeyLight(store, VAR_NOUN_KEYPAD_LIGHT, data);
-  WriteVar a_WriteKeyLight(store, VAR_NOUN_KEYPAD_LIGHT, data);
-  ReadVar a_ReadScreenSaver(store, VAR_NOUN_SCREENSAVER, data);
-  WriteVar a_WriteScreenSaver(store, VAR_NOUN_SCREENSAVER, data);
-  ReadVar a_ReadScreenSaverTimer(store, VAR_NOUN_SCREENSAVER_TIMER, data);
-  WriteVar a_WriteScreenSaverTimer(store, VAR_NOUN_SCREENSAVER_TIMER, data);
-  ReadVar a_ReadDbMonitorPeriod(store, VAR_NOUN_DBMONITOR_PERIOD, data);
-  WriteVar a_WriteDbMonitorPeriod(store, VAR_NOUN_DBMONITOR_PERIOD, data);
+  ReadVar a_ReadKeyLight(store, DskyVariables::NOUN_KEYPAD_LIGHT, data);
+  WriteVar a_WriteKeyLight(store, DskyVariables::NOUN_KEYPAD_LIGHT, data);
+  ReadVar a_ReadScreenSaver(store, DskyVariables::NOUN_SCREENSAVER, data);
+  WriteVar a_WriteScreenSaver(store, DskyVariables::NOUN_SCREENSAVER, data);
+  ReadVar a_ReadScreenSaverTimer(store, DskyVariables::NOUN_SCREENSAVER_TIMER, data);
+  WriteVar a_WriteScreenSaverTimer(store, DskyVariables::NOUN_SCREENSAVER_TIMER, data);
+  ReadVar a_ReadDbMonitorPeriod(store, DskyVariables::NOUN_DBMONITOR_PERIOD, data);
+  WriteVar a_WriteDbMonitorPeriod(store, DskyVariables::NOUN_DBMONITOR_PERIOD, data);
   TempMonitor a_TempMonitor(data, dbClient);
 
   /* Programs */
