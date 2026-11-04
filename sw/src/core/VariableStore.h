@@ -61,11 +61,37 @@ public:
     void registerVar(int noun, const std::string &name, const std::string &label, VarType_e type, int defaultValue, ApplyFn apply = nullptr);
 
     /**
+     * @brief Attach (or replace) the apply callback of an already registered variable.
+     *        Lets the caller wire hardware side effects after registration.
+     * @param noun NOUN selector for the variable
+     * @param apply Callback invoked on every set() and by applyAll() with the new value
+     * @return true if the NOUN is registered, false otherwise
+     */
+    bool setApply(int noun, ApplyFn apply);
+
+    /**
      * @brief Build a list of human-readable variable descriptions for display.
      *        One line per registered variable, in NOUN order: "VAR %d %s".
      * @return Vector of description lines (e.g. "VAR 2 KEYPAD LIGHT")
      */
     std::vector<std::string> describeVars() const;
+
+    /**
+     * @brief One entry of the ordered variable list returned by varList().
+     */
+    struct VarInfo
+    {
+        int noun;          ///< NOUN selector of the variable
+        std::string label; ///< Human-readable name shown on the LCD
+    };
+
+    /**
+     * @brief Return all registered variables in ascending NOUN order.
+     *        The index of an entry equals its position in the list, so
+     *        VERB 8/9 can map a +/- cursor directly onto a variable.
+     * @return Vector of VarInfo, one per registered variable (empty if none)
+     */
+    std::vector<VarInfo> varList() const;
 
     /**
      * @brief Load persisted values from the JSON file.

@@ -19,14 +19,13 @@
 /* VERBS 2 and 3 were removed: keypad light and screensaver are now
  * controlled through the variable read/write verbs (READ_VAR/WRITE_VAR). */
 
+/* VERB 8 / VERB 9: read and write DSKY variables. Verb-only actions (noun -1,
+ * no typed noun required): +/- cycle the variable list on the left LCD, so the
+ * user picks the target without typing a sub-noun number. */
 #define READ_VAR_VERB 8
+#define READ_VAR_NOUN -1
 #define WRITE_VAR_VERB 9
-
-/* Nouns used by the variable read/write verbs */
-#define VAR_NOUN_KEYPAD_LIGHT 2
-#define VAR_NOUN_SCREENSAVER 3
-#define VAR_NOUN_SCREENSAVER_TIMER 4
-#define VAR_NOUN_DBMONITOR_PERIOD 5
+#define WRITE_VAR_NOUN -1
 
 #define TEMP_MONITOR_VERB 10
 #define TEMP_MONITOR_NOUN -1

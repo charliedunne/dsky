@@ -4,7 +4,7 @@
 #include "Logger.h"
 
 // Noun selector for the period variable (VERB 8/9)
-#include "ListOfActions.h"
+#include "DskyVariables.h"
 
 // DB client whose health is reported on the TEMP alarm label
 #include "DbClient.h"
@@ -24,7 +24,7 @@ void DbMonitorProgram::start()
    * happens on the HMI thread; the worker thread only ever sees the cached
    * period_ member, so no store access is needed from the worker. */
   int seconds = DBMONITOR_DEFAULT_PERIOD;
-  if (!store_.get(VAR_NOUN_DBMONITOR_PERIOD, seconds) || seconds < DBMONITOR_MIN_PERIOD) {
+  if (!store_.get(DskyVariables::NOUN_DBMONITOR_PERIOD, seconds) || seconds < DBMONITOR_MIN_PERIOD) {
     seconds = DBMONITOR_DEFAULT_PERIOD;
   }
   setPeriod(seconds * 1000);

@@ -31,6 +31,7 @@ target_sources(dsky PRIVATE
   src/core/Event.cpp
   src/core/StatusMachine.cpp
   src/core/VariableStore.cpp
+  src/core/DskyVariables.cpp
   src/actions/Action.cpp
   src/actions/ListOfActions.cpp
   src/actions/ActionClock.cpp

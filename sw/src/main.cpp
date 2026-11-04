@@ -35,6 +35,7 @@
 #include "Keyboard.h"
 #include "Keypad.h"
 #include "VariableStore.h"
+#include "DskyVariables.h"
 
 // Message Queue
 #include "MsgQueue.h"
@@ -103,8 +104,11 @@ int main( int argc, char * argv[], char *envp[] ) {
   /* Persistent variable store */
   VariableStore store(VAR_STORE_FILE);
 
+  // Register all DSKY variables (names, labels, types, defaults) in one place.
+  DskyVariables dskyVars(store);
+
   // NOUN 2: keypad light. Apply re-sends the state to dskyKeyInt via the message queue.
-  store.registerVar(VAR_NOUN_KEYPAD_LIGHT, "keypadLight", "KEYPAD LIGHT", VAR_BOOL, 0, [](int value) {
+  store.setApply(DskyVariables::NOUN_KEYPAD_LIGHT, [](int value) {
     MsgQueue msgQueue(CMD_MSG_QUEUE_FILE, CMD_MSG_QUEUE_ID, MSG_QUEUE_OUT);
     CommMsg_t cmd;
     cmd.mType = 1;
@@ -114,18 +118,14 @@ int main( int argc, char * argv[], char *envp[] ) {
   });
 
   // NOUN 3: screensaver. Apply enables/disables the saver directly.
-  store.registerVar(VAR_NOUN_SCREENSAVER, "screensaver", "SCREENSAVER", VAR_BOOL, 1, [&screenSaver](int value) {
+  store.setApply(DskyVariables::NOUN_SCREENSAVER, [&screenSaver](int value) {
     screenSaver.setEnabled(value != 0);
   });
 
   // NOUN 4: screensaver idle timer [seconds]. Apply updates the running timer.
-  store.registerVar(VAR_NOUN_SCREENSAVER_TIMER, "screensaverTimer", "SCREENSAVER TIMER", VAR_INT, SCREENSAVER_TIMER, [&screenSaver](int value) {
+  store.setApply(DskyVariables::NOUN_SCREENSAVER_TIMER, [&screenSaver](int value) {
     screenSaver.setTimer(value);
   });
-
-  // NOUN 5: DBMONITOR execution period [seconds]. No apply callback: the program
-  // reads this variable at start(), so a change takes effect on the next trigger.
-  store.registerVar(VAR_NOUN_DBMONITOR_PERIOD, "dbMonitorPeriod", "DBMONITOR PERIOD", VAR_INT, DBMONITOR_DEFAULT_PERIOD);
 
   // Restore persisted values, then re-apply them to hardware.
   store.load();
@@ -148,14 +148,8 @@ int main( int argc, char * argv[], char *envp[] ) {
   ActionClock a_Clock(data);
   SystemReboot a_SystemReboot(data);
   SystemShutdown a_SystemShutdown(data);
-  ReadVar a_ReadKeyLight(store, VAR_NOUN_KEYPAD_LIGHT, data);
-  WriteVar a_WriteKeyLight(store, VAR_NOUN_KEYPAD_LIGHT, data);
-  ReadVar a_ReadScreenSaver(store, VAR_NOUN_SCREENSAVER, data);
-  WriteVar a_WriteScreenSaver(store, VAR_NOUN_SCREENSAVER, data);
-  ReadVar a_ReadScreenSaverTimer(store, VAR_NOUN_SCREENSAVER_TIMER, data);
-  WriteVar a_WriteScreenSaverTimer(store, VAR_NOUN_SCREENSAVER_TIMER, data);
-  ReadVar a_ReadDbMonitorPeriod(store, VAR_NOUN_DBMONITOR_PERIOD, data);
-  WriteVar a_WriteDbMonitorPeriod(store, VAR_NOUN_DBMONITOR_PERIOD, data);
+  ReadVar a_ReadVar(store, data);
+  WriteVar a_WriteVar(store, data);
   TempMonitor a_TempMonitor(data, dbClient);
 
   /* Programs */
@@ -166,24 +160,28 @@ int main( int argc, char * argv[], char *envp[] ) {
   logic.registerAction(a_Clock);
   logic.registerAction(a_SystemReboot);
   logic.registerAction(a_SystemShutdown);
-  logic.registerAction(a_ReadKeyLight);
-  logic.registerAction(a_WriteKeyLight);
-  logic.registerAction(a_ReadScreenSaver);
-  logic.registerAction(a_WriteScreenSaver);
-  logic.registerAction(a_ReadScreenSaverTimer);
-  logic.registerAction(a_WriteScreenSaverTimer);
-  logic.registerAction(a_ReadDbMonitorPeriod);
-  logic.registerAction(a_WriteDbMonitorPeriod);
+  logic.registerAction(a_ReadVar);
+  logic.registerAction(a_WriteVar);
   logic.registerAction(a_TempMonitor);
 
   /* Programs registration */
   logic.registerProgram(p_Dummy);
   logic.registerProgram(p_DbMonitor);
 
-  /* Auto-start the DB monitor so it publishes database health from boot.
-   * The TEMP alarm label is derived from that condition every frame by
-   * HmiLogic, so without this the alarm would be dead in nominal mode. */
-  p_DbMonitor.start();
+  /* Boot-time auto-start of background programs, controlled by DSKY variables.
+   * Both are boot-only: the values are read once here and changing them later
+   * (VERB 9) takes effect on the next boot. A program whose autostart flag is
+   * 0 can still be started manually from the keypad at any time. Note that if
+   * DbMonitor is not auto-started, the TEMP alarm stays dead until it is
+   * started manually, since HmiLogic derives that label from dbHealthy_. */
+  int dummyAutostart = 0;
+  if (store.get(DskyVariables::NOUN_DUMMY_AUTOSTART, dummyAutostart) && dummyAutostart != 0) {
+    p_Dummy.start();
+  }
+  int dbMonitorAutostart = 0;
+  if (store.get(DskyVariables::NOUN_DBMONITOR_AUTOSTART, dbMonitorAutostart) && dbMonitorAutostart != 0) {
+    p_DbMonitor.start();
+  }
 
   /* VERB 7: stop a running background program selected via the noun field
    * (+/- cycling or typed ID). Needs the program registry, so it is

@@ -48,7 +48,7 @@ void Number::setValue(const std::string s)
   // Convert the UTF-8 degree sign (0xC2 0xBA) to a single sentinel byte.
   // The 7-segment renderer dispatches one byte per digit position, so a
   // multi-byte sequence would otherwise occupy two positions.
-  static const char utf8Degree[2] = {0xC2, 0xBA};
+  static const char utf8Degree[2] = {static_cast<char>(0xC2), static_cast<char>(0xBA)};
 
   std::string converted;
   converted.reserve(s.size());

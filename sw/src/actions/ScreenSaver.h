@@ -19,7 +19,7 @@
  *
  * This is only the compile-time default. The effective value is stored in the
  * ScreenSaver timerSeconds_ member and can be changed at runtime through the
- * persistent variable system (VERB 8/9, NOUN VAR_NOUN_SCREENSAVER_TIMER).
+ * persistent variable system (VERB 8/9, NOUN DskyVariables::NOUN_SCREENSAVER_TIMER).
  */
 #define SCREENSAVER_TIMER 30
 

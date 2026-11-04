@@ -30,6 +30,16 @@ void VariableStore::registerVar(int noun, const std::string &name, const std::st
     LogDebug << "VariableStore: registered NOUN " << noun << " -> " << name << " (" << label << ")" << std::endl;
 }
 
+bool VariableStore::setApply(int noun, ApplyFn apply)
+{
+    auto it = vars_.find(noun);
+    if (it == vars_.end())
+        return false;
+
+    it->second.apply = std::move(apply);
+    return true;
+}
+
 std::vector<std::string> VariableStore::describeVars() const
 {
     std::vector<std::string> lines;
@@ -40,6 +50,20 @@ std::vector<std::string> VariableStore::describeVars() const
         lines.push_back(buf);
     }
     return lines;
+}
+
+std::vector<VariableStore::VarInfo> VariableStore::varList() const
+{
+    std::vector<VarInfo> out;
+    out.reserve(vars_.size());
+    for (const auto &kv : vars_)
+    {
+        VarInfo info;
+        info.noun = kv.second.noun;
+        info.label = kv.second.label;
+        out.push_back(info);
+    }
+    return out;
 }
 
 bool VariableStore::get(int noun, int &value) const

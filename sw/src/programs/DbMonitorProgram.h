@@ -16,7 +16,7 @@ class DbClient;
 /**
  * @brief Background program that monitors database accessibility.
  *
- * The period is stored in the variable store under NOUN VAR_NOUN_DBMONITOR_PERIOD
+ * The period is stored in the variable store under NOUN DskyVariables::NOUN_DBMONITOR_PERIOD
  * (in seconds). On every start() the current variable value is read and used
  * as the execution period, so a change made via VERB 9 takes effect on the
  * next trigger. If no value is available, DBMONITOR_DEFAULT_PERIOD is used.
