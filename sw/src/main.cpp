@@ -148,18 +148,8 @@ int main( int argc, char * argv[], char *envp[] ) {
   ActionClock a_Clock(data);
   SystemReboot a_SystemReboot(data);
   SystemShutdown a_SystemShutdown(data);
-  ReadVar a_ReadKeyLight(store, DskyVariables::NOUN_KEYPAD_LIGHT, data);
-  WriteVar a_WriteKeyLight(store, DskyVariables::NOUN_KEYPAD_LIGHT, data);
-  ReadVar a_ReadScreenSaver(store, DskyVariables::NOUN_SCREENSAVER, data);
-  WriteVar a_WriteScreenSaver(store, DskyVariables::NOUN_SCREENSAVER, data);
-  ReadVar a_ReadScreenSaverTimer(store, DskyVariables::NOUN_SCREENSAVER_TIMER, data);
-  WriteVar a_WriteScreenSaverTimer(store, DskyVariables::NOUN_SCREENSAVER_TIMER, data);
-  ReadVar a_ReadDbMonitorPeriod(store, DskyVariables::NOUN_DBMONITOR_PERIOD, data);
-  WriteVar a_WriteDbMonitorPeriod(store, DskyVariables::NOUN_DBMONITOR_PERIOD, data);
-  ReadVar a_ReadDummyAutostart(store, DskyVariables::NOUN_DUMMY_AUTOSTART, data);
-  WriteVar a_WriteDummyAutostart(store, DskyVariables::NOUN_DUMMY_AUTOSTART, data);
-  ReadVar a_ReadDbMonitorAutostart(store, DskyVariables::NOUN_DBMONITOR_AUTOSTART, data);
-  WriteVar a_WriteDbMonitorAutostart(store, DskyVariables::NOUN_DBMONITOR_AUTOSTART, data);
+  ReadVar a_ReadVar(store, data);
+  WriteVar a_WriteVar(store, data);
   TempMonitor a_TempMonitor(data, dbClient);
 
   /* Programs */
@@ -170,18 +160,8 @@ int main( int argc, char * argv[], char *envp[] ) {
   logic.registerAction(a_Clock);
   logic.registerAction(a_SystemReboot);
   logic.registerAction(a_SystemShutdown);
-  logic.registerAction(a_ReadKeyLight);
-  logic.registerAction(a_WriteKeyLight);
-  logic.registerAction(a_ReadScreenSaver);
-  logic.registerAction(a_WriteScreenSaver);
-  logic.registerAction(a_ReadScreenSaverTimer);
-  logic.registerAction(a_WriteScreenSaverTimer);
-  logic.registerAction(a_ReadDbMonitorPeriod);
-  logic.registerAction(a_WriteDbMonitorPeriod);
-  logic.registerAction(a_ReadDummyAutostart);
-  logic.registerAction(a_WriteDummyAutostart);
-  logic.registerAction(a_ReadDbMonitorAutostart);
-  logic.registerAction(a_WriteDbMonitorAutostart);
+  logic.registerAction(a_ReadVar);
+  logic.registerAction(a_WriteVar);
   logic.registerAction(a_TempMonitor);
 
   /* Programs registration */

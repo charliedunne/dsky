@@ -52,6 +52,20 @@ std::vector<std::string> VariableStore::describeVars() const
     return lines;
 }
 
+std::vector<VariableStore::VarInfo> VariableStore::varList() const
+{
+    std::vector<VarInfo> out;
+    out.reserve(vars_.size());
+    for (const auto &kv : vars_)
+    {
+        VarInfo info;
+        info.noun = kv.second.noun;
+        info.label = kv.second.label;
+        out.push_back(info);
+    }
+    return out;
+}
+
 bool VariableStore::get(int noun, int &value) const
 {
     auto it = vars_.find(noun);

@@ -77,6 +77,23 @@ public:
     std::vector<std::string> describeVars() const;
 
     /**
+     * @brief One entry of the ordered variable list returned by varList().
+     */
+    struct VarInfo
+    {
+        int noun;          ///< NOUN selector of the variable
+        std::string label; ///< Human-readable name shown on the LCD
+    };
+
+    /**
+     * @brief Return all registered variables in ascending NOUN order.
+     *        The index of an entry equals its position in the list, so
+     *        VERB 8/9 can map a +/- cursor directly onto a variable.
+     * @return Vector of VarInfo, one per registered variable (empty if none)
+     */
+    std::vector<VarInfo> varList() const;
+
+    /**
      * @brief Load persisted values from the JSON file.
      *        Missing or malformed file: keep defaults and log a warning.
      *        Unknown keys are ignored; missing keys get their default.

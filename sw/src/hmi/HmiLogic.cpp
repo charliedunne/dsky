@@ -699,6 +699,11 @@ void HmiLogic::run(HmiData &data)
   int verb = data.getRightLcdData().nVerb;
   int noun = data.getRightLcdData().nNoun;
 
+  /* Set to true when a running action consumes the current key (e.g. ENTER
+   * commits a WriteVar). Prevents the reap path below from misinterpreting
+   * that same key as a new command and re-running the finished action */
+  bool keyConsumed = false;
+
   if (keyEvents_.size() > 0)
   {
     /* Copy the Event key received */
@@ -731,10 +736,11 @@ void HmiLogic::run(HmiData &data)
     default:
       /* Forward the key to a running action that wants to handle it.
        * A periodic action keeps running after this, so no new action is
-       * started below and the frame simply re-renders */
+       * started below and the frame simply re-renders. If the action
+       * consumes the key (returns true), suppress the reap-path retry */
       if (action.isRunning())
       {
-        action.handleKey(eventKey);
+        keyConsumed = action.handleKey(eventKey);
       }
       break;
     }
@@ -750,7 +756,7 @@ void HmiLogic::run(HmiData &data)
     LogTrace << "Action finished, reaping" << std::endl;
     actions_(data).stop();
 
-    bool newCommand = keyEvents_.size() == 1 &&
+    bool newCommand = !keyConsumed && keyEvents_.size() == 1 &&
         (keyEvents_[0].getEvent() == E_KEY_ENTR ||
          keyEvents_[0].getEvent() == E_KEY_NOUN);
 

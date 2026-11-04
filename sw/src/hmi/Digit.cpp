@@ -159,6 +159,136 @@ static std::vector<bool> getSegmentsFromChar(const char c)
     segments[6] = 1;
     break;
 
+  // Uppercase letters G-Z: best-effort 7-segment approximations. Some letters
+  // share a glyph where the segment layout cannot distinguish them (M/O/T/W,
+  // H/N); this matches common 7-seg font conventions and avoids the default
+  // "X" fallback for unlisted characters.
+  case 'G':
+    segments[0] = 1;
+    segments[2] = 1;
+    segments[3] = 1;
+    segments[4] = 1;
+    segments[5] = 1;
+    segments[6] = 1;
+    break;
+
+  case 'H':
+  case 'N':
+    segments[1] = 1;
+    segments[2] = 1;
+    segments[3] = 1;
+    segments[4] = 1;
+    segments[5] = 1;
+    break;
+
+  case 'I':
+    segments[1] = 1;
+    segments[2] = 1;
+    break;
+
+  case 'J':
+    segments[2] = 1;
+    segments[4] = 1;
+    segments[6] = 1;
+    break;
+
+  case 'K':
+    segments[1] = 1;
+    segments[3] = 1;
+    segments[4] = 1;
+    segments[5] = 1;
+    break;
+
+  case 'L':
+    segments[4] = 1;
+    segments[5] = 1;
+    segments[6] = 1;
+    break;
+
+  case 'M':
+  case 'O':
+  case 'T':
+  case 'W':
+    segments[0] = 1;
+    segments[1] = 1;
+    segments[2] = 1;
+    segments[4] = 1;
+    segments[5] = 1;
+    segments[6] = 1;
+    break;
+
+  case 'P':
+    segments[0] = 1;
+    segments[1] = 1;
+    segments[3] = 1;
+    segments[4] = 1;
+    segments[5] = 1;
+    break;
+
+  case 'Q':
+    segments[0] = 1;
+    segments[1] = 1;
+    segments[2] = 1;
+    segments[3] = 1;
+    segments[4] = 1;
+    segments[5] = 1;
+    segments[6] = 1;
+    break;
+
+  case 'R':
+    segments[0] = 1;
+    segments[1] = 1;
+    segments[2] = 1;
+    segments[3] = 1;
+    segments[4] = 1;
+    segments[5] = 1;
+    break;
+
+  case 'S':
+    segments[0] = 1;
+    segments[2] = 1;
+    segments[3] = 1;
+    segments[5] = 1;
+    segments[6] = 1;
+    break;
+
+  case 'U':
+    segments[1] = 1;
+    segments[2] = 1;
+    segments[4] = 1;
+    segments[5] = 1;
+    segments[6] = 1;
+    break;
+
+  case 'V':
+    segments[1] = 1;
+    segments[2] = 1;
+    segments[4] = 1;
+    segments[5] = 1;
+    break;
+
+  case 'X':
+    segments[0] = 1;
+    segments[3] = 1;
+    break;
+
+  case 'Y':
+    segments[1] = 1;
+    segments[2] = 1;
+    segments[3] = 1;
+    segments[4] = 1;
+    segments[5] = 1;
+    segments[6] = 1;
+    break;
+
+  case 'Z':
+    segments[0] = 1;
+    segments[1] = 1;
+    segments[3] = 1;
+    segments[4] = 1;
+    segments[6] = 1;
+    break;
+
   case '+':
   case '-':
     segments[0] = 0;
@@ -194,10 +324,14 @@ static std::vector<bool> getSegmentsFromChar(const char c)
     segments[2] = 1;
     break;
 
+  // Lowercase n drawn as an H shape: with the short 'i' stroke it reads as
+  // "in", the only lowercase string rendered through this path.
   case 'n':
+    segments[1] = 1;
     segments[2] = 1;
+    segments[3] = 1;
     segments[4] = 1;
-    segments[6] = 1;
+    segments[5] = 1;
     break;
 
   case 'd':
