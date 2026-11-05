@@ -49,6 +49,7 @@ target_sources(dsky PRIVATE
   src/programs/FgProgram.cpp
   src/programs/DummyProgram.cpp
   src/programs/DbMonitorProgram.cpp
+  src/programs/MoonPhaseProgram.cpp
   src/programs/ListOfPrograms.cpp
   src/db/DbClient.cpp
   src/drivers/dskyKeyInt/MsgQueue.cpp
@@ -133,10 +134,27 @@ target_link_libraries(dsky ${DSKY_DEPS_DIR}/lib/libSDL2_image.so)
 target_link_libraries(dsky ${DSKY_DEPS_DIR}/lib/libSDL2_gfx.so)
 target_link_libraries(dsky pthread)
 target_link_libraries(dsky drm)
-# MariaDB client (live temp sensor data). Name-based: the toolchain puts the
-# sysroot multiarch dir on -L, where libmariadb.so -> libmariadb.so.3 lives;
-# at runtime the Pi's system libmariadb3 satisfies it. Headers come from
-# <sysroot>/usr/include/mariadb (GCC searches the sysroot include path
-# automatically). No extra include/link dirs needed — verified by smoke test.
+# MariaDB client (live temp sensor data). Name-based linking works for both
+# paths: cross builds get libmariadb.so from the sysroot multiarch dir on -L
+# (satisfied at runtime by the Pi's system libmariadb3); native builds resolve
+# the host's /usr/lib/libmariadb.so.
 target_link_libraries(dsky mariadb)
+# Headers: <mariadb/mysql.h> exists in the Pi sysroot (<sysroot>/usr/include/mariadb),
+# but on a native host (Arch/CachyOS layout) the headers live under /usr/include/mysql/.
+# In cross builds CMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY restricts find_path to the
+# sysroot, so it finds the header and this shim is skipped. On a native host it comes
+# back NOTFOUND, in which case we expose the pkg-config mysql/ dir as <mariadb>/ via a
+# symlink (a forwarding header would not work: mysql.h includes its sibling headers
+# relatively, resolved against the real header directory).
+find_path(MARIADB_MYSQL_H mariadb/mysql.h)
+if(NOT MARIADB_MYSQL_H)
+  find_package(PkgConfig QUIET)
+  pkg_check_modules(MARIADB_PC libmariadb)
+  if(NOT MARIADB_PC_FOUND OR NOT EXISTS "${MARIADB_PC_INCLUDE_DIRS}/mysql.h")
+    message(FATAL_ERROR "MariaDB headers not found: mariadb/mysql.h is missing and pkg-config 'libmariadb' did not yield a usable mysql/ include dir. Install the libmariadb dev package on the build host.")
+  endif()
+  file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/include-shim)
+  execute_process(COMMAND ln -sfn ${MARIADB_PC_INCLUDE_DIRS} ${CMAKE_BINARY_DIR}/include-shim/mariadb)
+  include_directories(${CMAKE_BINARY_DIR}/include-shim)
+endif()
 
