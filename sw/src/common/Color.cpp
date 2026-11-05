@@ -142,3 +142,27 @@ Color Color::disabled() {
 
   return Color(DISABLED_COLOR_R, DISABLED_COLOR_G, DISABLED_COLOR_B, DISABLED_COLOR_A);
 }
+
+/** @brief Bright green (fully saturated; X-cross, list text, moon lit part/edge) */
+Color Color::brightGreen() {
+
+  return Color(BRIGHT_GREEN_COLOR_R, BRIGHT_GREEN_COLOR_G, BRIGHT_GREEN_COLOR_B, BRIGHT_GREEN_COLOR_A);
+}
+
+/** @brief Divider green (dim green separator line in the verb list) */
+Color Color::dividerGreen() {
+
+  return Color(DIVIDER_GREEN_COLOR_R, DIVIDER_GREEN_COLOR_G, DIVIDER_GREEN_COLOR_B, DIVIDER_GREEN_COLOR_A);
+}
+
+/** @brief Moon dim green (unlit part of the moon disk) */
+Color Color::moonDimGreen() {
+
+  return Color(MOON_DIM_GREEN_COLOR_R, MOON_DIM_GREEN_COLOR_G, MOON_DIM_GREEN_COLOR_B, MOON_DIM_GREEN_COLOR_A);
+}
+
+/** @brief Debug yellow (debug frame border; opaque, unlike alarmYellow) */
+Color Color::debugYellow() {
+
+  return Color(DEBUG_YELLOW_COLOR_R, DEBUG_YELLOW_COLOR_G, DEBUG_YELLOW_COLOR_B, DEBUG_YELLOW_COLOR_A);
+}

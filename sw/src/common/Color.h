@@ -43,6 +43,14 @@ class Color {
   static Color transparent();
   /** @brief Dimmed/inactive element color */
   static Color disabled();
+  /** @brief Bright green (fully saturated; X-cross, list text, moon lit part/edge) */
+  static Color brightGreen();
+  /** @brief Divider green (dim green separator line in the verb list) */
+  static Color dividerGreen();
+  /** @brief Moon dim green (unlit part of the moon disk) */
+  static Color moonDimGreen();
+  /** @brief Debug yellow (debug frame border; opaque, unlike alarmYellow) */
+  static Color debugYellow();
 
   // Getters
   int r() const;

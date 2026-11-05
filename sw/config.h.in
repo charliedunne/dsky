@@ -69,6 +69,30 @@
 #define DISABLED_COLOR_B 0x14
 #define DISABLED_COLOR_A 0x80
 
+// Bright green (fully saturated, opaque; X-cross, list text, moon lit part/edge)
+#define BRIGHT_GREEN_COLOR_R 0x00
+#define BRIGHT_GREEN_COLOR_G 0xFF
+#define BRIGHT_GREEN_COLOR_B 0x00
+#define BRIGHT_GREEN_COLOR_A 0xFF
+
+// Divider green (dim green separator line in the verb list)
+#define DIVIDER_GREEN_COLOR_R 0x00
+#define DIVIDER_GREEN_COLOR_G 0x80
+#define DIVIDER_GREEN_COLOR_B 0x00
+#define DIVIDER_GREEN_COLOR_A 0xFF
+
+// Moon dim green (unlit part of the moon disk)
+#define MOON_DIM_GREEN_COLOR_R 0x00
+#define MOON_DIM_GREEN_COLOR_G 0x40
+#define MOON_DIM_GREEN_COLOR_B 0x00
+#define MOON_DIM_GREEN_COLOR_A 0xFF
+
+// Debug yellow (debug frame border; opaque, unlike alarmYellow)
+#define DEBUG_YELLOW_COLOR_R 0xFF
+#define DEBUG_YELLOW_COLOR_G 0xFF
+#define DEBUG_YELLOW_COLOR_B 0x00
+#define DEBUG_YELLOW_COLOR_A 0xFF
+
 
 
 

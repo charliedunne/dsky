@@ -101,7 +101,7 @@ void FrameLeftLcd::render()
     {
         roundedRectangleColor(r_, x_, y_,
                               x_ + w_ - 1, y_ + h_ - 1,
-                              M_PI * 8, Color(255, 255, 0));
+                              M_PI * 8, Color::debugYellow());
     }
 
     // Draw alarm labels only when the VERB 0 menu or the MOONPHASE result is not shown
@@ -138,7 +138,7 @@ void FrameLeftLcd::render()
             const int cx = x_ + 167;   // same center as the moon disk
             const int cy = y_ + 205;
             const int arm = (int)(112 * 0.7);   // X half-diagonal ~78 px, well inside the panel
-            const Uint32 color = 0xFF00FF00;    // bright green
+            const Color color = Color::brightGreen();
             thickLineColor(r_, cx - arm, cy - arm, cx + arm, cy + arm, 4, color);
             thickLineColor(r_, cx - arm, cy + arm, cx + arm, cy - arm, 4, color);
         }
@@ -225,7 +225,7 @@ void FrameLeftLcd::drawVerbList()
     // scale ~0.5 fits the ~32px Gorton bitmap into the 335px-wide panel.
     const float scale = 0.5f;
     const int lineHeight = (int)(32 * scale) + 6;   // glyph height + gap (tune later)
-    const Color green(0, 255, 0, 255);
+    const Color green = Color::brightGreen();
 
     // Header line: use the data-provided header when set, otherwise fall back
     // to the defaults (page 0 = verb list, page 1 = variable list).
@@ -237,8 +237,7 @@ void FrameLeftLcd::drawVerbList()
     y += lineHeight;
 
     // Separator row: a dim-green divider line between the header and the list.
-    // gfxPrimitives renderer calls take a packed 0xAARRGGBB pixel value.
-    const Uint32 dividerPixel = 0xFF008000;   // opaque, (r=0, g=128, b=0)
+    const Color dividerPixel = Color::dividerGreen();
     hlineColor(r_, x_ + 10, x_ + w_ - 10, y + lineHeight - 6, dividerPixel);
     y += lineHeight;
 
@@ -293,10 +292,10 @@ void FrameLeftLcd::drawMoon()
     const int cx = x_ + 167;        // disk center, horizontally centered on the panel
     const int cy = y_ + 205;        // shifted down to leave room for the title
 
-    // Packed 0xAARRGGBB pixels for the gfxPrimitives calls.
-    const Uint32 lit  = 0xFF00FF00; // bright green: illuminated part
-    const Uint32 dim  = 0xFF004000; // dark green: unlit part of the disk
-    const Uint32 edge = 0xFF00FF00; // disk outline so new moon stays visible
+    // Moon colors from the palette.
+    const Color lit  = Color::brightGreen();   // illuminated part
+    const Color dim  = Color::moonDimGreen();  // unlit part of the disk
+    const Color edge = Color::brightGreen();   // disk outline so new moon stays visible
 
     // Title "MOON PHASE" centered at the top. estimateSize() reports the
     // unscaled size, so scale the width by tScale to center it on the panel.
