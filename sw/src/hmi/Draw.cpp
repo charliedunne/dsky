@@ -16,6 +16,7 @@ Draw::Draw(const int x, const int y,
 
     // Default values
     mode_ = DRAW_OFF;
+    frameCounter_ = 0;
 }
 
 void Draw::draw()

@@ -9,6 +9,7 @@
 #include "Color.h"
 #include "Label.h"
 #include "Font.h"
+#include "Number.h"
 
 // HMI
 #include "AlarmLabel.h"
@@ -59,6 +60,28 @@ public:
    */
   void setVerbList(const LeftLcdData &d);
 
+  /**
+   * @brief Update the MOONPHASE display.
+   *
+   * DRAW_ON shows a moon graphic at the given phase plus the percentage
+   * (0..100) with a "%" label below it; any other mode hides it.
+   * @param mode Draw mode (DRAW_ON shows, anything else hides).
+   * @param pct Illumination percentage, 0..100.
+   * @param phase Moon phase in [0,1): 0=new, 0.25=waxing quarter,
+   *              0.5=full, 0.75=waning quarter.
+   */
+  void setMoon(DrawMode mode, int pct, float phase);
+
+  /**
+   * @brief Set the MOONPHASE date-correction blink state.
+   *
+   * While on, a blinking X is drawn over the disk center, on top of the
+   * moon graphic, indicating that the displayed values are not valid yet.
+   * The X is visible for half the default blinking period (20 frames).
+   * @param on true to show the blinking X, false to stop it.
+   */
+  void setMoonEditBlink(bool on);
+
 
 private:
   // VERB 0 menu rendering
@@ -67,6 +90,14 @@ private:
   DrawMode verbListMode_ = DRAW_OFF;
   int verbListPage_ = 0;                     // active page index (0 or 1)
   std::string verbListHeader_;               // header line of the active page (empty = default)
+
+  // MOONPHASE display: moon graphic + percentage below it
+  Number *nMoon_ = nullptr;                  // centered percentage digits (3 digits)
+  DrawMode moonMode_ = DRAW_OFF;
+  int moonPct_ = 0;
+  float moonPhase_ = 0.0f;                   // phase in [0,1), drives the graphic
+  bool moonEditBlink_ = false;               // true while the date is being corrected
+  int moonBlinkCounter_ = 0;                 // frame counter for the edit blink
 
   /**
    * @brief Draw the background lines (grid)
@@ -84,6 +115,12 @@ private:
    * @brief Internal: draw the VERB 0 menu lines over the grid background
    */
   void drawVerbList();
+
+  /**
+   * @brief Internal: draw the MOONPHASE moon-phase graphic, percentage
+   *        digits and "%" label
+   */
+  void drawMoon();
 };
 
 #endif /* FRAMELEFTLCD_H */

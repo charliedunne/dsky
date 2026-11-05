@@ -1,6 +1,7 @@
 #include "BgProgram.h"
 
 // STL
+#include <algorithm>
 #include <chrono>
 
 // Logging
@@ -71,10 +72,17 @@ void BgProgram::loop()
 
     operation();
 
-    // Wait for next cycle.
+    // Wait for next cycle in short slices so stop() is responsive:
+    // a single full-period sleep would delay shutdown by up to one period.
     if (getPeriod() > 0)
     {
-      std::this_thread::sleep_until(next);
+      const auto slice = std::chrono::milliseconds(100);
+      auto now = std::chrono::steady_clock::now();
+      while (isRunning() && now < next)
+      {
+        std::this_thread::sleep_until(std::min(now + slice, next));
+        now = std::chrono::steady_clock::now();
+      }
     }
   }
 

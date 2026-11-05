@@ -45,7 +45,8 @@ class Number : public Draw {
    * @param c [in] Color
    * @param glow [in] Glow enabled?
    */
-  Number(SDL_Renderer * r, const int digits, const int x, const int y, const Color c, const bool glow);
+  /** @param scale [in] Glyph size scale factor (1.0 = default size) */
+  Number(SDL_Renderer * r, const int digits, const int x, const int y, const Color c, const bool glow, const float scale = 1.0f);
   
   /**
    * @brief Set the Value object
