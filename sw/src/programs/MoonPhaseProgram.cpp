@@ -120,6 +120,33 @@ void MoonPhaseProgram::operation() {
             continue;
         }
 
+        // CLR undoes the last data introduced, LIFO: first the current field's
+        // partial buffer, then previously committed fields (R3 -> R2 -> R1).
+        if (key == E_KEY_CLR) {
+            if (!digits.empty()) {
+                digits.clear();
+                echoField(field, "");
+                LogTrace << "MOONPHASE: CLR - cleared partial input of field "
+                         << (int)field << std::endl;
+            } else if (field > YEAR) {
+                // Pop the previously committed field back to active.
+                Field prev = (Field)(field - 1);
+                switch (prev) {
+                    case YEAR:  yStr.clear(); break;
+                    case MONTH: mStr.clear(); break;
+                    default:    dStr.clear(); break;
+                }
+                setLabel(field, DRAW_OFF); // the field left is no longer active
+                echoField(prev, "");
+                field = prev;
+                setLabel(field, DRAW_ON);
+                LogTrace << "MOONPHASE: CLR - cleared committed field "
+                         << (int)prev << std::endl;
+            }
+            // Nothing left to clear: the event is ignored.
+            continue;
+        }
+
         // Map the key to a digit; ignore non-digit keys during entry.
         int digit = -1;
         for (int i = 0; i < 10; i++) {
