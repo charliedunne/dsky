@@ -12,7 +12,10 @@
  * The operator enters a calendar date through the keypad, field by field:
  * R1 = year (4 digits), R2 = month (2 digits), R3 = day (2 digits). Fields
  * commit and advance automatically as soon as enough digits have been typed
- * (8 key presses in total, no ENTER needed between fields). The active field's
+ * (8 key presses in total, no ENTER needed between fields). If ENTER is
+ * pressed while waiting for year input with no digits entered yet, the
+ * current system date is used instead and the result is shown immediately.
+ * The active field's
  * label blinks while digits are being entered and stays fixed on once the
  * field is committed. When the date is complete the program computes the
  * lunar illumination fraction for that day (0..100 %) and displays it on the

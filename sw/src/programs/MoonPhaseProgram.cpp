@@ -3,6 +3,7 @@
 #include <Logger.h>
 #include <cmath>
 #include <cstdio>
+#include <ctime>
 #include <string>
 
 // Synodic month length in days (mean).
@@ -234,6 +235,37 @@ void MoonPhaseProgram::operation() {
                          << (int)prev << std::endl;
             }
             // Nothing left to clear: the event is ignored.
+            continue;
+        }
+
+        // ENTER while waiting for year input with no digits entered:
+        // auto-fill the current system date and show the phase graphic.
+        if (key == E_KEY_ENTR && field == YEAR && digits.empty()) {
+            time_t now = time(nullptr);
+            struct tm *lt = localtime(&now);
+            int y = lt->tm_year + 1900;
+            int m = lt->tm_mon + 1;
+            int d = lt->tm_mday;
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%04d", y);
+            yStr = buf;
+            snprintf(buf, sizeof(buf), "%02d", m);
+            mStr = buf;
+            snprintf(buf, sizeof(buf), "%02d", d);
+            dStr = buf;
+            echoField(YEAR, yStr);
+            echoField(MONTH, mStr);
+            echoField(DAY, dStr);
+            setLabel(YEAR, DRAW_ON);
+            setLabel(MONTH, DRAW_ON); // default-off labels must be turned on
+            setLabel(DAY, DRAW_ON);   // explicitly in this path
+            const double phase = moonPhase(y, m, d);
+            const int pct = (int)lround(illumination(y, m, d) * 100.0);
+            hmiData_.lSetMoon(DRAW_ON, pct, (float)phase);
+            LogTrace << "MOONPHASE: ENTER with empty year - using current date "
+                     << yStr << "-" << mStr << "-" << dStr
+                     << " -> " << pct << "% phase=" << phase << std::endl;
+            field = RESULT;
             continue;
         }
 
