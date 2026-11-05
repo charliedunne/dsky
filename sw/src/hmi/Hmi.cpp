@@ -87,6 +87,10 @@ void Hmi::render() {
 
   // Render the window
   SDL_RenderPresent(ren_);
+
+  // Advance the global render clock once per pass. All blinking elements
+  // read this counter, so they stay in phase with each other.
+  Frame::nextFrame();
 }
 
 void Hmi::update(HmiData &data) {

@@ -1,6 +1,9 @@
 // Provided interface
 #include "Draw.h"
 
+// HMI Definitions
+#include "Frame.h"
+
 // STL
 #include <iostream>
 
@@ -16,7 +19,6 @@ Draw::Draw(const int x, const int y,
 
     // Default values
     mode_ = DRAW_OFF;
-    frameCounter_ = 0;
 }
 
 void Draw::draw()
@@ -44,14 +46,14 @@ void Draw::draw()
         LogError << "Unexpected DRAW mode" << std::endl;
         break;
     }
-
-    // Increase the frames counter
-    frameCounter_ = (frameCounter_ + 1) % blinkPeriod_;
 }
 
 void Draw::drawBlink()
 {
-    if (frameCounter_ < blinkPeriod_ / 2)
+    // Use the global render clock (Frame::frameCount) so that all blinking
+    // elements share the same phase reference and blink in sync with each other.
+    const unsigned int phase = Frame::frameCount() % (unsigned int)blinkPeriod_;
+    if (phase < (unsigned int)(blinkPeriod_ / 2))
     {
         drawOn();
     }

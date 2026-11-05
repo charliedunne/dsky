@@ -129,12 +129,12 @@ void FrameLeftLcd::render()
 
     // While the date is being corrected after a result was shown, blink an X over the
     // disk center to indicate the values are not valid yet. The previous moon image
-    // remains visible underneath. The counter advances one frame per render; the X is
-    // visible for the first half of DEFAULT_BLINKING_PERIOD frames (same convention as
-    // the Draw base class).
+    // remains visible underneath. The X uses the global render clock (Frame::frameCount)
+    // so it blinks in phase with all other blinking elements (same convention as the
+    // Draw base class).
     if (moonEditBlink_) {
-        moonBlinkCounter_++;
-        if ((moonBlinkCounter_ % DEFAULT_BLINKING_PERIOD) < (DEFAULT_BLINKING_PERIOD / 2)) {
+        const unsigned int phase = Frame::frameCount() % (unsigned int)DEFAULT_BLINKING_PERIOD;
+        if (phase < (unsigned int)(DEFAULT_BLINKING_PERIOD / 2)) {
             const int cx = x_ + 167;   // same center as the moon disk
             const int cy = y_ + 205;
             const int arm = (int)(112 * 0.7);   // X half-diagonal ~78 px, well inside the panel
@@ -274,13 +274,8 @@ void FrameLeftLcd::setMoon(DrawMode mode, int pct, float phase)
 
 void FrameLeftLcd::setMoonEditBlink(bool on)
 {
-    if (on && !moonEditBlink_) {
-        // Start the blink cycle in its visible half so the X is shown
-        // immediately when editing begins. Edge-triggered: Hmi::update()
-        // calls this every frame, so resetting on every true call would
-        // freeze the counter and keep the X permanently visible.
-        moonBlinkCounter_ = 0;
-    }
+    // The blink phase comes from the global render clock (Frame::frameCount),
+    // so there is no per-object counter to initialize here.
     moonEditBlink_ = on;
 }
 

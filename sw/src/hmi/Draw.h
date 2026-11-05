@@ -43,12 +43,6 @@ private:
     int blinkPeriod_;
 
     /**
-     * @brief Internal counter for the blinking logic
-     *
-     */
-    int frameCounter_;
-
-    /**
      * @brief Behaviour of the object rendering when the
      * mode is set to @b ON
      *
