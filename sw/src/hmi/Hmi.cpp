@@ -38,9 +38,9 @@ Hmi::Hmi(int w, int h) {
   SDL_ShowCursor(SDL_DISABLE);
 
   // Create the frames
-  rightLcd_ = new FrameRightLcd(ren_, w_-330, 4, 330, h_, Color(0, 0, 0));
-  leftLcd_ = new FrameLeftLcd(ren_, 2, 4, 335, h_-4, Color(0, 0, 0));
-  centerLcd_ = new FrameCenterLcd(ren_, 331, 0, w_-331, h_-4, Color(0, 0, 0));
+  rightLcd_ = new FrameRightLcd(ren_, w_-330, 4, 330, h_, Color::black());
+  leftLcd_ = new FrameLeftLcd(ren_, 2, 4, 335, h_-4, Color::black());
+  centerLcd_ = new FrameCenterLcd(ren_, 331, 0, w_-331, h_-4, Color::black());
 
 }
 
@@ -71,7 +71,8 @@ void Hmi::render() {
   // the clear would use whatever color the last element of the previous frame
   // left behind. That leaked a blinking yellow into the window margins while
   // the SHTDWN label was active.
-  SDL_SetRenderDrawColor(ren_, GHOST_COLOR_R, GHOST_COLOR_G, GHOST_COLOR_B, 255);
+  const Color ghost = Color::ghost();
+  SDL_SetRenderDrawColor(ren_, ghost.r(), ghost.g(), ghost.b(), ghost.a());
 
   // Clear the screen
   if (SDL_RenderClear(ren_) != 0) {

@@ -133,7 +133,7 @@ void HmiLogic::idle(HmiData &data)
   {
     LogTrace << "VERB" << std::endl;
 
-    data.rSetVerbLabel(DRAW_ON);
+    data.rSetVerbLabel(DRAW_BLINK);
 
     status_.transit(MODE_V_INPUT);
   }
@@ -141,7 +141,7 @@ void HmiLogic::idle(HmiData &data)
   {
     LogTrace << "PRO" << std::endl;
 
-    data.rSetProgLabel(DRAW_ON);
+    data.rSetProgLabel(DRAW_BLINK);
 
     status_.transit(MODE_PROG_INPUT);
   }
@@ -194,7 +194,7 @@ void HmiLogic::verbInput(HmiData &data)
       if (actions_.needNoun(data.getRightLcdData().nVerb))
       {
         status_.transit(MODE_N_INPUT);
-        data.rSetNounLabel(DRAW_ON);
+        data.rSetNounLabel(DRAW_BLINK);
         if (data.getRightLcdData().nVerb == STOP_BG_VERB)
           drawStopBgList(data);
         LogTrace << "Go no Noun input [verb: " << data.getRightLcdData().nVerb << "]" << std::endl;

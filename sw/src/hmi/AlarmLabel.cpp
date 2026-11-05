@@ -13,8 +13,8 @@ AlarmLabel::AlarmLabel(SDL_Renderer *r, const int x, const int y,
     text_ = text;
 
     // Set default parameters
-    fgColor_ = Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A);
-    bgColor_ = Color(GHOST_COLOR_R, GHOST_COLOR_G, GHOST_COLOR_B, GHOST_COLOR_A);
+    fgColor_ = Color::live();
+    bgColor_ = Color::ghost();
 
     fontBitmap_ = std::string(GORTON_FONT_BITMAP);
     fontFnt_ = std::string(GORTON_FONT_FNT);
@@ -72,7 +72,7 @@ void AlarmLabel::drawLabel(const Color c)
     textPosY = centerY - textInkH/2;
 
     /* Draw the text */
-    text.setColor(Color(0, 0, 0, 255));
+    text.setColor(Color::black());
     text.drawText(text_, textPosX, textPosY);
 }
 
@@ -109,5 +109,5 @@ void AlarmLabel::drawOff()
 
 void AlarmLabel::drawErr()
 {
-    drawLabel(Color(255, 50, 50));
+    drawLabel(Color::errorRed());
 }

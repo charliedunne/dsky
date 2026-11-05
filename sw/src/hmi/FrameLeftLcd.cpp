@@ -51,7 +51,7 @@ FrameLeftLcd::FrameLeftLcd(SDL_Renderer *r, int x, int y, int w, int h, Color bg
     shutdown->setTargetCenter(248, 202);
 
     // Set the Alarm colors
-    shutdown->setFgColor(Color(ALARM_YELLOW_COLOR_R, ALARM_YELLOW_COLOR_G, ALARM_YELLOW_COLOR_B, ALARM_YELLOW_COLOR_A));
+    shutdown->setFgColor(Color::alarmYellow());
 
     // VERB 0 menu font (Gorton bitmap, scaled down at draw time)
     verbListFont_ = new Font(r_, GORTON_FONT_BITMAP, GORTON_FONT_FNT);
@@ -61,7 +61,7 @@ FrameLeftLcd::FrameLeftLcd(SDL_Renderer *r, int x, int y, int w, int h, Color bg
     // Digits are scaled to 80% of their default size (cell ~42x60 px), so the
     // right-aligned "NN" ink occupies abs x ~114..198; the "%" glyph is placed
     // to its right so that the combined row is centered on the panel.
-    nMoon_ = new Number(r_, 3, x_ + 70, y_ + 368, Color(0, 255, 0, 255), false, 0.8f);
+    nMoon_ = new Number(r_, 3, x_ + 70, y_ + 368, Color::labelGreen(), false, 0.8f);
 
     // Create the Grid object
     SDL_Surface *surface = IMG_Load(GRID_FULL_TXT_FILE);
@@ -305,7 +305,7 @@ void FrameLeftLcd::drawMoon()
         verbListFont_->estimateSize("MOON PHASE", &tw, &th);
         const float tScale = 0.75f;
         const int tx = cx - (int)(tw * tScale) / 2;
-        verbListFont_->drawText("MOON PHASE", tx, y_ + 14, Color(0, 255, 0, 255), tScale);
+        verbListFont_->drawText("MOON PHASE", tx, y_ + 14, Color::labelGreen(), tScale);
     }
 
     const float phi = moonPhase_;   // [0,1): 0=new, 0.5=full

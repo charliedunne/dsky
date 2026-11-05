@@ -65,12 +65,7 @@ public:
 
   // Setters and Getters
   void setColor(const Color fgColor,
-                const Color bgColor =
-                    Color(GHOST_COLOR_R,
-                          GHOST_COLOR_G,
-                          GHOST_COLOR_B,
-                          GHOST_COLOR_A));
-  ;
+                const Color bgColor = Color::ghost());
   void setBgColor(const Color c);
   void setPosition(const int x, const int y);
 

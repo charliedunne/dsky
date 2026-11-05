@@ -38,9 +38,9 @@ Digits::Digits() {
   status_ = DIGITS_OFF;
 
   // Default color
-  fgColor_ = Color(0, 255, 0, 255);
-  bgColor_ = Color(0, 0, 0, 0);
-  fgColorDisable_ = Color(40, 20, 20, 128);
+  fgColor_ = Color::labelGreen();
+  bgColor_ = Color::transparent();
+  fgColorDisable_ = Color::disabled();
 
   // Increase instance counter
   instanceCounter_++;
