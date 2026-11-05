@@ -189,6 +189,10 @@ void HmiLogic::verbInput(HmiData &data)
 
     LogTrace << "Enter Verb input" << std::endl;
 
+    /* The verb is committed: stop blinking the VERB label but keep it lit.
+     * If a noun is still needed, the NOUN label takes over blinking below. */
+    data.rSetVerbLabel(DRAW_ON);
+
     try
     {
       if (actions_.needNoun(data.getRightLcdData().nVerb))
@@ -314,6 +318,11 @@ void HmiLogic::programInput(HmiData &data)
 
     LogTrace << "Enter Program input" << std::endl;
 
+    /* The program number is committed: stop blinking the PROG label but keep
+     * it lit. If a value (e.g. DBMONITOR period) is still needed, the R2 label
+     * blinks instead. */
+    data.rSetProgLabel(DRAW_ON);
+
     try
     {
       /* Resolve the program first so an invalid ID throws before any state change */
@@ -417,6 +426,10 @@ void HmiLogic::nounInput(HmiData &data)
   {
 
   case E_KEY_ENTR:
+
+    /* The noun is committed: stop blinking the NOUN label but keep it lit.
+     * If a value is still needed, the R2 label takes over blinking below. */
+    data.rSetNounLabel(DRAW_ON);
 
     if (actions_.needValue(data.getRightLcdData().nVerb,
                            data.getRightLcdData().nNoun))
