@@ -79,7 +79,8 @@ void MoonPhaseProgram::operation() {
         }
     };
 
-    // Light or unlight the label of a field on the right LCD.
+    // Set the draw mode of a field's label (RX_LINE) on the right LCD:
+    // blinking while the field is being entered, fixed once committed.
     auto setLabel = [this](Field f, DrawMode mode) {
         switch (f) {
             case YEAR:  hmiData_.rSetR1Label(mode); break;
@@ -92,11 +93,11 @@ void MoonPhaseProgram::operation() {
     std::string digits;
     Field field = YEAR;
 
-    // Blank all echo fields, light the year label.
+    // Blank all echo fields, blink the year label (active input prompt).
     echoField(YEAR, "");
     echoField(MONTH, "");
     echoField(DAY, "");
-    setLabel(YEAR, DRAW_ON);
+    setLabel(YEAR, DRAW_BLINK);
 
     LogTrace << "MOONPHASE: date entry started" << std::endl;
 
@@ -139,7 +140,7 @@ void MoonPhaseProgram::operation() {
                 setLabel(field, DRAW_OFF); // the field left is no longer active
                 echoField(prev, "");
                 field = prev;
-                setLabel(field, DRAW_ON);
+                setLabel(field, DRAW_BLINK);
                 LogTrace << "MOONPHASE: CLR - cleared committed field "
                          << (int)prev << std::endl;
             }
@@ -185,7 +186,7 @@ void MoonPhaseProgram::operation() {
             LogTrace << "MOONPHASE: invalid value '" << digits << "' for field " << (int)field
                      << ", re-prompting" << std::endl;
             digits.clear();
-            echoField(field, ""); // Clear the field; its label stays lit.
+            echoField(field, ""); // Clear the field; its label keeps blinking.
             continue;
         }
 
@@ -195,7 +196,7 @@ void MoonPhaseProgram::operation() {
             case MONTH: mStr = digits; break;
             default:    dStr = digits; break;
         }
-        setLabel(field, DRAW_OFF);
+        setLabel(field, DRAW_ON); // committed: label stays fixed on
         echoField(field, digits);
 
         if (field == DAY) {
@@ -209,7 +210,7 @@ void MoonPhaseProgram::operation() {
             // Advance to the next field (YEAR -> MONTH -> DAY).
             digits.clear();
             field = (field == YEAR) ? MONTH : DAY;
-            setLabel(field, DRAW_ON);
+            setLabel(field, DRAW_BLINK);
         }
     }
 

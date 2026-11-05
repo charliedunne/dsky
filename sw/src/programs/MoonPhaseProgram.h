@@ -12,9 +12,11 @@
  * The operator enters a calendar date through the keypad, field by field:
  * R1 = year (4 digits), R2 = month (2 digits), R3 = day (2 digits). Fields
  * commit and advance automatically as soon as enough digits have been typed
- * (8 key presses in total, no ENTER needed between fields). When the date is
- * complete the program computes the lunar illumination fraction for that day
- * (0..100 %) and displays it on the left LCD. ENTER finishes the program;
+ * (8 key presses in total, no ENTER needed between fields). The active field's
+ * label blinks while digits are being entered and stays fixed on once the
+ * field is committed. When the date is complete the program computes the
+ * lunar illumination fraction for that day (0..100 %) and displays it on the
+ * left LCD. ENTER finishes the program;
  * RSET at any point cancels it. During entry, CLR undoes the last data
  * introduced by the operator, LIFO: first the current field's partial digits,
  * then previously committed fields (R3 -> R2 -> R1); extra presses are
