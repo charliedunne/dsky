@@ -74,12 +74,12 @@ typedef struct
     DrawMode lShutdown;
     DrawMode lReboot;
 
-    // VERB 0 menu: two pages — page 0 = verb list, page 1 = variable list
+    // VERB 0 menu: three pages — page 0 = verb list, page 1 = variable list, page 2 = program list
     DrawMode lVerbList;                        // DRAW_ON while the list is shown
-    char     lVerbListLines[2][20][28];        // up to 20 lines per page, max 27 chars + NUL
-    int      lVerbListCount[2];                // number of valid lines per page (0..20)
-    int      lVerbListPage;                    // active page index (0 or 1)
-    char     lVerbListHeader[2][28];           // optional header line per page (empty = default)
+    char     lVerbListLines[3][20][28];        // up to 20 lines per page, max 27 chars + NUL
+    int      lVerbListCount[3];                // number of valid lines per page (0..20)
+    int      lVerbListPage;                    // active page index (0..2)
+    char     lVerbListHeader[3][28];           // optional header line per page (empty = default)
 
     // MOONPHASE program: illumination result
     DrawMode lMoon;                            // DRAW_ON while the moon phase result is shown
@@ -129,14 +129,16 @@ public:
     void resetLeftLcdData();
 
     /**
-     * @brief Fill both pages of the VERB 0 menu and show it on page 0.
-     *        Page 0 = verb list, page 1 = variable list.
+     * @brief Fill all pages of the VERB 0 menu and show it on page 0.
+     *        Page 0 = verb list, page 1 = variable list, page 2 = program list.
      *        Each page caps at 20 lines / 27 chars per line.
+     * @param programs[in] Optional program list for page 2 (empty by default).
      */
-    void lSetVerbList(const std::vector<std::string> &verbs, const std::vector<std::string> &vars);
+    void lSetVerbList(const std::vector<std::string> &verbs, const std::vector<std::string> &vars,
+                      const std::vector<std::string> &programs = {});
 
     /**
-     * @brief Switch the active VERB 0 menu page (wraps modulo 2).
+     * @brief Switch the active VERB 0 menu page (wraps modulo 3).
      */
     void lSetVerbListPage(int page);
 

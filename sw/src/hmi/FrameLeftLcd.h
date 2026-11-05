@@ -88,7 +88,7 @@ private:
   Font *verbListFont_ = nullptr;
   std::vector<std::string> verbListLines_;   // lines of the active page
   DrawMode verbListMode_ = DRAW_OFF;
-  int verbListPage_ = 0;                     // active page index (0 or 1)
+  int verbListPage_ = 0;                     // active page index (0..2)
   std::string verbListHeader_;               // header line of the active page (empty = default)
 
   // MOONPHASE display: moon graphic + percentage below it

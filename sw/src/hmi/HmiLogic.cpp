@@ -159,15 +159,15 @@ void HmiLogic::idle(HmiData &data)
   }
   else if (data.getLeftLcdData().lVerbList == DRAW_ON)
   {
-    /* + / - flip between the verb list and variable list pages (wraps around).
-     * Single-page lists (e.g. VERB 6, running background programs) have an
-     * empty second page, so a flip towards it is a no-op. */
+    /* + / - flip between the verb list, variable list and program list pages
+     * (wraps around). Single-page lists (e.g. VERB 6, running background
+     * programs) have empty extra pages, so a flip towards one is a no-op. */
     if (key == E_KEY_PLUS || key == E_KEY_MINUS)
     {
       const int cur = data.getLeftLcdData().lVerbListPage;
       const int next = (key == E_KEY_PLUS) ? cur + 1 : cur - 1;
       /* Compute the wrapped target page so the trace matches what is displayed */
-      const int wrapped = ((next % 2) + 2) % 2;
+      const int wrapped = ((next % 3) + 3) % 3;
       if (data.getLeftLcdData().lVerbListCount[wrapped] > 0)
       {
         LogTrace << "Key pressed in IDLE, verb list page -> " << wrapped << std::endl;

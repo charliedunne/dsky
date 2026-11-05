@@ -44,11 +44,12 @@ std::vector<std::string> ListOfPrograms::describe() const {
                   return a->getId() < b->getId();
               });
 
-    // Format entries as "Pxx LABEL" (one line per program)
+    // Format entries as "Pxx KIND LABEL" (one line per program, kind = BG or FG)
     std::vector<std::string> out;
     for (const auto *p : sorted) {
         char buf[64];
-        std::snprintf(buf, sizeof(buf), "P%02d %s", p->getId(), p->getLabel().c_str());
+        std::snprintf(buf, sizeof(buf), "P%02d %s %s", p->getId(),
+                      p->foreground() ? "FG" : "BG", p->getLabel().c_str());
         out.push_back(std::string(buf));
     }
 

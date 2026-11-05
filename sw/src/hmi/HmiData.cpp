@@ -52,6 +52,7 @@ void HmiData::resetLeftLcdData()
     lLcdData_.lVerbList = DRAW_OFF;
     lLcdData_.lVerbListCount[0] = 0;
     lLcdData_.lVerbListCount[1] = 0;
+    lLcdData_.lVerbListCount[2] = 0;
     lLcdData_.lVerbListPage = 0;
     std::memset(lLcdData_.lVerbListHeader, 0, sizeof(lLcdData_.lVerbListHeader));
 
@@ -496,13 +497,15 @@ void fillVerbListPage(char (&page)[20][28], int &count, const std::vector<std::s
 }
 } // namespace
 
-void HmiData::lSetVerbList(const std::vector<std::string> &verbs, const std::vector<std::string> &vars)
+void HmiData::lSetVerbList(const std::vector<std::string> &verbs, const std::vector<std::string> &vars,
+                           const std::vector<std::string> &programs)
 {
     mutex_.lock();
 
-    // Page 0: verb list. Page 1: variable list.
+    // Page 0: verb list. Page 1: variable list. Page 2: program list.
     fillVerbListPage(lLcdData_.lVerbListLines[0], lLcdData_.lVerbListCount[0], verbs);
     fillVerbListPage(lLcdData_.lVerbListLines[1], lLcdData_.lVerbListCount[1], vars);
+    fillVerbListPage(lLcdData_.lVerbListLines[2], lLcdData_.lVerbListCount[2], programs);
 
     lLcdData_.lVerbListPage = 0;
     lLcdData_.lVerbList = DRAW_ON;
@@ -514,8 +517,8 @@ void HmiData::lSetVerbListPage(int page)
 {
     mutex_.lock();
 
-    // Wrap around modulo 2 (handles negative input as well).
-    lLcdData_.lVerbListPage = ((page % 2) + 2) % 2;
+    // Wrap around modulo 3 (handles negative input as well).
+    lLcdData_.lVerbListPage = ((page % 3) + 3) % 3;
 
     mutex_.unlock();
 }
@@ -527,6 +530,7 @@ void HmiData::clearVerbList()
     lLcdData_.lVerbList = DRAW_OFF;
     lLcdData_.lVerbListCount[0] = 0;
     lLcdData_.lVerbListCount[1] = 0;
+    lLcdData_.lVerbListCount[2] = 0;
     lLcdData_.lVerbListPage = 0;
     std::memset(lLcdData_.lVerbListHeader, 0, sizeof(lLcdData_.lVerbListHeader));
 
@@ -537,8 +541,8 @@ void HmiData::lSetVerbListHeader(int page, const char *header)
 {
     mutex_.lock();
 
-    // Clamp the page index to the two available pages.
-    if (page < 0 || page > 1) {
+    // Clamp the page index to the three available pages.
+    if (page < 0 || page > 2) {
         mutex_.unlock();
         return;
     }
