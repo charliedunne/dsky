@@ -75,10 +75,10 @@ public:
   /**
    * @brief Set the MOONPHASE date-correction blink state.
    *
-   * While on, a blinking cross is drawn in the disk center instead of the
+   * While on, a blinking X is drawn over the disk center, on top of the
    * moon graphic, indicating that the displayed values are not valid yet.
-   * The blink runs at half the default blinking period (20 frames).
-   * @param on true to show the blinking cross, false to restore the moon.
+   * The X is visible for half the default blinking period (20 frames).
+   * @param on true to show the blinking X, false to stop it.
    */
   void setMoonEditBlink(bool on);
 

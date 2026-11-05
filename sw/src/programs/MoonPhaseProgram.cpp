@@ -101,7 +101,7 @@ void MoonPhaseProgram::operation() {
         }
     };
 
-    // Hide the moon graphic and the edit-blink cross on the left LCD.
+    // Hide the moon graphic and the edit-blink X on the left LCD.
     auto clearLeftLcd = [this]() {
         hmiData_.lSetMoon(DRAW_OFF, 0, 0.0f);
         hmiData_.lSetMoonEditBlink(false);
@@ -136,8 +136,8 @@ void MoonPhaseProgram::operation() {
         if (field == RESULT) {
             // Result shown: ENTER finishes; CLR re-opens the day field so the
             // operator can correct the date and get a new graphic. While the
-            // date is incomplete again, the left LCD shows a blinking cross
-            // instead of the moon. Everything else is ignored.
+            // date is incomplete again, the left LCD blinks an X over the
+            // previous moon image. Everything else is ignored.
             if (key == E_KEY_ENTR) {
                 break;
             }

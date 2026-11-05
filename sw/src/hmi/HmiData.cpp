@@ -433,8 +433,9 @@ void HmiData::lSetMoon(DrawMode mode, int pct, float phase)
 
 /**
  * @brief Set the MOONPHASE date-correction blink flag.
- *        While true, a blinking cross replaces the moon graphic on the
- *        left LCD to indicate that the displayed values are not valid.
+ *        While true, a blinking X is drawn over the disk center, on top of
+ *        the moon graphic on the left LCD, to indicate that the displayed
+ *        values are not valid.
  */
 void HmiData::lSetMoonEditBlink(bool on)
 {

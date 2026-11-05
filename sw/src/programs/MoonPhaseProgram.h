@@ -22,8 +22,8 @@
  * (R3 -> R2 -> R1); extra presses are ignored once nothing is left to clear.
  * After the result is shown, CLR re-opens the day field so the date can be
  * corrected; further CLRs keep unwinding LIFO (month, then year). While the
- * date is incomplete again, the left LCD shows a blinking cross in place of
- * the moon graphic; completing the date restores it.
+ * date is incomplete again, the left LCD blinks an X over the previous moon
+ * graphic; completing the date removes it.
  */
 class MoonPhaseProgram : public FgProgram {
 

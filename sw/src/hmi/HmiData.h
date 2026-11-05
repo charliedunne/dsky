@@ -212,8 +212,8 @@ public:
 
     /**
      * @brief Set the MOONPHASE date-correction blink flag.
-     *        While true, the left LCD shows a blinking cross in the disk
-     *        center instead of the moon graphic (values are not valid).
+     *        While true, the left LCD blinks an X over the disk center, on
+     *        top of the moon graphic (values are not valid).
      */
     void lSetMoonEditBlink(bool on);
 

@@ -104,16 +104,14 @@ void FrameLeftLcd::render()
                               M_PI * 8, Color(255, 255, 0));
     }
 
-    // Draw alarm labels only when the VERB 0 menu, the MOONPHASE result and the
-    // date-correction blink are not shown
-    if (verbListMode_ != DRAW_ON && moonMode_ != DRAW_ON && !moonEditBlink_) {
+    // Draw alarm labels only when the VERB 0 menu or the MOONPHASE result is not shown
+    if (verbListMode_ != DRAW_ON && moonMode_ != DRAW_ON) {
         drawLabels();
     }
 
-    // Draw the separation lines (grid background), hidden while the VERB 0 menu, the
-    // MOONPHASE result or the date-correction blink is shown, so the percentage number
-    // does not overlap the alarm grid
-    if (verbListMode_ != DRAW_ON && moonMode_ != DRAW_ON && !moonEditBlink_) {
+    // Draw the separation lines (grid background), hidden while the VERB 0 menu or the
+    // MOONPHASE result is shown, so the percentage number does not overlap the alarm grid
+    if (verbListMode_ != DRAW_ON && moonMode_ != DRAW_ON) {
         drawLines();
     }
 
@@ -124,23 +122,25 @@ void FrameLeftLcd::render()
 
     // Draw the MOONPHASE result number on top of the grid, if active.
     // No bookkeeping needed: the background fill + grid redraw each frame erases it.
-    if (moonMode_ == DRAW_ON && !moonEditBlink_) {
+    // The moon stays visible while the date is corrected (blinking X overlaid below).
+    if (moonMode_ == DRAW_ON) {
         drawMoon();
     }
 
-    // While the date is being corrected after a result was shown, hide the moon
-    // and blink a cross in the disk center to indicate the values are not valid yet.
-    // The counter advances one frame per render; the cross is visible for the first
-    // half of DEFAULT_BLINKING_PERIOD frames (same convention as the Draw base class).
+    // While the date is being corrected after a result was shown, blink an X over the
+    // disk center to indicate the values are not valid yet. The previous moon image
+    // remains visible underneath. The counter advances one frame per render; the X is
+    // visible for the first half of DEFAULT_BLINKING_PERIOD frames (same convention as
+    // the Draw base class).
     if (moonEditBlink_) {
         moonBlinkCounter_++;
         if ((moonBlinkCounter_ % DEFAULT_BLINKING_PERIOD) < (DEFAULT_BLINKING_PERIOD / 2)) {
             const int cx = x_ + 167;   // same center as the moon disk
             const int cy = y_ + 205;
-            const int arm = (int)(112 * 0.7);   // cross arms ~78 px, well inside the panel
+            const int arm = (int)(112 * 0.7);   // X half-diagonal ~78 px, well inside the panel
             const Uint32 color = 0xFF00FF00;    // bright green
-            hlineColor(r_, cx - arm, cx + arm, cy, color);
-            thickLineColor(r_, cx, cy - arm, cx, cy + arm, 4, color);
+            thickLineColor(r_, cx - arm, cy - arm, cx + arm, cy + arm, 4, color);
+            thickLineColor(r_, cx - arm, cy + arm, cx + arm, cy - arm, 4, color);
         }
     }
 }
@@ -276,10 +276,10 @@ void FrameLeftLcd::setMoon(DrawMode mode, int pct, float phase)
 void FrameLeftLcd::setMoonEditBlink(bool on)
 {
     if (on && !moonEditBlink_) {
-        // Start the blink cycle in its visible half so the cross is shown
+        // Start the blink cycle in its visible half so the X is shown
         // immediately when editing begins. Edge-triggered: Hmi::update()
         // calls this every frame, so resetting on every true call would
-        // freeze the counter and keep the cross permanently visible.
+        // freeze the counter and keep the X permanently visible.
         moonBlinkCounter_ = 0;
     }
     moonEditBlink_ = on;
