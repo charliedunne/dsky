@@ -52,9 +52,11 @@ class ListOfPrograms {
 
     /**
      * @brief Human-readable description of every registered program,
-     *        sorted by id ascending. Used for tracing / diagnostics.
+     *        sorted by id ascending. Each line carries the program kind
+     *        (BG or FG) so background and foreground programs are told
+     *        apart in the listing. Used for tracing / diagnostics.
      *
-     * @return One string per program, e.g. "P01 DUMMY"
+     * @return One string per program, e.g. "P01 BG DUMMY"
      */
     std::vector<std::string> describe() const;
 

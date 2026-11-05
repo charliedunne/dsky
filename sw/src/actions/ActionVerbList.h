@@ -9,6 +9,9 @@
 // Persistent variable store (source of the VERB 0 variables page)
 #include "VariableStore.h"
 
+// Registered programs (source of the VERB 0 program list page)
+#include "ListOfPrograms.h"
+
 class ActionVerbList : public Action {
 
  private:
@@ -23,9 +26,14 @@ class ActionVerbList : public Action {
    */
   const VariableStore &store_;
 
+  /**
+   * @brief Reference to the registered programs (source of the program list page)
+   */
+  const ListOfPrograms &programs_;
+
  public:
 
-  ActionVerbList(HmiData &data, const ListOfActions &actions, const VariableStore &store);
+  ActionVerbList(HmiData &data, const ListOfActions &actions, const VariableStore &store, const ListOfPrograms &programs);
 
   void operation();
 };

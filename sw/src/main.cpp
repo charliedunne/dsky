@@ -201,7 +201,7 @@ int main( int argc, char * argv[], char *envp[] ) {
 
   // VERB 0: list all implemented verb/noun combos on the left panel.
   // Registered last so its menu can describe every other action.
-  ActionVerbList a_VerbList(data, logic.getActions(), store);
+  ActionVerbList a_VerbList(data, logic.getActions(), store, logic.getPrograms());
   logic.registerAction(a_VerbList);
 
   // Initialize FPS Manager

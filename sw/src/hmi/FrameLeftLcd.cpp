@@ -228,10 +228,10 @@ void FrameLeftLcd::drawVerbList()
     const Color green = Color::live();
 
     // Header line: use the data-provided header when set, otherwise fall back
-    // to the defaults (page 0 = verb list, page 1 = variable list).
+    // to the defaults (page 0 = verb list, page 1 = variable list, page 2 = program list).
     int y = y_ + 8;                                  // top margin (tune later)
     const char *header = verbListHeader_.empty()
-        ? ((verbListPage_ == 0) ? "VERB LIST" : "VARIABLE LIST")
+        ? ((verbListPage_ == 0) ? "VERB LIST" : ((verbListPage_ == 1) ? "VARIABLE LIST" : "PROGRAM LIST"))
         : verbListHeader_.c_str();
     verbListFont_->drawText(header, x_ + 10, y, green, scale);
     y += lineHeight;
