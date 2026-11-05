@@ -37,6 +37,12 @@ void FgProgram::start()
 
   /* Mark running via the base, then spawn the worker thread */
   Program::start();
+
+  /* Light the COMP ACTY label for the whole run; it is cleared when the
+   * worker exits (see loop()). start() joins any previous thread first, so
+   * a stale worker's trailing DRAW_OFF can never clobber this. */
+  hmiData_.rSetCompActLabel(DRAW_ON);
+
   thread_ = std::thread(&FgProgram::loop, this);
 }
 
@@ -102,6 +108,11 @@ void FgProgram::loop()
   /* Clear the running flag via the base (idempotent, non-blocking) so a
    * concurrent stop() join never waits on us */
   Program::stop();
+
+  /* Turn off the COMP ACTY label lit in start(). Covers every exit path
+   * (natural finish, stop(), cancel()) and is harmless when the HMI has
+   * already reset the right LCD. */
+  hmiData_.rSetCompActLabel(DRAW_OFF);
 
   LogTrace << "Program " << getId() << " stopped" << std::endl;
 }
