@@ -58,6 +58,8 @@ void HmiData::resetLeftLcdData()
     // Clear the MOONPHASE result
     lLcdData_.lMoon = DRAW_OFF;
     lLcdData_.lMoonPct = 0;
+    lLcdData_.lMoonPhase = 0.0f;
+    lLcdData_.lMoonEditBlink = false;
 }
 
 HmiData::HmiData()
@@ -415,15 +417,30 @@ void HmiData::lSetReboot(DrawMode mode)
 }
 
 /**
- * @brief Set the MOONPHASE illumination display mode and percentage.
+ * @brief Set the MOONPHASE illumination display mode, percentage and phase.
  *        DRAW_ON shows the given percentage; any other mode hides it.
  */
-void HmiData::lSetMoon(DrawMode mode, int pct)
+void HmiData::lSetMoon(DrawMode mode, int pct, float phase)
 {
     mutex_.lock();
 
     lLcdData_.lMoon = mode;
     lLcdData_.lMoonPct = pct;
+    lLcdData_.lMoonPhase = phase;
+
+    mutex_.unlock();
+}
+
+/**
+ * @brief Set the MOONPHASE date-correction blink flag.
+ *        While true, a blinking cross replaces the moon graphic on the
+ *        left LCD to indicate that the displayed values are not valid.
+ */
+void HmiData::lSetMoonEditBlink(bool on)
+{
+    mutex_.lock();
+
+    lLcdData_.lMoonEditBlink = on;
 
     mutex_.unlock();
 }

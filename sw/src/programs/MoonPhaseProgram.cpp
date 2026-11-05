@@ -29,13 +29,13 @@ static double julianDay(int y, int m, int d) {
 const int MoonPhaseProgram::need_[3] = {4, 2, 2};
 
 /**
- * @brief Illuminated fraction of the moon for a civil date.
+ * @brief Lunar phase for a civil date.
  * @param y Year (e.g. 2026).
  * @param m Month, 1-12.
  * @param d Day of month.
- * @return Illumination fraction in [0, 1]; 0 = new moon, 1 = full moon.
+ * @return Phase in [0, 1): 0 = new moon, 0.5 = full moon.
  */
-double MoonPhaseProgram::illumination(int y, int m, int d) {
+double MoonPhaseProgram::moonPhase(int y, int m, int d) {
     // Noon UT of the given day: JD at 0h + half a day.
     double jdNoon = julianDay(y, m, d) + 0.5;
     // Phase in [0, 1): fraction of the synodic cycle since the epoch new moon.
@@ -43,6 +43,18 @@ double MoonPhaseProgram::illumination(int y, int m, int d) {
     if (phase < 0.0) {
         phase += 1.0;
     }
+    return phase;
+}
+
+/**
+ * @brief Illuminated fraction of the moon for a civil date.
+ * @param y Year (e.g. 2026).
+ * @param m Month, 1-12.
+ * @param d Day of month.
+ * @return Illumination fraction in [0, 1]; 0 = new moon, 1 = full moon.
+ */
+double MoonPhaseProgram::illumination(int y, int m, int d) {
+    const double phase = moonPhase(y, m, d);
     return (1.0 - cos(2.0 * M_PI * phase)) / 2.0;
 }
 
@@ -89,6 +101,12 @@ void MoonPhaseProgram::operation() {
         }
     };
 
+    // Hide the moon graphic and the edit-blink cross on the left LCD.
+    auto clearLeftLcd = [this]() {
+        hmiData_.lSetMoon(DRAW_OFF, 0, 0.0f);
+        hmiData_.lSetMoonEditBlink(false);
+    };
+
     std::string yStr, mStr, dStr;
     std::string digits;
     Field field = YEAR;
@@ -104,19 +122,34 @@ void MoonPhaseProgram::operation() {
     while (true) {
         EventId_t key;
         if (!nextKey(key)) {
+            clearLeftLcd();
             return;
         }
 
         // RSET cancels the whole program.
         if (key == E_KEY_RSET) {
             LogTrace << "MOONPHASE: cancelled by RSET" << std::endl;
+            clearLeftLcd();
             return;
         }
 
         if (field == RESULT) {
-            // Result shown: only ENTER finishes, everything else is ignored.
+            // Result shown: ENTER finishes; CLR re-opens the day field so the
+            // operator can correct the date and get a new graphic. While the
+            // date is incomplete again, the left LCD shows a blinking cross
+            // instead of the moon. Everything else is ignored.
             if (key == E_KEY_ENTR) {
                 break;
+            }
+            if (key == E_KEY_CLR) {
+                dStr.clear();
+                digits.clear(); // stale committed day must not auto-commit
+                echoField(DAY, "");
+                setLabel(DAY, DRAW_BLINK);
+                hmiData_.lSetMoonEditBlink(true);
+                field = DAY;
+                LogTrace << "MOONPHASE: CLR at result - re-opening day editing" << std::endl;
+                continue;
             }
             continue;
         }
@@ -200,11 +233,13 @@ void MoonPhaseProgram::operation() {
         echoField(field, digits);
 
         if (field == DAY) {
-            // All three fields valid: compute and show the illumination.
+            // All three fields valid: compute and show the phase graphic.
+            const double phase = moonPhase(std::stoi(yStr), std::stoi(mStr), std::stoi(dStr));
             int pct = (int)lround(illumination(std::stoi(yStr), std::stoi(mStr), std::stoi(dStr)) * 100.0);
-            hmiData_.lSetMoon(DRAW_ON, pct);
+            hmiData_.lSetMoon(DRAW_ON, pct, (float)phase);
+            hmiData_.lSetMoonEditBlink(false); // date complete: show the moon again
             LogTrace << "MOONPHASE: " << yStr << "-" << mStr << "-" << dStr
-                     << " -> " << pct << "%" << std::endl;
+                     << " -> " << pct << "% phase=" << phase << std::endl;
             field = RESULT;
         } else {
             // Advance to the next field (YEAR -> MONTH -> DAY).
@@ -214,5 +249,6 @@ void MoonPhaseProgram::operation() {
         }
     }
 
+    clearLeftLcd();
     LogTrace << "MOONPHASE: finished" << std::endl;
 }

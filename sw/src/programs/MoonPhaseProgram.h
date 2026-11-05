@@ -16,11 +16,14 @@
  * label blinks while digits are being entered and stays fixed on once the
  * field is committed. When the date is complete the program computes the
  * lunar illumination fraction for that day (0..100 %) and displays it on the
- * left LCD. ENTER finishes the program;
- * RSET at any point cancels it. During entry, CLR undoes the last data
- * introduced by the operator, LIFO: first the current field's partial digits,
- * then previously committed fields (R3 -> R2 -> R1); extra presses are
- * ignored once nothing is left to clear.
+ * left LCD. ENTER finishes the program; RSET at any point cancels it.
+ * During entry, CLR undoes the last data introduced by the operator, LIFO:
+ * first the current field's partial digits, then previously committed fields
+ * (R3 -> R2 -> R1); extra presses are ignored once nothing is left to clear.
+ * After the result is shown, CLR re-opens the day field so the date can be
+ * corrected; further CLRs keep unwinding LIFO (month, then year). While the
+ * date is incomplete again, the left LCD shows a blinking cross in place of
+ * the moon graphic; completing the date restores it.
  */
 class MoonPhaseProgram : public FgProgram {
 
@@ -45,6 +48,16 @@ class MoonPhaseProgram : public FgProgram {
    * @return Illumination fraction in the range [0, 1].
    */
   double illumination(int y, int m, int d);
+
+  /**
+   * @brief Lunar phase for a civil date.
+   *
+   * @param y [in] Year (e.g. 2026)
+   * @param m [in] Month (1..12)
+   * @param d [in] Day of month (1..daysInMonth)
+   * @return Phase in [0, 1): 0 = new moon, 0.5 = full moon.
+   */
+  double moonPhase(int y, int m, int d);
 
   /**
    * @brief Number of days in a given month (leap-year aware).

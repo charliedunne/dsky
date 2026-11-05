@@ -1,6 +1,7 @@
 #include "FrameLeftLcd.h"
 
 // STL
+#include <cmath>
 #include <iostream>
 #include <stdexcept>
 
@@ -55,10 +56,12 @@ FrameLeftLcd::FrameLeftLcd(SDL_Renderer *r, int x, int y, int w, int h, Color bg
     // VERB 0 menu font (Gorton bitmap, scaled down at draw time)
     verbListFont_ = new Font(r_, GORTON_FONT_BITMAP, GORTON_FONT_FNT);
 
-    // MOONPHASE result: large centered percentage number + small "%" label.
-    // Coordinates are window-absolute; digits span ~159x76 px on the middle grid band.
-    nMoon_ = new Number(r_, 3, x_ + 88, y_ + 81, Color(0, 255, 0, 255), false);
-    moonPctFont_ = new Font(r_, GORTON_FONT_BITMAP, GORTON_FONT_FNT);
+    // MOONPHASE result: percentage number below the moon disk + small "%" label.
+    // Coordinates are window-absolute; the disk center sits at (x_+167, y_+205).
+    // Digits are scaled to 80% of their default size (cell ~42x60 px), so the
+    // right-aligned "NN" ink occupies abs x ~114..198; the "%" glyph is placed
+    // to its right so that the combined row is centered on the panel.
+    nMoon_ = new Number(r_, 3, x_ + 70, y_ + 368, Color(0, 255, 0, 255), false, 0.8f);
 
     // Create the Grid object
     SDL_Surface *surface = IMG_Load(GRID_FULL_TXT_FILE);
@@ -86,7 +89,6 @@ FrameLeftLcd::~FrameLeftLcd()
     delete shutdown;
     delete verbListFont_;
     delete nMoon_;
-    delete moonPctFont_;
 }
 
 void FrameLeftLcd::render()
@@ -102,14 +104,16 @@ void FrameLeftLcd::render()
                               M_PI * 8, Color(255, 255, 0));
     }
 
-    // Draw alarm labels only when the VERB 0 menu and the MOONPHASE result are not shown
-    if (verbListMode_ != DRAW_ON && moonMode_ != DRAW_ON) {
+    // Draw alarm labels only when the VERB 0 menu, the MOONPHASE result and the
+    // date-correction blink are not shown
+    if (verbListMode_ != DRAW_ON && moonMode_ != DRAW_ON && !moonEditBlink_) {
         drawLabels();
     }
 
-    // Draw the separation lines (grid background), hidden while the VERB 0 menu or the
-    // MOONPHASE result is shown, so the percentage number does not overlap the alarm grid
-    if (verbListMode_ != DRAW_ON && moonMode_ != DRAW_ON) {
+    // Draw the separation lines (grid background), hidden while the VERB 0 menu, the
+    // MOONPHASE result or the date-correction blink is shown, so the percentage number
+    // does not overlap the alarm grid
+    if (verbListMode_ != DRAW_ON && moonMode_ != DRAW_ON && !moonEditBlink_) {
         drawLines();
     }
 
@@ -120,8 +124,24 @@ void FrameLeftLcd::render()
 
     // Draw the MOONPHASE result number on top of the grid, if active.
     // No bookkeeping needed: the background fill + grid redraw each frame erases it.
-    if (moonMode_ == DRAW_ON) {
+    if (moonMode_ == DRAW_ON && !moonEditBlink_) {
         drawMoon();
+    }
+
+    // While the date is being corrected after a result was shown, hide the moon
+    // and blink a cross in the disk center to indicate the values are not valid yet.
+    // The counter advances one frame per render; the cross is visible for the first
+    // half of DEFAULT_BLINKING_PERIOD frames (same convention as the Draw base class).
+    if (moonEditBlink_) {
+        moonBlinkCounter_++;
+        if ((moonBlinkCounter_ % DEFAULT_BLINKING_PERIOD) < (DEFAULT_BLINKING_PERIOD / 2)) {
+            const int cx = x_ + 167;   // same center as the moon disk
+            const int cy = y_ + 205;
+            const int arm = (int)(112 * 0.7);   // cross arms ~78 px, well inside the panel
+            const Uint32 color = 0xFF00FF00;    // bright green
+            hlineColor(r_, cx - arm, cx + arm, cy, color);
+            thickLineColor(r_, cx, cy - arm, cx, cy + arm, 4, color);
+        }
     }
 }
 
@@ -238,10 +258,11 @@ void FrameLeftLcd::drawVerbList()
     }
 }
 
-void FrameLeftLcd::setMoon(DrawMode mode, int pct)
+void FrameLeftLcd::setMoon(DrawMode mode, int pct, float phase)
 {
     moonMode_ = mode;
     moonPct_ = pct;
+    moonPhase_ = phase;
     if (mode == DRAW_ON) {
         // Number right-aligns and blanks leading digits ("42" -> _ 4 2)
         nMoon_->setValue(std::to_string(pct));
@@ -252,15 +273,91 @@ void FrameLeftLcd::setMoon(DrawMode mode, int pct)
     nMoon_->setMode(mode);
 }
 
+void FrameLeftLcd::setMoonEditBlink(bool on)
+{
+    if (on && !moonEditBlink_) {
+        // Start the blink cycle in its visible half so the cross is shown
+        // immediately when editing begins. Edge-triggered: Hmi::update()
+        // calls this every frame, so resetting on every true call would
+        // freeze the counter and keep the cross permanently visible.
+        moonBlinkCounter_ = 0;
+    }
+    moonEditBlink_ = on;
+}
+
 void FrameLeftLcd::drawMoon()
 {
     if (moonMode_ != DRAW_ON) return;
 
-    // Large centered percentage number, then a small "%" label to its right,
-    // vertically centered on the digits.
+    const int R = 112;              // moon disk radius (px)
+    const int cx = x_ + 167;        // disk center, horizontally centered on the panel
+    const int cy = y_ + 205;        // shifted down to leave room for the title
+
+    // Packed 0xAARRGGBB pixels for the gfxPrimitives calls.
+    const Uint32 lit  = 0xFF00FF00; // bright green: illuminated part
+    const Uint32 dim  = 0xFF004000; // dark green: unlit part of the disk
+    const Uint32 edge = 0xFF00FF00; // disk outline so new moon stays visible
+
+    // Title "MOON PHASE" centered at the top. estimateSize() reports the
+    // unscaled size, so scale the width by tScale to center it on the panel.
+    {
+        int tw = 0, th = 0;
+        verbListFont_->estimateSize("MOON PHASE", &tw, &th);
+        const float tScale = 0.75f;
+        const int tx = cx - (int)(tw * tScale) / 2;
+        verbListFont_->drawText("MOON PHASE", tx, y_ + 14, Color(0, 255, 0, 255), tScale);
+    }
+
+    const float phi = moonPhase_;   // [0,1): 0=new, 0.5=full
+    const bool waxing = (phi <= 0.5f);
+    const double c = cos(2.0 * M_PI * phi);
+    const int rx = (int)lround(R * fabs(c));
+
+    // Retro scanline texture: instead of solid fills, paint the disk row by
+    // row with horizontal lines every SCAN pixels. All three layers (dim
+    // base, lit half-disk, terminator ellipse) share the same row selection
+    // so they stay aligned and no band ever becomes a solid fill.
+    const int SCAN = 3;
+    for (int yy = cy - R; yy <= cy + R; ++yy) {
+        if ((yy - (cy - R)) % SCAN != 0) continue;
+
+        const double dy = yy - cy;
+        const double t2 = 1.0 - (dy * dy) / (R * (double)R);
+        if (t2 < 0.0) continue;
+        const int dx = (int)lround(R * sqrt(t2));
+
+        // Layer 1: dim base across the full disk width.
+        hlineColor(r_, cx - dx, cx + dx, yy, dim);
+
+        // Layer 2: lit half-disk (waxing -> right, waning -> left).
+        if (waxing) {
+            hlineColor(r_, cx, cx + dx, yy, lit);
+        } else {
+            hlineColor(r_, cx - dx, cx, yy, lit);
+        }
+
+        // Layer 3: terminator ellipse line; dim for crescents, lit for gibbous.
+        if (rx > 0) {
+            const int ex = (int)lround((double)rx * sqrt(t2));
+            hlineColor(r_, cx - ex, cx + ex, yy,
+                       (phi < 0.25f || phi > 0.75f) ? dim : lit);
+        }
+    }
+
+    // Disk outline so the shape is visible even at new moon.
+    circleColor(r_, cx, cy, R, edge);
+
+    // Percentage number below the disk + small "%" label to its right.
     nMoon_->draw();
 
-    const Color green(0, 255, 0, 255);
-    moonPctFont_->drawText("%", x_ + 253, y_ + 111, green, 0.5f);
+    // "%" glyph: the Gorton bitmap font has no "%" character, so draw it
+    // manually with gfxPrimitives — two small rings plus a diagonal slash.
+    const int pcx = x_ + 212;   // percent sign center, right of the digits
+    const int pcy = y_ + 398;   // digit vertical middle (digits span abs y 372..432)
+    circleColor(r_, pcx - 6, pcy - 10, 5, lit);
+    circleColor(r_, pcx - 6, pcy - 10, 4, lit);
+    circleColor(r_, pcx + 6, pcy + 10, 5, lit);
+    circleColor(r_, pcx + 6, pcy + 10, 4, lit);
+    thickLineColor(r_, pcx + 8, pcy - 13, pcx - 8, pcy + 13, 2, lit);
 }
   

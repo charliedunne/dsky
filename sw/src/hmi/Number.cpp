@@ -1,7 +1,7 @@
 #include "Number.h"
 #include <Logger.h>
 
-Number::Number(SDL_Renderer *r, const int digits, const int x, const int y, const Color c, const bool glow) : Draw(x, y)
+Number::Number(SDL_Renderer *r, const int digits, const int x, const int y, const Color c, const bool glow, const float scale) : Draw(x, y)
 {
 
   // Maximum number of digits
@@ -13,6 +13,13 @@ Number::Number(SDL_Renderer *r, const int digits, const int x, const int y, cons
 
       Digit *d = new Digit(r);
 
+      // Scale the glyph size and the inter-digit offset by the same factor.
+      if (scale != 1.0f)
+      {
+
+        d->setSize((int)((S_WIDTH / 2 * S_FACTOR) * scale), (int)(S_HEIGHT * S_FACTOR * scale));
+      }
+
       if (i == 0)
       {
 
@@ -21,7 +28,7 @@ Number::Number(SDL_Renderer *r, const int digits, const int x, const int y, cons
       else
       {
 
-        int offset = (S_WIDTH / 2 * S_FACTOR) * N_SPACE_FACTOR;
+        int offset = (int)((S_WIDTH / 2 * S_FACTOR) * N_SPACE_FACTOR * scale);
 
         d->setPosition(x + (offset * i), y);
       }
