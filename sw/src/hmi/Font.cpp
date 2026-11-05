@@ -21,7 +21,7 @@ Font::Font(SDL_Renderer *r, std::string bitmap, std::string fnt)
     fnt_ = fnt;
 
     // Default color
-    color_ = Color(255, 255, 255, 255);
+    color_ = Color::white();
 
     // Create the texture
     SDL_Surface *surface = IMG_Load(bitmap.c_str());

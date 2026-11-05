@@ -3,9 +3,6 @@ cmake_minimum_required(VERSION 3.18)
 # Project name
 project (dskyKeyInt VERSION 0.1)
 
-# Configuration file
-configure_file(config.h.in config.h)
-
 # Exec rule
 add_executable(dskyKeyInt "")
 
@@ -26,7 +23,7 @@ set(CMAKE_BUILD_TYPE Release)
 SET(CMAKE_CXX_FLAGS "-std=c++20")
 
 # Includes
-include_directories(build)
+include_directories(../../common)
 include_directories(build/include)
 include_directories(../../core)
 include_directories(../../../build/include)

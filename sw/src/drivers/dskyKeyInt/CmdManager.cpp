@@ -1,7 +1,7 @@
 #include "CmdManager.h"
 
-// Configuration
-#include "config.h"
+// Configuration (shared with the app, see common/KeyIntConfig.h)
+#include "KeyIntConfig.h"
 
 CmdManager::CmdManager() : inMsgQueue_(CMD_MSG_QUEUE_FILE, CMD_MSG_QUEUE_ID, MSG_QUEUE_IN)
 {

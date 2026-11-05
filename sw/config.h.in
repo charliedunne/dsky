@@ -40,6 +40,59 @@
 #define ALARM_YELLOW_COLOR_B 0x00
 #define ALARM_YELLOW_COLOR_A 0xBB
 
+// Default label green (dim green used for PROG/VERB/NOUN labels)
+#define LABEL_GREEN_COLOR_R 0x88
+#define LABEL_GREEN_COLOR_G 0x88
+#define LABEL_GREEN_COLOR_B 0x88
+#define LABEL_GREEN_COLOR_A 0x22
+
+// Dots color (faint dot grid overlay)
+#define DOTS_COLOR_R 0xF0
+#define DOTS_COLOR_G 0xF0
+#define DOTS_COLOR_B 0xF0
+#define DOTS_COLOR_A 0x55
+
+// Line color (faint separator lines)
+#define LINE_COLOR_R 0xC0
+#define LINE_COLOR_G 0xC0
+#define LINE_COLOR_B 0xC0
+#define LINE_COLOR_A 0x22
+
+// Error red color (error text/highlights)
+#define ERROR_RED_COLOR_R 0xFF
+#define ERROR_RED_COLOR_G 0x32
+#define ERROR_RED_COLOR_B 0x32
+
+// Red element color (pure red, e.g. blinking X-cross during date correction)
+#define RED_COLOR_R 0xFF
+#define RED_COLOR_G 0x00
+#define RED_COLOR_B 0x00
+#define RED_COLOR_A 0xFF
+
+// Disabled color (dimmed/inactive elements)
+#define DISABLED_COLOR_R 0x28
+#define DISABLED_COLOR_G 0x14
+#define DISABLED_COLOR_B 0x14
+#define DISABLED_COLOR_A 0x80
+
+// Divider green (dim green separator line in the verb list)
+#define DIVIDER_GREEN_COLOR_R 0x00
+#define DIVIDER_GREEN_COLOR_G 0x80
+#define DIVIDER_GREEN_COLOR_B 0x00
+#define DIVIDER_GREEN_COLOR_A 0xFF
+
+// Moon dim green (unlit part of the moon disk)
+#define MOON_DIM_GREEN_COLOR_R 0x00
+#define MOON_DIM_GREEN_COLOR_G 0x40
+#define MOON_DIM_GREEN_COLOR_B 0x00
+#define MOON_DIM_GREEN_COLOR_A 0xFF
+
+// Debug yellow (debug frame border; opaque, unlike alarmYellow)
+#define DEBUG_YELLOW_COLOR_R 0xFF
+#define DEBUG_YELLOW_COLOR_G 0xFF
+#define DEBUG_YELLOW_COLOR_B 0x00
+#define DEBUG_YELLOW_COLOR_A 0xFF
+
 
 
 

@@ -133,7 +133,7 @@ void HmiLogic::idle(HmiData &data)
   {
     LogTrace << "VERB" << std::endl;
 
-    data.rSetVerbLabel(DRAW_ON);
+    data.rSetVerbLabel(DRAW_BLINK);
 
     status_.transit(MODE_V_INPUT);
   }
@@ -141,7 +141,7 @@ void HmiLogic::idle(HmiData &data)
   {
     LogTrace << "PRO" << std::endl;
 
-    data.rSetProgLabel(DRAW_ON);
+    data.rSetProgLabel(DRAW_BLINK);
 
     status_.transit(MODE_PROG_INPUT);
   }
@@ -150,28 +150,42 @@ void HmiLogic::idle(HmiData &data)
     /* RSET clears transient/action left-LCD alarms (e.g. OP ERROR blink from
      * an action error), returning the display to the clean boot screen.
      * Condition-based alarms (TEMP/DB health) are re-derived in
-     * updateHmiData() this same frame, so they survive if the error persists */
-    LogTrace << "RSET in IDLE, clearing left LCD" << std::endl;
+     * updateHmiData() this same frame, so they survive if the error persists.
+     * Also clears the right-side VERB label/number left lit by a list verb */
+    LogTrace << "RSET in IDLE, clearing LCDs" << std::endl;
 
     data.resetLeftLcdData();
+    data.resetRightLcdData();
   }
   else if (data.getLeftLcdData().lVerbList == DRAW_ON)
   {
-    /* + / - flip between the verb list and variable list pages (wraps around) */
+    /* + / - flip between the verb list and variable list pages (wraps around).
+     * Single-page lists (e.g. VERB 6, running background programs) have an
+     * empty second page, so a flip towards it is a no-op. */
     if (key == E_KEY_PLUS || key == E_KEY_MINUS)
     {
       const int cur = data.getLeftLcdData().lVerbListPage;
       const int next = (key == E_KEY_PLUS) ? cur + 1 : cur - 1;
-      /* Log the wrapped page so the trace matches what is actually displayed */
+      /* Compute the wrapped target page so the trace matches what is displayed */
       const int wrapped = ((next % 2) + 2) % 2;
-      LogTrace << "Key pressed in IDLE, verb list page -> " << wrapped << std::endl;
-      data.lSetVerbListPage(next);
+      if (data.getLeftLcdData().lVerbListCount[wrapped] > 0)
+      {
+        LogTrace << "Key pressed in IDLE, verb list page -> " << wrapped << std::endl;
+        data.lSetVerbListPage(next);
+      }
+      else
+      {
+        /* Target page is empty: nothing to flip to (single-page list). */
+        LogTrace << "Key pressed in IDLE, verb list single page, ignoring key" << std::endl;
+      }
     }
     else
     {
-      /* Any other key returns to the clean boot screen (page resets to 0) */
+      /* Any other key returns to the clean boot screen (page resets to 0) and
+       * dismisses the right-side VERB label/number left lit by a list verb */
       LogTrace << "Key pressed in IDLE, clear verb list" << std::endl;
       data.clearVerbList();
+      data.resetRightLcdData();
     }
   }
 }
@@ -189,12 +203,16 @@ void HmiLogic::verbInput(HmiData &data)
 
     LogTrace << "Enter Verb input" << std::endl;
 
+    /* The verb is committed: stop blinking the VERB label but keep it lit.
+     * If a noun is still needed, the NOUN label takes over blinking below. */
+    data.rSetVerbLabel(DRAW_ON);
+
     try
     {
       if (actions_.needNoun(data.getRightLcdData().nVerb))
       {
         status_.transit(MODE_N_INPUT);
-        data.rSetNounLabel(DRAW_ON);
+        data.rSetNounLabel(DRAW_BLINK);
         if (data.getRightLcdData().nVerb == STOP_BG_VERB)
           drawStopBgList(data);
         LogTrace << "Go no Noun input [verb: " << data.getRightLcdData().nVerb << "]" << std::endl;
@@ -314,6 +332,11 @@ void HmiLogic::programInput(HmiData &data)
 
     LogTrace << "Enter Program input" << std::endl;
 
+    /* The program number is committed: stop blinking the PROG label but keep
+     * it lit. If a value (e.g. DBMONITOR period) is still needed, the R2 label
+     * blinks instead. */
+    data.rSetProgLabel(DRAW_ON);
+
     try
     {
       /* Resolve the program first so an invalid ID throws before any state change */
@@ -417,6 +440,10 @@ void HmiLogic::nounInput(HmiData &data)
   {
 
   case E_KEY_ENTR:
+
+    /* The noun is committed: stop blinking the NOUN label but keep it lit.
+     * If a value is still needed, the R2 label takes over blinking below. */
+    data.rSetNounLabel(DRAW_ON);
 
     if (actions_.needValue(data.getRightLcdData().nVerb,
                            data.getRightLcdData().nNoun))
@@ -575,7 +602,7 @@ void HmiLogic::drawStopBgList(HmiData &data)
   }
 
   data.resetLeftLcdData();
-  data.lSetVerbListHeader(0, "RUNNING");
+  data.lSetVerbListHeader(0, "KILL RUNNING PROGRAMS");
   data.lSetVerbList(lines, {});
 }
 
@@ -762,7 +789,16 @@ void HmiLogic::run(HmiData &data)
 
     if (!newCommand)
     {
-      data.resetRightLcdData();
+      /* The list verbs (VERB 0 / VERB 6) finish instantly, so the same-frame
+       * re-dispatch after keyEvents_.clear() reaps them here. Do not reset the
+       * right LCD for those: the VERB label and verb number must stay lit in
+       * MODE_IDLE so the user can browse the list with +/-. Any other key
+       * dismisses the list via idle(), and a new command clears it on start */
+      if (verb != ACTION_LIST_VERB && verb != LIST_BG_VERB)
+      {
+        data.resetRightLcdData();
+      }
+
       status_.transit(MODE_IDLE);
       return;
     }

@@ -97,7 +97,6 @@ private:
   int moonPct_ = 0;
   float moonPhase_ = 0.0f;                   // phase in [0,1), drives the graphic
   bool moonEditBlink_ = false;               // true while the date is being corrected
-  int moonBlinkCounter_ = 0;                 // frame counter for the edit blink
 
   /**
    * @brief Draw the background lines (grid)

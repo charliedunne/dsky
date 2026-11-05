@@ -370,8 +370,8 @@ Digit::Digit()
   y_ = 0;
   w_ = S_WIDTH / 2 * S_FACTOR;
   h_ = S_HEIGHT * S_FACTOR;
-  fgColor_ = Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A);
-  bgColor_ = Color(GHOST_COLOR_R, GHOST_COLOR_G, GHOST_COLOR_B, GHOST_COLOR_A);
+  fgColor_ = Color::live();
+  bgColor_ = Color::ghost();
   glow_ = false;
 }
 

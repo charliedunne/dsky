@@ -51,7 +51,7 @@ FrameLeftLcd::FrameLeftLcd(SDL_Renderer *r, int x, int y, int w, int h, Color bg
     shutdown->setTargetCenter(248, 202);
 
     // Set the Alarm colors
-    shutdown->setFgColor(Color(ALARM_YELLOW_COLOR_R, ALARM_YELLOW_COLOR_G, ALARM_YELLOW_COLOR_B, ALARM_YELLOW_COLOR_A));
+    shutdown->setFgColor(Color::alarmYellow());
 
     // VERB 0 menu font (Gorton bitmap, scaled down at draw time)
     verbListFont_ = new Font(r_, GORTON_FONT_BITMAP, GORTON_FONT_FNT);
@@ -61,7 +61,7 @@ FrameLeftLcd::FrameLeftLcd(SDL_Renderer *r, int x, int y, int w, int h, Color bg
     // Digits are scaled to 80% of their default size (cell ~42x60 px), so the
     // right-aligned "NN" ink occupies abs x ~114..198; the "%" glyph is placed
     // to its right so that the combined row is centered on the panel.
-    nMoon_ = new Number(r_, 3, x_ + 70, y_ + 368, Color(0, 255, 0, 255), false, 0.8f);
+    nMoon_ = new Number(r_, 3, x_ + 70, y_ + 368, Color::live(), false, 0.8f);
 
     // Create the Grid object
     SDL_Surface *surface = IMG_Load(GRID_FULL_TXT_FILE);
@@ -101,7 +101,7 @@ void FrameLeftLcd::render()
     {
         roundedRectangleColor(r_, x_, y_,
                               x_ + w_ - 1, y_ + h_ - 1,
-                              M_PI * 8, Color(255, 255, 0));
+                              M_PI * 8, Color::debugYellow());
     }
 
     // Draw alarm labels only when the VERB 0 menu or the MOONPHASE result is not shown
@@ -129,16 +129,16 @@ void FrameLeftLcd::render()
 
     // While the date is being corrected after a result was shown, blink an X over the
     // disk center to indicate the values are not valid yet. The previous moon image
-    // remains visible underneath. The counter advances one frame per render; the X is
-    // visible for the first half of DEFAULT_BLINKING_PERIOD frames (same convention as
-    // the Draw base class).
+    // remains visible underneath. The X uses the global render clock (Frame::frameCount)
+    // so it blinks in phase with all other blinking elements (same convention as the
+    // Draw base class).
     if (moonEditBlink_) {
-        moonBlinkCounter_++;
-        if ((moonBlinkCounter_ % DEFAULT_BLINKING_PERIOD) < (DEFAULT_BLINKING_PERIOD / 2)) {
+        const unsigned int phase = Frame::frameCount() % (unsigned int)DEFAULT_BLINKING_PERIOD;
+        if (phase < (unsigned int)(DEFAULT_BLINKING_PERIOD / 2)) {
             const int cx = x_ + 167;   // same center as the moon disk
             const int cy = y_ + 205;
             const int arm = (int)(112 * 0.7);   // X half-diagonal ~78 px, well inside the panel
-            const Uint32 color = 0xFF00FF00;    // bright green
+            const Color color = Color::red();
             thickLineColor(r_, cx - arm, cy - arm, cx + arm, cy + arm, 4, color);
             thickLineColor(r_, cx - arm, cy + arm, cx + arm, cy - arm, 4, color);
         }
@@ -225,7 +225,7 @@ void FrameLeftLcd::drawVerbList()
     // scale ~0.5 fits the ~32px Gorton bitmap into the 335px-wide panel.
     const float scale = 0.5f;
     const int lineHeight = (int)(32 * scale) + 6;   // glyph height + gap (tune later)
-    const Color green(0, 255, 0, 255);
+    const Color green = Color::live();
 
     // Header line: use the data-provided header when set, otherwise fall back
     // to the defaults (page 0 = verb list, page 1 = variable list).
@@ -237,8 +237,7 @@ void FrameLeftLcd::drawVerbList()
     y += lineHeight;
 
     // Separator row: a dim-green divider line between the header and the list.
-    // gfxPrimitives renderer calls take a packed 0xAARRGGBB pixel value.
-    const Uint32 dividerPixel = 0xFF008000;   // opaque, (r=0, g=128, b=0)
+    const Color dividerPixel = Color::live();
     hlineColor(r_, x_ + 10, x_ + w_ - 10, y + lineHeight - 6, dividerPixel);
     y += lineHeight;
 
@@ -275,13 +274,8 @@ void FrameLeftLcd::setMoon(DrawMode mode, int pct, float phase)
 
 void FrameLeftLcd::setMoonEditBlink(bool on)
 {
-    if (on && !moonEditBlink_) {
-        // Start the blink cycle in its visible half so the X is shown
-        // immediately when editing begins. Edge-triggered: Hmi::update()
-        // calls this every frame, so resetting on every true call would
-        // freeze the counter and keep the X permanently visible.
-        moonBlinkCounter_ = 0;
-    }
+    // The blink phase comes from the global render clock (Frame::frameCount),
+    // so there is no per-object counter to initialize here.
     moonEditBlink_ = on;
 }
 
@@ -293,10 +287,10 @@ void FrameLeftLcd::drawMoon()
     const int cx = x_ + 167;        // disk center, horizontally centered on the panel
     const int cy = y_ + 205;        // shifted down to leave room for the title
 
-    // Packed 0xAARRGGBB pixels for the gfxPrimitives calls.
-    const Uint32 lit  = 0xFF00FF00; // bright green: illuminated part
-    const Uint32 dim  = 0xFF004000; // dark green: unlit part of the disk
-    const Uint32 edge = 0xFF00FF00; // disk outline so new moon stays visible
+    // Moon colors from the palette.
+    const Color lit  = Color::live();   // illuminated part
+    const Color dim  = Color::moonDimGreen();  // unlit part of the disk
+    const Color edge = Color::live();   // disk outline so new moon stays visible
 
     // Title "MOON PHASE" centered at the top. estimateSize() reports the
     // unscaled size, so scale the width by tScale to center it on the panel.
@@ -305,7 +299,7 @@ void FrameLeftLcd::drawMoon()
         verbListFont_->estimateSize("MOON PHASE", &tw, &th);
         const float tScale = 0.75f;
         const int tx = cx - (int)(tw * tScale) / 2;
-        verbListFont_->drawText("MOON PHASE", tx, y_ + 14, Color(0, 255, 0, 255), tScale);
+        verbListFont_->drawText("MOON PHASE", tx, y_ + 14, Color::live(), tScale);
     }
 
     const float phi = moonPhase_;   // [0,1): 0=new, 0.5=full

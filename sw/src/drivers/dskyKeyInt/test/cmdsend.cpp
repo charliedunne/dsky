@@ -11,7 +11,8 @@
  *   cmdsend status            show CMD queue key/qid and pending message count
  *
  * The queue is identified by ftok("/var/local/dskycmd", 12) — the same key
- * the app uses (see config.h.in). The marker file must exist and dskyKeyInt
+ * the app uses (see common/KeyIntConfig.h). The marker file must exist and
+ * dskyKeyInt
  * must be running (it owns the queue); cmdsend never creates the queue.
  */
 

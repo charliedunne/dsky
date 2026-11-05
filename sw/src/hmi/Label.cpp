@@ -15,8 +15,8 @@ Label::Label(SDL_Renderer *r,
     r_ = r;
     w_ = w;
     h_ = h;
-    bgColor_ = Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A);
-    fgColor_ = Color(0, 0, 0, 255);
+    bgColor_ = Color::live();
+    fgColor_ = Color::black();
 
     // Set the label type
     lType_ = t;

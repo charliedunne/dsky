@@ -6,6 +6,27 @@
 // Initialization of the object counter
 unsigned int Frame::frameCounter_ = 0;
 
+// Initialization of the global render clock
+unsigned int Frame::renderFrame_ = 0;
+
+/**
+ * @brief Get the current value of the global render clock.
+ *
+ * Shared by all blinking elements so their phases stay synchronized.
+ */
+unsigned int Frame::frameCount() {
+  return renderFrame_;
+}
+
+/**
+ * @brief Advance the global render clock by one frame.
+ *
+ * Called once per Hmi::render() pass.
+ */
+void Frame::nextFrame() {
+  renderFrame_++;
+}
+
 Frame::Frame(SDL_Renderer *r, int x, int y, int w, int h, Color bg) {
 
   // Save reference to the renderer

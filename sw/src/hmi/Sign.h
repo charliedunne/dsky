@@ -48,11 +48,7 @@ public:
   // void setColor(const Color fgColor);
 
   void setColor(const Color fgColor,
-                const Color bgColor =
-                    Color(GHOST_COLOR_R, 
-                    GHOST_COLOR_G, 
-                    GHOST_COLOR_B, 
-                    GHOST_COLOR_A));
+                const Color bgColor = Color::ghost());
   void setPosition(const int x, const int y);
   void setSize(const int w, const int h);
   void setGlow(const bool glow);

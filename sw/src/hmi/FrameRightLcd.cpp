@@ -87,7 +87,7 @@ void FrameRightLcd::progDigits()
    *
    */
 
-  stringColor(r_, 100, 100, "There was uppon a time", Color(255, 255, 255));
+  stringColor(r_, 100, 100, "There was uppon a time", Color::white());
 }
 
 /**
@@ -158,9 +158,9 @@ FrameRightLcd::FrameRightLcd(SDL_Renderer *r, int x, int y, int w, int h, Color 
    */
 
   // Colors
-  liveColor_ = Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A);
-  dotsColor_ = Color(0xF0, 0xF0, 0xF0, 0x55);
-  lineColor_ = Color(0xC0, 0xC0, 0xC0, 0x22);
+  liveColor_ = Color::live();
+  dotsColor_ = Color::dots();
+  lineColor_ = Color::line();
 
   // Create constants for positions
   const int nProg_x = 675;
@@ -205,13 +205,13 @@ FrameRightLcd::FrameRightLcd(SDL_Renderer *r, int x, int y, int w, int h, Color 
   lR3_ = new Label(r, xLeft, yPosDownR3, xSize, 4, LABEL_LINE);
 
 
-  lCompActy_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
-  lProg_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
-  lNoun_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
-  lVerb_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
-  lR1_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
-  lR2_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
-  lR3_->setColor(Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A), Color(0x88, 0x88, 0x88, 0x22));
+  lCompActy_->setColor(Color::live(), Color::labelGreen());
+  lProg_->setColor(Color::live(), Color::labelGreen());
+  lNoun_->setColor(Color::live(), Color::labelGreen());
+  lVerb_->setColor(Color::live(), Color::labelGreen());
+  lR1_->setColor(Color::live(), Color::labelGreen());
+  lR2_->setColor(Color::live(), Color::labelGreen());
+  lR3_->setColor(Color::live(), Color::labelGreen());
 
 }
 
