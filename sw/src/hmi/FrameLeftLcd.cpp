@@ -55,6 +55,11 @@ FrameLeftLcd::FrameLeftLcd(SDL_Renderer *r, int x, int y, int w, int h, Color bg
     // VERB 0 menu font (Gorton bitmap, scaled down at draw time)
     verbListFont_ = new Font(r_, GORTON_FONT_BITMAP, GORTON_FONT_FNT);
 
+    // MOONPHASE result: large centered percentage number + small "%" label.
+    // Coordinates are window-absolute; digits span ~159x76 px on the middle grid band.
+    nMoon_ = new Number(r_, 3, x_ + 88, y_ + 81, Color(0, 255, 0, 255), false);
+    moonPctFont_ = new Font(r_, GORTON_FONT_BITMAP, GORTON_FONT_FNT);
+
     // Create the Grid object
     SDL_Surface *surface = IMG_Load(GRID_FULL_TXT_FILE);
     if (surface == NULL)
@@ -80,6 +85,8 @@ FrameLeftLcd::~FrameLeftLcd()
     delete opErr;
     delete shutdown;
     delete verbListFont_;
+    delete nMoon_;
+    delete moonPctFont_;
 }
 
 void FrameLeftLcd::render()
@@ -95,19 +102,26 @@ void FrameLeftLcd::render()
                               M_PI * 8, Color(255, 255, 0));
     }
 
-    // Draw alarm labels only when the VERB 0 menu is not shown
-    if (verbListMode_ != DRAW_ON) {
+    // Draw alarm labels only when the VERB 0 menu and the MOONPHASE result are not shown
+    if (verbListMode_ != DRAW_ON && moonMode_ != DRAW_ON) {
         drawLabels();
     }
 
-    // Draw the separation lines (grid background), hidden while the VERB 0 menu is shown
-    if (verbListMode_ != DRAW_ON) {
+    // Draw the separation lines (grid background), hidden while the VERB 0 menu or the
+    // MOONPHASE result is shown, so the percentage number does not overlap the alarm grid
+    if (verbListMode_ != DRAW_ON && moonMode_ != DRAW_ON) {
         drawLines();
     }
 
     // Draw the VERB 0 menu on top of the grid, if active
     if (verbListMode_ == DRAW_ON) {
         drawVerbList();
+    }
+
+    // Draw the MOONPHASE result number on top of the grid, if active.
+    // No bookkeeping needed: the background fill + grid redraw each frame erases it.
+    if (moonMode_ == DRAW_ON) {
+        drawMoon();
     }
 }
 
@@ -222,5 +236,31 @@ void FrameLeftLcd::drawVerbList()
     if (total > maxLines) {
         verbListFont_->drawText("...", x_ + 10, y, green, scale);
     }
+}
+
+void FrameLeftLcd::setMoon(DrawMode mode, int pct)
+{
+    moonMode_ = mode;
+    moonPct_ = pct;
+    if (mode == DRAW_ON) {
+        // Number right-aligns and blanks leading digits ("42" -> _ 4 2)
+        nMoon_->setValue(std::to_string(pct));
+    }
+
+    // Enable/disable the number widget itself. The Draw base class starts
+    // in DRAW_OFF, so without this draw() would always render blank digits.
+    nMoon_->setMode(mode);
+}
+
+void FrameLeftLcd::drawMoon()
+{
+    if (moonMode_ != DRAW_ON) return;
+
+    // Large centered percentage number, then a small "%" label to its right,
+    // vertically centered on the digits.
+    nMoon_->draw();
+
+    const Color green(0, 255, 0, 255);
+    moonPctFont_->drawText("%", x_ + 253, y_ + 111, green, 0.5f);
 }
   

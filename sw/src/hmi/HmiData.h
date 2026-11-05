@@ -81,6 +81,10 @@ typedef struct
     int      lVerbListPage;                    // active page index (0 or 1)
     char     lVerbListHeader[2][28];           // optional header line per page (empty = default)
 
+    // MOONPHASE program: illumination percentage result
+    DrawMode lMoon;                            // DRAW_ON while the moon phase result is shown
+    int      lMoonPct;                         // illumination percentage (0..100)
+
 } LeftLcdData;
 
 class HmiData
@@ -197,6 +201,12 @@ public:
      * @brief Set the REBOOT alarm label draw mode (VERB 98 countdown).
      */
     void lSetReboot(DrawMode mode);
+
+    /**
+     * @brief Set the MOONPHASE illumination display mode and percentage.
+     *        DRAW_ON shows the given percentage; any other mode hides it.
+     */
+    void lSetMoon(DrawMode mode, int pct);
 
     /**
      * @brief Publish the database health condition (source of the TEMP alarm).

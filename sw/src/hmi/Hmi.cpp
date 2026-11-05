@@ -102,6 +102,9 @@ void Hmi::update(HmiData &data) {
   // VERB 0 menu
   leftLcd_->setVerbList(data.getLeftLcdData());
 
+  // MOONPHASE result
+  leftLcd_->setMoon(data.getLeftLcdData().lMoon, data.getLeftLcdData().lMoonPct);
+
 
   // Right LCD
 

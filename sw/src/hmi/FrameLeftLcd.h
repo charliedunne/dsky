@@ -9,6 +9,7 @@
 #include "Color.h"
 #include "Label.h"
 #include "Font.h"
+#include "Number.h"
 
 // HMI
 #include "AlarmLabel.h"
@@ -59,6 +60,14 @@ public:
    */
   void setVerbList(const LeftLcdData &d);
 
+  /**
+   * @brief Update the MOONPHASE illumination display.
+   *
+   * DRAW_ON shows the given percentage (0..100) with a "%" label;
+   * any other mode hides it.
+   */
+  void setMoon(DrawMode mode, int pct);
+
 
 private:
   // VERB 0 menu rendering
@@ -67,6 +76,12 @@ private:
   DrawMode verbListMode_ = DRAW_OFF;
   int verbListPage_ = 0;                     // active page index (0 or 1)
   std::string verbListHeader_;               // header line of the active page (empty = default)
+
+  // MOONPHASE illumination display
+  Number *nMoon_ = nullptr;                  // large centered percentage digits (3 digits)
+  Font *moonPctFont_ = nullptr;              // "%" label font
+  DrawMode moonMode_ = DRAW_OFF;
+  int moonPct_ = 0;
 
   /**
    * @brief Draw the background lines (grid)
@@ -84,6 +99,11 @@ private:
    * @brief Internal: draw the VERB 0 menu lines over the grid background
    */
   void drawVerbList();
+
+  /**
+   * @brief Internal: draw the MOONPHASE percentage digits and "%" label
+   */
+  void drawMoon();
 };
 
 #endif /* FRAMELEFTLCD_H */

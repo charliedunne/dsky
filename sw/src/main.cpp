@@ -23,6 +23,7 @@
 // Programs
 #include "DummyProgram.h"
 #include "DbMonitorProgram.h"
+#include "MoonPhaseProgram.h"
 
 // Database client (live temp sensor data for VERB 10)
 #include "DbClient.h"
@@ -155,6 +156,7 @@ int main( int argc, char * argv[], char *envp[] ) {
   /* Programs */
   DummyProgram p_Dummy(data);
   DbMonitorProgram p_DbMonitor(data, store, dbClient);
+  MoonPhaseProgram p_MoonPhase(data);
 
   /* Actions registration */
   logic.registerAction(a_Clock);
@@ -167,6 +169,7 @@ int main( int argc, char * argv[], char *envp[] ) {
   /* Programs registration */
   logic.registerProgram(p_Dummy);
   logic.registerProgram(p_DbMonitor);
+  logic.registerProgram(p_MoonPhase);
 
   /* Boot-time auto-start of background programs, controlled by DSKY variables.
    * Both are boot-only: the values are read once here and changing them later

@@ -54,6 +54,10 @@ void HmiData::resetLeftLcdData()
     lLcdData_.lVerbListCount[1] = 0;
     lLcdData_.lVerbListPage = 0;
     std::memset(lLcdData_.lVerbListHeader, 0, sizeof(lLcdData_.lVerbListHeader));
+
+    // Clear the MOONPHASE result
+    lLcdData_.lMoon = DRAW_OFF;
+    lLcdData_.lMoonPct = 0;
 }
 
 HmiData::HmiData()
@@ -406,6 +410,20 @@ void HmiData::lSetReboot(DrawMode mode)
     mutex_.lock();
 
     lLcdData_.lReboot = mode;
+
+    mutex_.unlock();
+}
+
+/**
+ * @brief Set the MOONPHASE illumination display mode and percentage.
+ *        DRAW_ON shows the given percentage; any other mode hides it.
+ */
+void HmiData::lSetMoon(DrawMode mode, int pct)
+{
+    mutex_.lock();
+
+    lLcdData_.lMoon = mode;
+    lLcdData_.lMoonPct = pct;
 
     mutex_.unlock();
 }
