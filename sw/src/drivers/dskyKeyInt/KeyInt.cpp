@@ -11,8 +11,8 @@
 #include <iostream>
 #include <unordered_set>
 
-// Configuration
-#include "config.h"
+// Configuration (shared with the app, see common/KeyIntConfig.h)
+#include "KeyIntConfig.h"
 
 // Logging
 #include "Logger.h"

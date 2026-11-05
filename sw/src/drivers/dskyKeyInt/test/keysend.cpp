@@ -20,7 +20,8 @@
  * dropped with a "@TODO Handle more than one event" warning.
  *
  * The queue is identified by ftok("/var/local/dskykeyint", 10) — the same
- * key the app uses (see config.h.in). dsky owns and creates the queue, so
+ * key the app uses (see common/KeyIntConfig.h). dsky owns and creates the
+ * queue, so
  * it must be running; keysend never creates the queue.
  */
 

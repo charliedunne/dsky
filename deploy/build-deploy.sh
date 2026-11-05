@@ -126,7 +126,7 @@ ssh_pi() { ssh "$PI_HOST" "$@"; }
 build_daemon() {
   echo "==> Building dskyKeyInt (cross)..."
   ( cd "$DRIVER" && "$CROSS_CXX" -std=c++17 -D_REENTRANT -O2 \
-      -I. -Ibuild \
+      -I. -I../../common \
       -I../../core \
       -I../../../build-pi/include \
       -I../../../3rdparty/simple-cpp-logger/include \
