@@ -83,6 +83,12 @@ Color Color::live() {
   return Color(LIVE_COLOR_R, LIVE_COLOR_G, LIVE_COLOR_B, LIVE_COLOR_A);
 }
 
+/** @brief Red element color (pure red, e.g. blinking X-cross during date correction) */
+Color Color::red() {
+
+  return Color(RED_COLOR_R, RED_COLOR_G, RED_COLOR_B, RED_COLOR_A);
+}
+
 /** @brief Ghost/unlit element color (dark background tint) */
 Color Color::ghost() {
 
@@ -141,12 +147,6 @@ Color Color::transparent() {
 Color Color::disabled() {
 
   return Color(DISABLED_COLOR_R, DISABLED_COLOR_G, DISABLED_COLOR_B, DISABLED_COLOR_A);
-}
-
-/** @brief Bright green (fully saturated; X-cross, list text, moon lit part/edge) */
-Color Color::brightGreen() {
-
-  return Color(BRIGHT_GREEN_COLOR_R, BRIGHT_GREEN_COLOR_G, BRIGHT_GREEN_COLOR_B, BRIGHT_GREEN_COLOR_A);
 }
 
 /** @brief Divider green (dim green separator line in the verb list) */

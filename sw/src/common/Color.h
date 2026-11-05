@@ -25,6 +25,8 @@ class Color {
   static Color live();
   /** @brief Ghost/unlit element color (dark background tint) */
   static Color ghost();
+  /** @brief Red element color (pure red, e.g. blinking X-cross during date correction) */
+  static Color red();
   /** @brief Alarm yellow (warning states on the left LCD) */
   static Color alarmYellow();
   /** @brief Default label green (dim green used for PROG/VERB/NOUN labels) */
@@ -43,8 +45,6 @@ class Color {
   static Color transparent();
   /** @brief Dimmed/inactive element color */
   static Color disabled();
-  /** @brief Bright green (fully saturated; X-cross, list text, moon lit part/edge) */
-  static Color brightGreen();
   /** @brief Divider green (dim green separator line in the verb list) */
   static Color dividerGreen();
   /** @brief Moon dim green (unlit part of the moon disk) */

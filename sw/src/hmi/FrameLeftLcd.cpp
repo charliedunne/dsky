@@ -61,7 +61,7 @@ FrameLeftLcd::FrameLeftLcd(SDL_Renderer *r, int x, int y, int w, int h, Color bg
     // Digits are scaled to 80% of their default size (cell ~42x60 px), so the
     // right-aligned "NN" ink occupies abs x ~114..198; the "%" glyph is placed
     // to its right so that the combined row is centered on the panel.
-    nMoon_ = new Number(r_, 3, x_ + 70, y_ + 368, Color::labelGreen(), false, 0.8f);
+    nMoon_ = new Number(r_, 3, x_ + 70, y_ + 368, Color::live(), false, 0.8f);
 
     // Create the Grid object
     SDL_Surface *surface = IMG_Load(GRID_FULL_TXT_FILE);
@@ -138,7 +138,7 @@ void FrameLeftLcd::render()
             const int cx = x_ + 167;   // same center as the moon disk
             const int cy = y_ + 205;
             const int arm = (int)(112 * 0.7);   // X half-diagonal ~78 px, well inside the panel
-            const Color color = Color::brightGreen();
+            const Color color = Color::red();
             thickLineColor(r_, cx - arm, cy - arm, cx + arm, cy + arm, 4, color);
             thickLineColor(r_, cx - arm, cy + arm, cx + arm, cy - arm, 4, color);
         }
@@ -225,7 +225,7 @@ void FrameLeftLcd::drawVerbList()
     // scale ~0.5 fits the ~32px Gorton bitmap into the 335px-wide panel.
     const float scale = 0.5f;
     const int lineHeight = (int)(32 * scale) + 6;   // glyph height + gap (tune later)
-    const Color green = Color::brightGreen();
+    const Color green = Color::live();
 
     // Header line: use the data-provided header when set, otherwise fall back
     // to the defaults (page 0 = verb list, page 1 = variable list).
@@ -293,9 +293,9 @@ void FrameLeftLcd::drawMoon()
     const int cy = y_ + 205;        // shifted down to leave room for the title
 
     // Moon colors from the palette.
-    const Color lit  = Color::brightGreen();   // illuminated part
+    const Color lit  = Color::live();   // illuminated part
     const Color dim  = Color::moonDimGreen();  // unlit part of the disk
-    const Color edge = Color::brightGreen();   // disk outline so new moon stays visible
+    const Color edge = Color::live();   // disk outline so new moon stays visible
 
     // Title "MOON PHASE" centered at the top. estimateSize() reports the
     // unscaled size, so scale the width by tScale to center it on the panel.
