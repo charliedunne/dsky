@@ -237,7 +237,7 @@ void FrameLeftLcd::drawVerbList()
     y += lineHeight;
 
     // Separator row: a dim-green divider line between the header and the list.
-    const Color dividerPixel = Color::dividerGreen();
+    const Color dividerPixel = Color::live();
     hlineColor(r_, x_ + 10, x_ + w_ - 10, y + lineHeight - 6, dividerPixel);
     y += lineHeight;
 
@@ -304,7 +304,7 @@ void FrameLeftLcd::drawMoon()
         verbListFont_->estimateSize("MOON PHASE", &tw, &th);
         const float tScale = 0.75f;
         const int tx = cx - (int)(tw * tScale) / 2;
-        verbListFont_->drawText("MOON PHASE", tx, y_ + 14, Color::labelGreen(), tScale);
+        verbListFont_->drawText("MOON PHASE", tx, y_ + 14, Color::live(), tScale);
     }
 
     const float phi = moonPhase_;   // [0,1): 0=new, 0.5=full
