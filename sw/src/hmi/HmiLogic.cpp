@@ -775,7 +775,16 @@ void HmiLogic::run(HmiData &data)
 
     if (!newCommand)
     {
-      data.resetRightLcdData();
+      /* The list verbs (VERB 0 / VERB 6) finish instantly, so the same-frame
+       * re-dispatch after keyEvents_.clear() reaps them here. Do not reset the
+       * right LCD for those: the VERB label and verb number must stay lit in
+       * MODE_IDLE so the user can browse the list with +/-. Any other key
+       * dismisses the list via idle(), and a new command clears it on start */
+      if (verb != ACTION_LIST_VERB && verb != LIST_BG_VERB)
+      {
+        data.resetRightLcdData();
+      }
+
       status_.transit(MODE_IDLE);
       return;
     }
