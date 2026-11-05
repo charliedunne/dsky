@@ -150,10 +150,12 @@ void HmiLogic::idle(HmiData &data)
     /* RSET clears transient/action left-LCD alarms (e.g. OP ERROR blink from
      * an action error), returning the display to the clean boot screen.
      * Condition-based alarms (TEMP/DB health) are re-derived in
-     * updateHmiData() this same frame, so they survive if the error persists */
-    LogTrace << "RSET in IDLE, clearing left LCD" << std::endl;
+     * updateHmiData() this same frame, so they survive if the error persists.
+     * Also clears the right-side VERB label/number left lit by a list verb */
+    LogTrace << "RSET in IDLE, clearing LCDs" << std::endl;
 
     data.resetLeftLcdData();
+    data.resetRightLcdData();
   }
   else if (data.getLeftLcdData().lVerbList == DRAW_ON)
   {
@@ -169,9 +171,11 @@ void HmiLogic::idle(HmiData &data)
     }
     else
     {
-      /* Any other key returns to the clean boot screen (page resets to 0) */
+      /* Any other key returns to the clean boot screen (page resets to 0) and
+       * dismisses the right-side VERB label/number left lit by a list verb */
       LogTrace << "Key pressed in IDLE, clear verb list" << std::endl;
       data.clearVerbList();
+      data.resetRightLcdData();
     }
   }
 }
