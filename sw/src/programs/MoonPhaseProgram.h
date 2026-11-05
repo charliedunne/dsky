@@ -23,7 +23,9 @@
  * After the result is shown, CLR re-opens the day field so the date can be
  * corrected; further CLRs keep unwinding LIFO (month, then year). While the
  * date is incomplete again, the left LCD blinks an X over the previous moon
- * graphic; completing the date removes it.
+ * graphic; completing the date removes it. At the result, + steps the date to
+ * the next day and - to the previous day (with month/year rollover); the echo
+ * fields and the moon graphic are updated immediately for the new date.
  */
 class MoonPhaseProgram : public FgProgram {
 
@@ -67,6 +69,18 @@ class MoonPhaseProgram : public FgProgram {
    * @return Number of days in the month.
    */
   static int daysInMonth(int y, int m);
+
+  /**
+   * @brief Shift a civil date by a given number of days.
+   *
+   * Handles month and year rollover in both directions.
+   *
+   * @param y [in/out] Year.
+   * @param m [in/out] Month (1..12).
+   * @param d [in/out] Day of month.
+   * @param delta Number of days to shift (+1 = next day, -1 = previous day).
+   */
+  static void stepDate(int &y, int &m, int &d, int delta);
 
   public:
   MoonPhaseProgram(HmiData &data);

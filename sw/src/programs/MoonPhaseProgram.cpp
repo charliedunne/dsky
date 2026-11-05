@@ -2,6 +2,7 @@
 #include "HmiData.h"
 #include <Logger.h>
 #include <cmath>
+#include <cstdio>
 #include <string>
 
 // Synodic month length in days (mean).
@@ -72,6 +73,37 @@ int MoonPhaseProgram::daysInMonth(int y, int m) {
     return table[m - 1];
 }
 
+void MoonPhaseProgram::stepDate(int &y, int &m, int &d, int delta) {
+    while (delta > 0) {
+        if (d < daysInMonth(y, m)) {
+            d++;
+        } else {
+            d = 1;
+            if (m < 12) {
+                m++;
+            } else {
+                m = 1;
+                y++;
+            }
+        }
+        delta--;
+    }
+    while (delta < 0) {
+        if (d > 1) {
+            d--;
+        } else {
+            if (m == 1) {
+                m = 12;
+                y--;
+            } else {
+                m--;
+            }
+            d = daysInMonth(y, m);
+        }
+        delta++;
+    }
+}
+
 MoonPhaseProgram::MoonPhaseProgram(HmiData &data) : FgProgram(MOONPHASE_PROGRAM, data, "MOONPHASE") {};
 
 void MoonPhaseProgram::operation() {
@@ -134,12 +166,36 @@ void MoonPhaseProgram::operation() {
         }
 
         if (field == RESULT) {
-            // Result shown: ENTER finishes; CLR re-opens the day field so the
-            // operator can correct the date and get a new graphic. While the
+            // Result shown: ENTER finishes; + / - step the date by one day
+            // (with month/year rollover) and refresh the graphic; CLR re-opens
+            // the day field so the operator can correct the date. While the
             // date is incomplete again, the left LCD blinks an X over the
             // previous moon image. Everything else is ignored.
             if (key == E_KEY_ENTR) {
                 break;
+            }
+            if (key == E_KEY_PLUS || key == E_KEY_MINUS) {
+                // Step the full date by one day, with month/year rollover.
+                int y = std::stoi(yStr);
+                int m = std::stoi(mStr);
+                int d = std::stoi(dStr);
+                stepDate(y, m, d, (key == E_KEY_PLUS) ? 1 : -1);
+                char buf[8];
+                snprintf(buf, sizeof(buf), "%04d", y);
+                yStr = buf;
+                snprintf(buf, sizeof(buf), "%02d", m);
+                mStr = buf;
+                snprintf(buf, sizeof(buf), "%02d", d);
+                dStr = buf;
+                echoField(YEAR, yStr);
+                echoField(MONTH, mStr);
+                echoField(DAY, dStr);
+                const double phase = moonPhase(y, m, d);
+                const int pct = (int)lround(illumination(y, m, d) * 100.0);
+                hmiData_.lSetMoon(DRAW_ON, pct, (float)phase);
+                LogTrace << "MOONPHASE: stepped date to " << yStr << "-" << mStr
+                         << "-" << dStr << std::endl;
+                continue;
             }
             if (key == E_KEY_CLR) {
                 dStr.clear();
