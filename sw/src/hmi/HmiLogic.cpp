@@ -602,7 +602,7 @@ void HmiLogic::drawStopBgList(HmiData &data)
   }
 
   data.resetLeftLcdData();
-  data.lSetVerbListHeader(0, "RUNNING");
+  data.lSetVerbListHeader(0, "KILL RUNNING PROGRAMS");
   data.lSetVerbList(lines, {});
 }
 
