@@ -51,6 +51,9 @@ void HmiData::resetLeftLcdData()
     lAlarms_.lUplinkAct = DRAW_OFF;
     lAlarms_.lTemp = DRAW_OFF;
     lAlarms_.lKeyErr = DRAW_OFF;
+    // lDoor is intentionally NOT reset here: it is event-driven and owned by
+    // UdpDoorProgram — only a negative UDP signal may clear it, so an RSET
+    // wipe must not hide an active door condition.
     lAlarms_.lOpErr = DRAW_OFF;
     lAlarms_.lShutdown = DRAW_OFF;
     lAlarms_.lReboot = DRAW_OFF;
@@ -376,6 +379,18 @@ void HmiData::lSetKeyErr(DrawMode mode)
     mutex_.lock();
 
     lAlarms_.lKeyErr = mode;
+
+    mutex_.unlock();
+}
+
+/**
+ * @brief Set the DOOR alarm label draw mode (remote UDP door signal).
+ */
+void HmiData::lSetDoor(DrawMode mode)
+{
+    mutex_.lock();
+
+    lAlarms_.lDoor = mode;
 
     mutex_.unlock();
 }

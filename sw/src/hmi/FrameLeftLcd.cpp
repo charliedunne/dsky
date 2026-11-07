@@ -31,8 +31,8 @@ FrameLeftLcd::FrameLeftLcd(SDL_Renderer *r, int x, int y, int w, int h, Color bg
     keyErr = new AlarmLabel(r_, extGridSize, (h_ / 2) / 3 + 1,
                             w_ / 2, (h_ / 2) / 3, std::string("KEY REL"));
 
-    spare1 = new AlarmLabel(r_, w_ / 2 + 1, (h_ / 2) / 3 + 1,
-                            w_ / 2, (h_ / 2) / 3, std::string("NONE"));
+    door = new AlarmLabel(r_, w_ / 2 + 1, (h_ / 2) / 3 + 1,
+                          w_ / 2, (h_ / 2) / 3, std::string("DOOR"));
 
     opErr = new AlarmLabel(r_, extGridSize, 2 * (h_ / 2) / 3 + 2,
                              w_ / 2, (h_ / 2) / 3, std::string("OP ERR"));
@@ -46,7 +46,7 @@ FrameLeftLcd::FrameLeftLcd(SDL_Renderer *r, int x, int y, int w, int h, Color bg
     uplinkAct->setTargetCenter(91, 49);
     temp->setTargetCenter(248, 49);
     keyErr->setTargetCenter(91, 123);
-    spare1->setTargetCenter(248, 123);
+    door->setTargetCenter(248, 123);
     opErr->setTargetCenter(91, 202);
     shutdown->setTargetCenter(248, 202);
 
@@ -84,7 +84,7 @@ FrameLeftLcd::~FrameLeftLcd()
     delete uplinkAct;
     delete temp;
     delete keyErr;
-    delete spare1;
+    delete door;
     delete opErr;
     delete shutdown;
     delete verbListFont_;
@@ -132,7 +132,7 @@ void FrameLeftLcd::drawLabels()
     uplinkAct->draw();
     temp->draw();
     keyErr->draw();
-    spare1->draw();
+    door->draw();
     opErr->draw();
     shutdown->draw();
 }
@@ -151,7 +151,12 @@ void FrameLeftLcd::drawLabels()
   {
     keyErr->setMode(mode);
   }
-  
+
+  void FrameLeftLcd::setDoor(DrawMode mode)
+  {
+    door->setMode(mode);
+  }
+
   void FrameLeftLcd::setOpErr(DrawMode mode)
   {
     opErr->setMode(mode);

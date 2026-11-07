@@ -34,6 +34,9 @@ public:
     /** NOUN 7: DbMonitorProgram auto-start at boot (bool). Boot-only, no apply callback. */
     static constexpr int NOUN_DBMONITOR_AUTOSTART = 7;
 
+    /** NOUN 8: UdpDoorProgram auto-start at boot (bool). Boot-only, no apply callback. */
+    static constexpr int NOUN_UDPDOOR_AUTOSTART = 8;
+
     /**
      * @brief Register all DSKY variables into the store.
      * @param store Store that will own the variable definitions

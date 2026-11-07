@@ -75,6 +75,7 @@ typedef struct
     DrawMode lUplinkAct;
     DrawMode lTemp;
     DrawMode lKeyErr;
+    DrawMode lDoor;
     DrawMode lOpErr;
     DrawMode lShutdown;
     DrawMode lReboot;
@@ -213,6 +214,12 @@ public:
     void lSetUplinkAct(DrawMode mode);
     void lSetTemp(DrawMode mode);
     void lSetKeyErr(DrawMode mode);
+
+    /**
+     * @brief Set the DOOR alarm label draw mode (remote UDP signal).
+     */
+    void lSetDoor(DrawMode mode);
+
     void lSetOpErr(DrawMode mode);
 
     /**

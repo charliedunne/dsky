@@ -55,6 +55,7 @@ target_sources(dsky PRIVATE
   src/programs/DummyProgram.cpp
   src/programs/DbMonitorProgram.cpp
   src/programs/MoonPhaseProgram.cpp
+  src/programs/UdpDoorProgram.cpp
   src/programs/ListOfPrograms.cpp
   src/db/DbClient.cpp
   src/drivers/dskyKeyInt/MsgQueue.cpp

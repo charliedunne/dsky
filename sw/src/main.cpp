@@ -24,6 +24,7 @@
 #include "DummyProgram.h"
 #include "DbMonitorProgram.h"
 #include "MoonPhaseProgram.h"
+#include "UdpDoorProgram.h"
 
 // Database client (live temp sensor data for VERB 10)
 #include "DbClient.h"
@@ -157,6 +158,7 @@ int main( int argc, char * argv[], char *envp[] ) {
   DummyProgram p_Dummy(data);
   DbMonitorProgram p_DbMonitor(data, store, dbClient);
   MoonPhaseProgram p_MoonPhase(data);
+  UdpDoorProgram p_UdpDoor(data);
 
   /* Actions registration */
   logic.registerAction(a_Clock);
@@ -170,9 +172,10 @@ int main( int argc, char * argv[], char *envp[] ) {
   logic.registerProgram(p_Dummy);
   logic.registerProgram(p_DbMonitor);
   logic.registerProgram(p_MoonPhase);
+  logic.registerProgram(p_UdpDoor);
 
   /* Boot-time auto-start of background programs, controlled by DSKY variables.
-   * Both are boot-only: the values are read once here and changing them later
+   * All are boot-only: the values are read once here and changing them later
    * (VERB 9) takes effect on the next boot. A program whose autostart flag is
    * 0 can still be started manually from the keypad at any time. Note that if
    * DbMonitor is not auto-started, the TEMP alarm stays dead until it is
@@ -184,6 +187,11 @@ int main( int argc, char * argv[], char *envp[] ) {
   int dbMonitorAutostart = 0;
   if (store.get(DskyVariables::NOUN_DBMONITOR_AUTOSTART, dbMonitorAutostart) && dbMonitorAutostart != 0) {
     p_DbMonitor.start();
+  }
+  /* Local fallback matches the registered variable default (1 = autostart on) */
+  int udpdoorAutostart = 1;
+  if (store.get(DskyVariables::NOUN_UDPDOOR_AUTOSTART, udpdoorAutostart) && udpdoorAutostart != 0) {
+    p_UdpDoor.start();
   }
 
   /* VERB 7: stop a running background program selected via the noun field

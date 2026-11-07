@@ -101,6 +101,7 @@ void Hmi::update(HmiData &data) {
   leftLcd_->setUplink(alarms.lUplinkAct);
   leftLcd_->setTemp(alarms.lTemp);
   leftLcd_->setKeyErr(alarms.lKeyErr);
+  leftLcd_->setDoor(alarms.lDoor);
   leftLcd_->setOpErr(alarms.lOpErr);
   // Shared SHUTDOWN/REBOOT label: one deterministic call per frame.
   leftLcd_->setShutdownReboot(alarms.lShutdown, alarms.lReboot);
