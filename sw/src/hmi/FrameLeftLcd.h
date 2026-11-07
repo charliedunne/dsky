@@ -28,7 +28,7 @@ private:
   AlarmLabel *uplinkAct = nullptr;
   AlarmLabel *temp = nullptr;
   AlarmLabel *keyErr = nullptr;
-  AlarmLabel *spare1 = nullptr;
+  AlarmLabel *door = nullptr;
   AlarmLabel *opErr = nullptr;
   AlarmLabel *shutdown = nullptr;
 
@@ -48,6 +48,12 @@ public:
   void setUplink(DrawMode);
   void setTemp(DrawMode);
   void setKeyErr(DrawMode);
+
+  /**
+   * @brief Set the DOOR alarm label draw mode (remote UDP door signal).
+   */
+  void setDoor(DrawMode);
+
   void setOpErr(DrawMode);
   /**
    * @brief Update the shared SHUTDOWN/REBOOT alarm label.

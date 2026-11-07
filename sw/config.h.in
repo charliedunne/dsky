@@ -112,3 +112,6 @@
 
 // Database connection configuration file (key=value format)
 #define DB_CONF_FILE "/var/local/dskydb.conf"
+
+// UDP door status monitor port (UdpDoorProgram listens here for remote signals)
+#define UDP_DOOR_PORT 9000

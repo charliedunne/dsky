@@ -26,4 +26,9 @@ DskyVariables::DskyVariables(VariableStore &store)
 
     // NOUN 7: DbMonitorProgram auto-start at boot. Boot-only, same semantics as NOUN 6.
     store.registerVar(NOUN_DBMONITOR_AUTOSTART, "dbMonitorAutostart", "DBMONITOR AUTOSTART", VAR_BOOL, 0);
+
+    // NOUN 8: UdpDoorProgram auto-start at boot. Boot-only, same semantics as NOUN 6.
+    // Defaults to 1 (on): the door monitor is a passive external-signal catcher
+    // and should be live right after deployment without keypad interaction.
+    store.registerVar(NOUN_UDPDOOR_AUTOSTART, "udpdoorAutostart", "UDPDOOR AUTOSTART", VAR_BOOL, 1);
 }
