@@ -310,22 +310,17 @@ void FrameLeftLcd::canvasMoon(float phase, int pct, bool editBlink) const
     }
 }
 
-void FrameLeftLcd::canvasTemp(const std::vector<std::string> &lines, int selected, const std::string &header) const
+void FrameLeftLcd::canvasRows(const std::vector<std::string> &lines, int selected, const std::string &header) const
 {
     // Draw over the grid background, stacked from the top — same layout as
-    // canvasList (list views), but each row is a pre-formatted temperature line
+    // canvasList (list views), but each row is a pre-formatted value-list row
     // and the selected row gets a cursor block on its left margin.
     const float scale = 0.5f;
     const int lineHeight = (int)(32 * scale) + 6;   // glyph height + gap
     const Color green = Color::live();
 
-    // Header line: fall back to a default when the caller passed none.
-    std::string h = header;
-    if (h.empty()) {
-        h = "TEMPERATURES";
-    }
     int y = y_ + 8;                                  // top margin
-    verbListFont_->drawText(h, x_ + 10, y, green, scale);
+    verbListFont_->drawText(header, x_ + 10, y, green, scale);
     y += lineHeight;
 
     // Separator row: dim-green divider between the header and the rows.

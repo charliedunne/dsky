@@ -36,7 +36,7 @@ public:
 
   /**
    * @brief Draw the temperature rows and selection cursor through the frame's
-   *        temp canvas primitive.
+   *        shared value-list (rows) canvas primitive.
    */
   void draw(FrameLeftLcd &f) const override;
 

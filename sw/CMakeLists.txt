@@ -27,6 +27,8 @@ target_sources(dsky PRIVATE
   src/hmi/VerbListView.cpp
   src/hmi/MoonPhaseView.cpp
   src/hmi/TempView.cpp
+  src/hmi/VarView.cpp
+  src/hmi/ProgListView.cpp
   src/hmi/Font.cpp
   src/hmi/AlarmLabel.cpp
   src/core/Keypad.cpp 

@@ -11,23 +11,27 @@
 namespace {
 
 /**
- * @brief Build the left-screen variable list lines.
+ * @brief Build the left-screen variable rows.
  *
- * Each line has the form "<NOUN> <LABEL>". The selected line's label is
- * wrapped in asterisks, e.g. "3 *SCREENSAVER*"; unselected lines are plain,
- * e.g. "2 KEYPAD_LIGHT". The leading number is the variable's actual NOUN id
- * (not a 1-based position), so what the user sees matches the NOUN that will
- * be read or written even if NOUNs have gaps. Lines follow NOUN order (the
- * VariableStore map is keyed by NOUN ascending).
+ * Each row has the form "<NOUN> <LABEL> <VALUE>" showing the variable's NOUN
+ * id, label and current value, e.g. "2 KEYPAD LIGHT 1". The leading number is
+ * the variable's actual NOUN id (not a 1-based position), so what the user
+ * sees matches the NOUN that will be read even if NOUNs have gaps. Rows follow
+ * NOUN order (the VariableStore map is keyed by NOUN ascending). Only glyphs
+ * the Gorton font can draw are used; values are non-negative integers.
  */
-std::vector<std::string> buildListLines(const std::vector<VariableStore::VarInfo> &vars, int selected)
+std::vector<std::string> buildVarLines(const VariableStore &store, const std::vector<VariableStore::VarInfo> &vars)
 {
   std::vector<std::string> lines;
   lines.reserve(vars.size());
-  char line[28];
+  char line[40];
   for (size_t i = 0; i < vars.size(); ++i) {
-    const bool sel = static_cast<int>(i) == selected;
-    snprintf(line, sizeof(line), "%d %s%s%s", vars[i].noun, sel ? "*" : "", vars[i].label.c_str(), sel ? "*" : "");
+    int value = 0;
+    if (store.get(vars[i].noun, value)) {
+      snprintf(line, sizeof(line), "%d %s %d", vars[i].noun, vars[i].label.c_str(), value);
+    } else {
+      snprintf(line, sizeof(line), "%d %s", vars[i].noun, vars[i].label.c_str());
+    }
     lines.emplace_back(line);
   }
   return lines;
@@ -104,9 +108,10 @@ void ReadVar::updateScreens()
   const std::vector<VariableStore::VarInfo> vars = store_.varList();
   const int sel = selected_.load();
 
-  // Left screen: variable list with the selected line marked.
+  // Left screen: variable rows (NOUN, label and live value) with the selected
+  // row marked by a cursor block.
   hmiData_.resetLeftLcdData();
-  hmiData_.showVerbList(buildListLines(vars, sel), {}, {}, {"VARIABLES", "", ""});
+  hmiData_.showVars(buildVarLines(store_, vars), sel);
 
   // Right screen: NOUN field shows the selected variable's NOUN and R2 its
   // current value; R1 and R3 are blanked.

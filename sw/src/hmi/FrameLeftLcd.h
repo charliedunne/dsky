@@ -85,14 +85,16 @@ public:
   void canvasMoon(float phase, int pct, bool editBlink) const;
 
   /**
-   * @brief Canvas primitive: draw the TEMP MONITOR screen — header + separator
-   *        + one pre-formatted row per sensor, with a cursor block to the left
-   *        of the selected row. Used by temp views via TempView::draw().
-   * @param lines Pre-formatted sensor rows (font-safe glyphs only).
+   * @brief Canvas primitive: draw a value-list screen — header + separator +
+   *        one pre-formatted row per entry, with a cursor block to the left of
+   *        the selected row. Shared by any view whose content is a list of
+   *        font-safe rows (e.g. TEMP MONITOR via TempView::draw() and VARIABLES
+   *        via VarView::draw()).
+   * @param lines Pre-formatted rows (font-safe glyphs only).
    * @param selected Index into lines of the selected row (-1 = none).
-   * @param header Header line; empty falls back to "TEMPERATURES".
+   * @param header Header line drawn above the separator (views set a default).
    */
-  void canvasTemp(const std::vector<std::string> &lines, int selected, const std::string &header) const;
+  void canvasRows(const std::vector<std::string> &lines, int selected, const std::string &header) const;
 
 
 private:

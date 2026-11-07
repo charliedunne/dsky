@@ -13,6 +13,8 @@ target_sources(hmiData PRIVATE
   ../../src/hmi/VerbListView.cpp
   ../../src/hmi/MoonPhaseView.cpp
   ../../src/hmi/TempView.cpp
+  ../../src/hmi/VarView.cpp
+  ../../src/hmi/ProgListView.cpp
   ../common/frame_stub.cpp
 )
 

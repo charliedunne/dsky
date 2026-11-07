@@ -245,6 +245,26 @@ public:
     void showTemp(const std::vector<std::string> &lines, int selected, const std::string &header = "TEMPERATURES");
 
     /**
+     * @brief Build and show a VarView (READ/WRITE VAR screen), replacing any
+     *        active view. Rows are pre-formatted by the caller using only
+     *        glyphs the Gorton font can draw.
+     * @param lines[in] One row per variable, e.g. "2 KEYPAD LIGHT 1".
+     * @param selected[in] Index into lines of the selected row (-1 = none).
+     * @param header[in] Header line; empty falls back to "VARIABLES".
+     */
+    void showVars(const std::vector<std::string> &lines, int selected, const std::string &header = "VARIABLES");
+
+    /**
+     * @brief Build and show a ProgListView (running-programs list screen),
+     *        replacing any active view. Rows are pre-formatted by the caller
+     *        using only glyphs the Gorton font can draw.
+     * @param lines[in] One row per running program, e.g. "P05 MOONPHASE".
+     * @param selected[in] Index into lines of the selected row (-1 = none).
+     * @param header[in] Header line; empty falls back to "RUNNING PROGRAMS".
+     */
+    void showProgList(const std::vector<std::string> &lines, int selected, const std::string &header = "RUNNING PROGRAMS");
+
+    /**
      * @brief Publish the database health condition (source of the TEMP alarm).
      *        Called by DbMonitorProgram; the displayed lTemp flag is derived
      *        from this value each frame by HmiLogic.

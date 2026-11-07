@@ -17,6 +17,8 @@ target_sources(listOfActions PRIVATE
   ../../src/hmi/VerbListView.cpp
   ../../src/hmi/MoonPhaseView.cpp
   ../../src/hmi/TempView.cpp
+  ../../src/hmi/VarView.cpp
+  ../../src/hmi/ProgListView.cpp
   ../../src/programs/ListOfPrograms.cpp
   ../../src/programs/Program.cpp
   ../../src/common/exceptions/DskyException.cpp

@@ -575,9 +575,9 @@ void HmiLogic::nounInput(HmiData &data)
 /**
  * @brief Draw the list of running programs on the left LCD for VERB 7.
  *
- * Fills the verb-list widget with one line per running program, marking
- * the entry whose ID matches the current noun field with '*' on both
- * sides. Shows "NONE" when no program is running.
+ * Publishes a ProgListView with one row per running program; the entry whose
+ * ID matches the current noun field is marked with a cursor block. Shows
+ * "NONE" when no program is running.
  */
 void HmiLogic::drawStopBgList(HmiData &data)
 {
@@ -590,7 +590,6 @@ void HmiLogic::drawStopBgList(HmiData &data)
     if (ids[i] == data.getRightLcdData().nNoun) { selIdx = i; break; }
 
   std::vector<std::string> lines;
-
   if (count == 0)
   {
     lines.push_back("NONE");
@@ -598,19 +597,11 @@ void HmiLogic::drawStopBgList(HmiData &data)
   else
   {
     /* describeRunning() entries pair 1:1 with runningIds() when non-empty */
-    const std::vector<std::string> entries = programs_.describeRunning();
-    lines.reserve(entries.size());
-    char line[28];
-    for (size_t i = 0; i < entries.size(); ++i)
-    {
-      const bool sel = (int)i == selIdx;
-      snprintf(line, sizeof(line), "%s%s%s", sel ? "*" : "", entries[i].c_str(), sel ? "*" : "");
-      lines.emplace_back(line);
-    }
+    lines = programs_.describeRunning();
   }
 
   data.resetLeftLcdData();
-  data.showVerbList(lines, {}, {}, {"KILL RUNNING PROGRAMS", "", ""});
+  data.showProgList(lines, selIdx, "KILL RUNNING PROGRAMS");
 }
 
 void HmiLogic::valueInput(HmiData &data)

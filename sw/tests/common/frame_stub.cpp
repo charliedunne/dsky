@@ -13,4 +13,4 @@ void FrameLeftLcd::canvasList(const std::vector<std::string> &, const std::strin
 
 void FrameLeftLcd::canvasMoon(float, int, bool) const {}
 
-void FrameLeftLcd::canvasTemp(const std::vector<std::string> &, int, const std::string &) const {}
+void FrameLeftLcd::canvasRows(const std::vector<std::string> &, int, const std::string &) const {}

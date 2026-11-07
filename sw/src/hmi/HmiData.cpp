@@ -2,6 +2,8 @@
 #include "VerbListView.h"
 #include "MoonPhaseView.h"
 #include "TempView.h"
+#include "VarView.h"
+#include "ProgListView.h"
 
 // STL
 #include <algorithm>
@@ -430,6 +432,32 @@ void HmiData::showMoon(int pct, float phase, bool editBlink)
 void HmiData::showTemp(const std::vector<std::string> &lines, int selected, const std::string &header)
 {
     auto view = std::make_shared<TempView>();
+    view->lines = lines;
+    view->selected = selected;
+    view->header = header;
+
+    showLeftView(view);
+}
+
+/**
+ * @brief Build and show a VarView (READ/WRITE VAR screen), replacing any active view.
+ */
+void HmiData::showVars(const std::vector<std::string> &lines, int selected, const std::string &header)
+{
+    auto view = std::make_shared<VarView>();
+    view->lines = lines;
+    view->selected = selected;
+    view->header = header;
+
+    showLeftView(view);
+}
+
+/**
+ * @brief Build and show a ProgListView (running-programs list screen), replacing any active view.
+ */
+void HmiData::showProgList(const std::vector<std::string> &lines, int selected, const std::string &header)
+{
+    auto view = std::make_shared<ProgListView>();
     view->lines = lines;
     view->selected = selected;
     view->header = header;

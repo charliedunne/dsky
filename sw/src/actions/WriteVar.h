@@ -11,12 +11,13 @@ class VariableStore;
  *
  * Verb-only action (no typed noun required). Runs in two phases:
  *
- *  - Selection: the left screen shows the variable list (like VERB 8); the
- *    user picks the target either by typing its NOUN number and pressing
- *    ENTER, or by navigating with +/- and pressing ENTER. The NOUN label is
- *    on but the NOUN field stays blank until a number is typed.
- *  - Value entry: the left screen keeps showing the list with the selected
- *    line marked; the right screen shows the selected variable's NOUN, an
+ *  - Selection: the left screen shows a row per variable with its NOUN, label
+ *    and current value, the highlighted row marked by a cursor block (like
+ *    VERB 8); the user picks the target either by typing its NOUN number and
+ *    pressing ENTER, or by navigating with +/- and pressing ENTER. The NOUN
+ *    label is on but the NOUN field stays blank until a number is typed.
+ *  - Value entry: the left screen keeps showing the rows with the selected
+ *    row marked; the right screen shows the selected variable's NOUN, an
  *    "in" prompt in R1 and the value being typed in R2 (blinking label);
  *    ENTER commits the write and finishes.
  *

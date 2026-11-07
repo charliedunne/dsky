@@ -4,5 +4,5 @@
 
 void TempView::draw(FrameLeftLcd &f) const
 {
-  f.canvasTemp(lines, selected, header);
+  f.canvasRows(lines, selected, header);
 }
