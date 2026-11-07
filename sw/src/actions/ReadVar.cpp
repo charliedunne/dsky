@@ -106,8 +106,7 @@ void ReadVar::updateScreens()
 
   // Left screen: variable list with the selected line marked.
   hmiData_.resetLeftLcdData();
-  hmiData_.lSetVerbListHeader(0, "VARIABLES");
-  hmiData_.lSetVerbList(buildListLines(vars, sel), {});
+  hmiData_.showVerbList(buildListLines(vars, sel), {}, {}, {"VARIABLES", "", ""});
 
   // Right screen: NOUN field shows the selected variable's NOUN and R2 its
   // current value; R1 and R3 are blanked.

@@ -265,8 +265,7 @@ void WriteVar::updateScreens()
   // Left screen: the variable list with the current target line marked, shown
   // in both phases so the user always sees which variable is active.
   hmiData_.resetLeftLcdData();
-  hmiData_.lSetVerbListHeader(0, "VARIABLES");
-  hmiData_.lSetVerbList(buildListLines(vars, sel), {});
+  hmiData_.showVerbList(buildListLines(vars, sel), {}, {}, {"VARIABLES", "", ""});
 
   // Right screen: the NOUN label stays on in both phases; the NOUN field shows
   // the number being typed (phase 0) or the selected variable's NOUN (phase 1).

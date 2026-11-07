@@ -2,9 +2,14 @@
 #define _HMIDATA_H_
 
 // STL
+#include <array>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
+
+// Hmi
+#include "LeftLcdView.h"
 
 /**
  * @brief Draw mode for HMI Elements
@@ -62,7 +67,7 @@ typedef struct
 } RightLcdData;
 
 /**
- * @brief HMI Left LCD Data structure
+ * @brief HMI Left LCD alarm flags (flat persistent overlay)
  */
 typedef struct
 {
@@ -74,29 +79,17 @@ typedef struct
     DrawMode lShutdown;
     DrawMode lReboot;
 
-    // VERB 0 menu: three pages — page 0 = verb list, page 1 = variable list, page 2 = program list
-    DrawMode lVerbList;                        // DRAW_ON while the list is shown
-    char     lVerbListLines[3][20][28];        // up to 20 lines per page, max 27 chars + NUL
-    int      lVerbListCount[3];                // number of valid lines per page (0..20)
-    int      lVerbListPage;                    // active page index (0..2)
-    char     lVerbListHeader[3][28];           // optional header line per page (empty = default)
-
-    // MOONPHASE program: illumination result
-    DrawMode lMoon;                            // DRAW_ON while the moon phase result is shown
-    int      lMoonPct;                         // illumination percentage (0..100)
-    float    lMoonPhase;                       // lunar phase in [0,1): 0=new, 0.5=full
-    bool     lMoonEditBlink;                   // true while the date is being corrected after a result
-
-} LeftLcdData;
+} LeftAlarmFlags;
 
 class HmiData
 {
 
 private:
     /**
-     * @brief Mutex for safe access to the data
+     * @brief Mutex for safe access to the data. Mutable so the snapshot
+     *        getters (getLeftView) can lock from const methods.
      */
-    std::mutex mutex_;
+    mutable std::mutex mutex_;
 
     /**
      * @brief Right LCD shared information
@@ -104,9 +97,15 @@ private:
     RightLcdData rLcdData_;
 
     /**
-     * @brief Right LCD shared information
+     * @brief Left LCD alarm flags (flat persistent overlay)
      */
-    LeftLcdData lLcdData_;
+    LeftAlarmFlags lAlarms_;
+
+    /**
+     * @brief Active left-LCD content view (nullptr = none). Exactly one at a
+     *        time; showing a new view replaces the previous one.
+     */
+    std::shared_ptr<const LeftLcdView> lView_;
 
     /**
      * @brief Condition source for the TEMP alarm label. True while the
@@ -122,36 +121,56 @@ public:
     const RightLcdData &getRightLcdData();
     void setRightLcdData(const RightLcdData &);
 
-    const LeftLcdData &getLeftLcdData();
-    void setLeftLcdData(const LeftLcdData &);
+    /**
+     * @brief Snapshot copy of the left-LCD alarm flags (taken under the lock,
+     *        so the render thread never reads live member memory).
+     */
+    LeftAlarmFlags getLeftAlarms() const;
+
+    /**
+     * @brief Bulk-set the left-LCD alarm flags.
+     */
+    void setLeftAlarms(const LeftAlarmFlags &);
 
     void resetRightLcdData();
     void resetLeftLcdData();
 
     /**
-     * @brief Fill all pages of the VERB 0 menu and show it on page 0.
-     *        Page 0 = verb list, page 1 = variable list, page 2 = program list.
-     *        Each page caps at 20 lines / 27 chars per line.
-     * @param programs[in] Optional program list for page 2 (empty by default).
+     * @brief Show a left-LCD content view, replacing any previous one.
+     *        The view is an immutable snapshot shared across threads.
      */
-    void lSetVerbList(const std::vector<std::string> &verbs, const std::vector<std::string> &vars,
-                      const std::vector<std::string> &programs = {});
+    void showLeftView(std::shared_ptr<const LeftLcdView> v);
 
     /**
-     * @brief Switch the active VERB 0 menu page (wraps modulo 3).
+     * @brief Hide the active content view (does not touch alarm flags).
      */
-    void lSetVerbListPage(int page);
+    void clearLeftView();
 
     /**
-     * @brief Set the header line of one list page.
-     *        An empty string restores the default header for that page.
+     * @brief Snapshot of the active content view (nullptr when none).
+     *        The shared_ptr copy is taken under the lock, so the returned
+     *        object stays valid and immutable for the caller.
      */
-    void lSetVerbListHeader(int page, const char *header);
+    std::shared_ptr<const LeftLcdView> getLeftView() const;
 
     /**
-     * @brief Hide/clear the VERB 0 menu (does not touch alarm flags).
+     * @brief Typed accessor: the active view as T, or nullptr when absent.
      */
-    void clearVerbList();
+    template <class T> const T *leftViewAs() const {
+      return std::dynamic_pointer_cast<const T>(getLeftView()).get();
+    }
+
+    /**
+     * @brief Build and show a VerbListView with up to three pages, starting
+     *        on page 0. Each page caps at 20 lines / 27 chars per line.
+     * @param p1[in] Optional second page (e.g. variable list).
+     * @param p2[in] Optional third page (e.g. program list).
+     * @param headers[in] Per-page header override; empty entry = default.
+     */
+    void showVerbList(const std::vector<std::string> &p0,
+                      const std::vector<std::string> &p1 = {},
+                      const std::vector<std::string> &p2 = {},
+                      const std::array<std::string, 3> &headers = {});
 
     /*     HmiData& operator=(const HmiData &); */
 
@@ -207,17 +226,23 @@ public:
     void lSetReboot(DrawMode mode);
 
     /**
-     * @brief Set the MOONPHASE illumination display mode, percentage and phase.
-     *        DRAW_ON shows the given percentage; any other mode hides it.
+     * @brief Build and show a MoonPhaseView, replacing any active view.
+     * @param pct[in] Illumination percentage, 0..100.
+     * @param phase[in] Lunar phase in [0,1): 0=new, 0.5=full.
+     * @param editBlink[in] true to overlay the date-correction blink X
+     *        (values are not valid yet).
      */
-    void lSetMoon(DrawMode mode, int pct, float phase);
+    void showMoon(int pct, float phase, bool editBlink = false);
 
     /**
-     * @brief Set the MOONPHASE date-correction blink flag.
-     *        While true, the left LCD blinks an X over the disk center, on
-     *        top of the moon graphic (values are not valid).
+     * @brief Build and show a TempView (TEMP MONITOR screen), replacing any
+     *        active view. Rows are pre-formatted by the caller using only
+     *        glyphs the Gorton font can draw.
+     * @param lines[in] One row per sensor, e.g. "1 KITCHEN 23*5C".
+     * @param selected[in] Index into lines of the selected row (-1 = none).
+     * @param header[in] Header line; empty falls back to "TEMPERATURES".
      */
-    void lSetMoonEditBlink(bool on);
+    void showTemp(const std::vector<std::string> &lines, int selected, const std::string &header = "TEMPERATURES");
 
     /**
      * @brief Publish the database health condition (source of the TEMP alarm).

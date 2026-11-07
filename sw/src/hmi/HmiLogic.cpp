@@ -4,7 +4,11 @@
 #include <cstdio>
 
 #include "HmiData.h"
+#include "VerbListView.h"
 #include "Logger.h"
+
+// STL
+#include <memory>
 
 // Programs
 #include "DbMonitorProgram.h"
@@ -157,21 +161,25 @@ void HmiLogic::idle(HmiData &data)
     data.resetLeftLcdData();
     data.resetRightLcdData();
   }
-  else if (data.getLeftLcdData().lVerbList == DRAW_ON)
+  else if (data.leftViewAs<VerbListView>() != nullptr)
   {
     /* + / - flip between the verb list, variable list and program list pages
      * (wraps around). Single-page lists (e.g. VERB 6, running background
      * programs) have empty extra pages, so a flip towards one is a no-op. */
+    const VerbListView *v = data.leftViewAs<VerbListView>();
     if (key == E_KEY_PLUS || key == E_KEY_MINUS)
     {
-      const int cur = data.getLeftLcdData().lVerbListPage;
+      const int cur = v->page;
       const int next = (key == E_KEY_PLUS) ? cur + 1 : cur - 1;
       /* Compute the wrapped target page so the trace matches what is displayed */
       const int wrapped = ((next % 3) + 3) % 3;
-      if (data.getLeftLcdData().lVerbListCount[wrapped] > 0)
+      if (!v->pages[wrapped].empty())
       {
         LogTrace << "Key pressed in IDLE, verb list page -> " << wrapped << std::endl;
-        data.lSetVerbListPage(next);
+        /* Publish a copy with the new active page (views are immutable). */
+        auto flipped = std::make_shared<VerbListView>(*v);
+        flipped->page = wrapped;
+        data.showLeftView(flipped);
       }
       else
       {
@@ -184,7 +192,7 @@ void HmiLogic::idle(HmiData &data)
       /* Any other key returns to the clean boot screen (page resets to 0) and
        * dismisses the right-side VERB label/number left lit by a list verb */
       LogTrace << "Key pressed in IDLE, clear verb list" << std::endl;
-      data.clearVerbList();
+      data.clearLeftView();
       data.resetRightLcdData();
     }
   }
@@ -602,8 +610,7 @@ void HmiLogic::drawStopBgList(HmiData &data)
   }
 
   data.resetLeftLcdData();
-  data.lSetVerbListHeader(0, "KILL RUNNING PROGRAMS");
-  data.lSetVerbList(lines, {});
+  data.showVerbList(lines, {}, {}, {"KILL RUNNING PROGRAMS", "", ""});
 }
 
 void HmiLogic::valueInput(HmiData &data)
@@ -808,9 +815,9 @@ void HmiLogic::run(HmiData &data)
   {
     LogTrace << "Running action..." << std::endl;
 
-    // A new (non-VERB 0) command dismisses the VERB 0 menu
+    // A new (non-VERB 0) command dismisses the active content view
     if (verb != 0) {
-      data.clearVerbList();
+      data.clearLeftView();
     }
 
     actions_(data).run();

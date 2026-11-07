@@ -11,13 +11,21 @@ target_sources(HmiLogic PRIVATE
   main.cpp
   ../../src/hmi/HmiLogic.cpp
   ../../src/hmi/HmiData.cpp
+  ../../src/hmi/VerbListView.cpp
+  ../../src/hmi/MoonPhaseView.cpp
+  ../../src/hmi/TempView.cpp
   ../../src/core/StatusMachine.cpp
   ../../src/core/Event.cpp
   ../../src/actions/Action.cpp
   ../../src/actions/ListOfActions.cpp
   ../../src/actions/ActionVerbList.cpp
+  ../../src/core/VariableStore.cpp
+  ../../src/programs/ListOfPrograms.cpp
+  ../../src/programs/Program.cpp
+  ../../src/programs/FgProgram.cpp
   ../../src/common/exceptions/DskyException.cpp
   ../../src/common/exceptions/ExcInvalidCommand.cpp
+  ../common/frame_stub.cpp
 )
 
 # CFLAGS
@@ -32,6 +40,7 @@ include_directories(../../)
 include_directories(../../src/hmi)
 include_directories(../../src/core)
 include_directories(../../src/actions)
+include_directories(../../src/programs)
 include_directories(../../src/common)
 include_directories(../../src/common/exceptions)
 include_directories(../../3rdparty/simple-cpp-logger/include)

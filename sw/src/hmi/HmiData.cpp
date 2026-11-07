@@ -1,7 +1,12 @@
 #include "HmiData.h"
+#include "VerbListView.h"
+#include "MoonPhaseView.h"
+#include "TempView.h"
 
 // STL
+#include <algorithm>
 #include <cstring>
+#include <memory>
 #include <vector>
 
 // Logging
@@ -41,26 +46,15 @@ void HmiData::resetRightLcdData()
 
 void HmiData::resetLeftLcdData()
 {
-    lLcdData_.lUplinkAct = DRAW_OFF;
-    lLcdData_.lTemp = DRAW_OFF;
-    lLcdData_.lKeyErr = DRAW_OFF;
-    lLcdData_.lOpErr = DRAW_OFF;
-    lLcdData_.lShutdown = DRAW_OFF;
-    lLcdData_.lReboot = DRAW_OFF;
+    lAlarms_.lUplinkAct = DRAW_OFF;
+    lAlarms_.lTemp = DRAW_OFF;
+    lAlarms_.lKeyErr = DRAW_OFF;
+    lAlarms_.lOpErr = DRAW_OFF;
+    lAlarms_.lShutdown = DRAW_OFF;
+    lAlarms_.lReboot = DRAW_OFF;
 
-    // Clear the VERB 0 menu
-    lLcdData_.lVerbList = DRAW_OFF;
-    lLcdData_.lVerbListCount[0] = 0;
-    lLcdData_.lVerbListCount[1] = 0;
-    lLcdData_.lVerbListCount[2] = 0;
-    lLcdData_.lVerbListPage = 0;
-    std::memset(lLcdData_.lVerbListHeader, 0, sizeof(lLcdData_.lVerbListHeader));
-
-    // Clear the MOONPHASE result
-    lLcdData_.lMoon = DRAW_OFF;
-    lLcdData_.lMoonPct = 0;
-    lLcdData_.lMoonPhase = 0.0f;
-    lLcdData_.lMoonEditBlink = false;
+    // Hide any active content view
+    lView_.reset();
 }
 
 HmiData::HmiData()
@@ -107,16 +101,16 @@ void HmiData::setRightLcdData(const RightLcdData &data)
 }
 
 /**
- * @brief Getter for the entire Left LCD Structure
+ * @brief Snapshot copy of the left-LCD alarm flags.
  *
- * @return copy of the Left LCD Data structure
+ * @return value copy taken under the lock
  */
-const LeftLcdData &HmiData::getLeftLcdData()
+LeftAlarmFlags HmiData::getLeftAlarms() const
 {
     mutex_.lock();
 
     /* Value to return */
-    LeftLcdData &out = lLcdData_;
+    LeftAlarmFlags out = lAlarms_;
 
     mutex_.unlock();
 
@@ -124,15 +118,15 @@ const LeftLcdData &HmiData::getLeftLcdData()
 }
 
 /**
- * @brief Update the set of Left LCD Data
+ * @brief Update the set of left-LCD alarm flags
  *
- * @param data[in] Reference to
+ * @param data[in] Reference to the flags to store
  */
-void HmiData::setLeftLcdData(const LeftLcdData &data)
+void HmiData::setLeftAlarms(const LeftAlarmFlags &data)
 {
     mutex_.lock();
 
-    std::memcpy(&lLcdData_, &data, sizeof(LeftLcdData));
+    std::memcpy(&lAlarms_, &data, sizeof(LeftAlarmFlags));
 
     mutex_.unlock();
 }
@@ -361,7 +355,7 @@ void HmiData::lSetUplinkAct(DrawMode mode)
 {
     mutex_.lock();
 
-    lLcdData_.lUplinkAct = mode;
+    lAlarms_.lUplinkAct = mode;
 
     mutex_.unlock();
 }
@@ -370,7 +364,7 @@ void HmiData::lSetTemp(DrawMode mode)
 {
     mutex_.lock();
 
-    lLcdData_.lTemp = mode;
+    lAlarms_.lTemp = mode;
 
     mutex_.unlock();
 }
@@ -379,7 +373,7 @@ void HmiData::lSetKeyErr(DrawMode mode)
 {
     mutex_.lock();
 
-    lLcdData_.lKeyErr = mode;
+    lAlarms_.lKeyErr = mode;
 
     mutex_.unlock();
 }
@@ -388,7 +382,7 @@ void HmiData::lSetOpErr(DrawMode mode)
 {
     mutex_.lock();
 
-    lLcdData_.lOpErr = mode;
+    lAlarms_.lOpErr = mode;
 
     mutex_.unlock();
 }
@@ -400,7 +394,7 @@ void HmiData::lSetShutdown(DrawMode mode)
 {
     mutex_.lock();
 
-    lLcdData_.lShutdown = mode;
+    lAlarms_.lShutdown = mode;
 
     mutex_.unlock();
 }
@@ -412,39 +406,35 @@ void HmiData::lSetReboot(DrawMode mode)
 {
     mutex_.lock();
 
-    lLcdData_.lReboot = mode;
+    lAlarms_.lReboot = mode;
 
     mutex_.unlock();
 }
 
 /**
- * @brief Set the MOONPHASE illumination display mode, percentage and phase.
- *        DRAW_ON shows the given percentage; any other mode hides it.
+ * @brief Build and show a MoonPhaseView, replacing any active view.
  */
-void HmiData::lSetMoon(DrawMode mode, int pct, float phase)
+void HmiData::showMoon(int pct, float phase, bool editBlink)
 {
-    mutex_.lock();
+    auto view = std::make_shared<MoonPhaseView>();
+    view->pct = pct;
+    view->phase = phase;
+    view->editBlink = editBlink;
 
-    lLcdData_.lMoon = mode;
-    lLcdData_.lMoonPct = pct;
-    lLcdData_.lMoonPhase = phase;
-
-    mutex_.unlock();
+    showLeftView(view);
 }
 
 /**
- * @brief Set the MOONPHASE date-correction blink flag.
- *        While true, a blinking X is drawn over the disk center, on top of
- *        the moon graphic on the left LCD, to indicate that the displayed
- *        values are not valid.
+ * @brief Build and show a TempView (TEMP MONITOR screen), replacing any active view.
  */
-void HmiData::lSetMoonEditBlink(bool on)
+void HmiData::showTemp(const std::vector<std::string> &lines, int selected, const std::string &header)
 {
-    mutex_.lock();
+    auto view = std::make_shared<TempView>();
+    view->lines = lines;
+    view->selected = selected;
+    view->header = header;
 
-    lLcdData_.lMoonEditBlink = on;
-
-    mutex_.unlock();
+    showLeftView(view);
 }
 
 /**
@@ -476,79 +466,80 @@ bool HmiData::isDbHealthy()
     return healthy;
 }
 
+/**
+ * @brief Show a left-LCD content view, replacing any previous one.
+ */
+void HmiData::showLeftView(std::shared_ptr<const LeftLcdView> v)
+{
+    mutex_.lock();
+
+    lView_ = std::move(v);
+
+    mutex_.unlock();
+}
+
+/**
+ * @brief Hide the active content view (does not touch alarm flags).
+ */
+void HmiData::clearLeftView()
+{
+    mutex_.lock();
+
+    lView_.reset();
+
+    mutex_.unlock();
+}
+
+/**
+ * @brief Snapshot of the active content view (nullptr when none).
+ */
+std::shared_ptr<const LeftLcdView> HmiData::getLeftView() const
+{
+    mutex_.lock();
+
+    std::shared_ptr<const LeftLcdView> out = lView_;
+
+    mutex_.unlock();
+
+    return out;
+}
+
 namespace {
 /**
- * @brief Copy up to 20 lines into one page buffer of the VERB 0 menu.
+ * @brief Cap a list page at 20 lines and truncate each line to 27 chars.
  */
-void fillVerbListPage(char (&page)[20][28], int &count, const std::vector<std::string> &lines)
+std::vector<std::string> capVerbListPage(const std::vector<std::string> &lines)
 {
-    const int maxLines = 20;
-    const int lineLen  = 28;   // 27 chars + NUL
+    const size_t maxLines = 20;
+    const size_t lineLen  = 27;
 
-    int n = (int)lines.size();
-    if (n > maxLines) n = maxLines;
+    std::vector<std::string> out;
+    out.reserve(std::min(lines.size(), maxLines));
 
-    for (int i = 0; i < n; ++i) {
-        std::strncpy(page[i], lines[i].c_str(), lineLen - 1);
-        page[i][lineLen - 1] = '\0';
+    for (size_t i = 0; i < lines.size() && i < maxLines; ++i) {
+        out.push_back(lines[i].substr(0, lineLen));
     }
 
-    count = n;
+    return out;
 }
 } // namespace
 
-void HmiData::lSetVerbList(const std::vector<std::string> &verbs, const std::vector<std::string> &vars,
-                           const std::vector<std::string> &programs)
+void HmiData::showVerbList(const std::vector<std::string> &p0, const std::vector<std::string> &p1,
+                           const std::vector<std::string> &p2, const std::array<std::string, 3> &headers)
 {
-    mutex_.lock();
+    auto view = std::make_shared<VerbListView>();
 
-    // Page 0: verb list. Page 1: variable list. Page 2: program list.
-    fillVerbListPage(lLcdData_.lVerbListLines[0], lLcdData_.lVerbListCount[0], verbs);
-    fillVerbListPage(lLcdData_.lVerbListLines[1], lLcdData_.lVerbListCount[1], vars);
-    fillVerbListPage(lLcdData_.lVerbListLines[2], lLcdData_.lVerbListCount[2], programs);
+    // Page 0: first list. Page 1: second list. Page 2: third list.
+    view->pages[0] = capVerbListPage(p0);
+    view->pages[1] = capVerbListPage(p1);
+    view->pages[2] = capVerbListPage(p2);
 
-    lLcdData_.lVerbListPage = 0;
-    lLcdData_.lVerbList = DRAW_ON;
-
-    mutex_.unlock();
-}
-
-void HmiData::lSetVerbListPage(int page)
-{
-    mutex_.lock();
-
-    // Wrap around modulo 3 (handles negative input as well).
-    lLcdData_.lVerbListPage = ((page % 3) + 3) % 3;
-
-    mutex_.unlock();
-}
-
-void HmiData::clearVerbList()
-{
-    mutex_.lock();
-
-    lLcdData_.lVerbList = DRAW_OFF;
-    lLcdData_.lVerbListCount[0] = 0;
-    lLcdData_.lVerbListCount[1] = 0;
-    lLcdData_.lVerbListCount[2] = 0;
-    lLcdData_.lVerbListPage = 0;
-    std::memset(lLcdData_.lVerbListHeader, 0, sizeof(lLcdData_.lVerbListHeader));
-
-    mutex_.unlock();
-}
-
-void HmiData::lSetVerbListHeader(int page, const char *header)
-{
-    mutex_.lock();
-
-    // Clamp the page index to the three available pages.
-    if (page < 0 || page > 2) {
-        mutex_.unlock();
-        return;
+    // Per-page header override; empty entry keeps the per-page default.
+    for (int i = 0; i < 3; ++i) {
+        view->headers[i] = headers[i].substr(0, 27);
     }
 
-    std::strncpy(lLcdData_.lVerbListHeader[page], header, 27);
-    lLcdData_.lVerbListHeader[page][27] = '\0';
+    view->page = 0;
 
-    mutex_.unlock();
+    showLeftView(view);
 }

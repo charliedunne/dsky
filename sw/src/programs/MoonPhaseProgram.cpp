@@ -1,5 +1,6 @@
 #include "MoonPhaseProgram.h"
 #include "HmiData.h"
+#include "MoonPhaseView.h"
 #include <Logger.h>
 #include <cmath>
 #include <cstdio>
@@ -134,10 +135,19 @@ void MoonPhaseProgram::operation() {
         }
     };
 
-    // Hide the moon graphic and the edit-blink X on the left LCD.
+    // Hide any content view on the left LCD (e.g. a previous MOONPHASE result).
     auto clearLeftLcd = [this]() {
-        hmiData_.lSetMoon(DRAW_OFF, 0, 0.0f);
-        hmiData_.lSetMoonEditBlink(false);
+        hmiData_.clearLeftView();
+    };
+
+    // Toggle the date-correction blink X on an active MOONPHASE result by
+    // publishing a copy of the current view with a different editBlink flag.
+    auto setEditBlink = [this](bool on) {
+        if (const MoonPhaseView *m = hmiData_.leftViewAs<MoonPhaseView>()) {
+            auto n = std::make_shared<MoonPhaseView>(*m);
+            n->editBlink = on;
+            hmiData_.showLeftView(n);
+        }
     };
 
     std::string yStr, mStr, dStr;
@@ -193,7 +203,7 @@ void MoonPhaseProgram::operation() {
                 echoField(DAY, dStr);
                 const double phase = moonPhase(y, m, d);
                 const int pct = (int)lround(illumination(y, m, d) * 100.0);
-                hmiData_.lSetMoon(DRAW_ON, pct, (float)phase);
+                hmiData_.showMoon(pct, (float)phase);
                 LogTrace << "MOONPHASE: stepped date to " << yStr << "-" << mStr
                          << "-" << dStr << std::endl;
                 continue;
@@ -203,7 +213,7 @@ void MoonPhaseProgram::operation() {
                 digits.clear(); // stale committed day must not auto-commit
                 echoField(DAY, "");
                 setLabel(DAY, DRAW_BLINK);
-                hmiData_.lSetMoonEditBlink(true);
+                setEditBlink(true);
                 field = DAY;
                 LogTrace << "MOONPHASE: CLR at result - re-opening day editing" << std::endl;
                 continue;
@@ -261,7 +271,7 @@ void MoonPhaseProgram::operation() {
             setLabel(DAY, DRAW_ON);   // explicitly in this path
             const double phase = moonPhase(y, m, d);
             const int pct = (int)lround(illumination(y, m, d) * 100.0);
-            hmiData_.lSetMoon(DRAW_ON, pct, (float)phase);
+            hmiData_.showMoon(pct, (float)phase);
             LogTrace << "MOONPHASE: ENTER with empty year - using current date "
                      << yStr << "-" << mStr << "-" << dStr
                      << " -> " << pct << "% phase=" << phase << std::endl;
@@ -324,8 +334,7 @@ void MoonPhaseProgram::operation() {
             // All three fields valid: compute and show the phase graphic.
             const double phase = moonPhase(std::stoi(yStr), std::stoi(mStr), std::stoi(dStr));
             int pct = (int)lround(illumination(std::stoi(yStr), std::stoi(mStr), std::stoi(dStr)) * 100.0);
-            hmiData_.lSetMoon(DRAW_ON, pct, (float)phase);
-            hmiData_.lSetMoonEditBlink(false); // date complete: show the moon again
+            hmiData_.showMoon(pct, (float)phase); // date complete: edit-blink off
             LogTrace << "MOONPHASE: " << yStr << "-" << mStr << "-" << dStr
                      << " -> " << pct << "% phase=" << phase << std::endl;
             field = RESULT;

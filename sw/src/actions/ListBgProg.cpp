@@ -20,6 +20,5 @@ void ListBgProg::operation()
 
   // Display on the left LCD: reset, set header, then set the list
   hmiData_.resetLeftLcdData();
-  hmiData_.lSetVerbListHeader(0, "LIST OF RUNNING PROGRAMS");
-  hmiData_.lSetVerbList(lines, {});
+  hmiData_.showVerbList(lines, {}, {}, {"LIST OF RUNNING PROGRAMS", "", ""});
 }
