@@ -95,22 +95,18 @@ void Hmi::render() {
 
 void Hmi::update(HmiData &data) {
 
-  // Left LCD
-  leftLcd_->setUplink(data.getLeftLcdData().lUplinkAct);
-  leftLcd_->setTemp(data.getLeftLcdData().lTemp);
-  leftLcd_->setKeyErr(data.getLeftLcdData().lKeyErr);
-  leftLcd_->setOpErr(data.getLeftLcdData().lOpErr);
+  // Left LCD alarm overlay: snapshot read so the render thread never touches
+  // live member memory while the logic thread mutates it.
+  const LeftAlarmFlags alarms = data.getLeftAlarms();
+  leftLcd_->setUplink(alarms.lUplinkAct);
+  leftLcd_->setTemp(alarms.lTemp);
+  leftLcd_->setKeyErr(alarms.lKeyErr);
+  leftLcd_->setOpErr(alarms.lOpErr);
   // Shared SHUTDOWN/REBOOT label: one deterministic call per frame.
-  leftLcd_->setShutdownReboot(data.getLeftLcdData().lShutdown,
-                              data.getLeftLcdData().lReboot);
+  leftLcd_->setShutdownReboot(alarms.lShutdown, alarms.lReboot);
 
-  // VERB 0 menu
-  leftLcd_->setVerbList(data.getLeftLcdData());
-
-  // MOONPHASE result
-  leftLcd_->setMoon(data.getLeftLcdData().lMoon, data.getLeftLcdData().lMoonPct,
-                    data.getLeftLcdData().lMoonPhase);
-  leftLcd_->setMoonEditBlink(data.getLeftLcdData().lMoonEditBlink);
+  // Active content view (VERB 0 menu, MOONPHASE result and the like)
+  leftLcd_->setView(data.getLeftView());
 
 
   // Right LCD

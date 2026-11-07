@@ -104,44 +104,17 @@ void FrameLeftLcd::render()
                               M_PI * 8, Color::debugYellow());
     }
 
-    // Draw alarm labels only when the VERB 0 menu or the MOONPHASE result is not shown
-    if (verbListMode_ != DRAW_ON && moonMode_ != DRAW_ON) {
+    // Draw the alarm labels and grid background only when no content view is
+    // shown (list or MOONPHASE), so the content does not overlap the alarm grid.
+    if (view_ == nullptr) {
         drawLabels();
-    }
-
-    // Draw the separation lines (grid background), hidden while the VERB 0 menu or the
-    // MOONPHASE result is shown, so the percentage number does not overlap the alarm grid
-    if (verbListMode_ != DRAW_ON && moonMode_ != DRAW_ON) {
         drawLines();
     }
 
-    // Draw the VERB 0 menu on top of the grid, if active
-    if (verbListMode_ == DRAW_ON) {
-        drawVerbList();
-    }
-
-    // Draw the MOONPHASE result number on top of the grid, if active.
-    // No bookkeeping needed: the background fill + grid redraw each frame erases it.
-    // The moon stays visible while the date is corrected (blinking X overlaid below).
-    if (moonMode_ == DRAW_ON) {
-        drawMoon();
-    }
-
-    // While the date is being corrected after a result was shown, blink an X over the
-    // disk center to indicate the values are not valid yet. The previous moon image
-    // remains visible underneath. The X uses the global render clock (Frame::frameCount)
-    // so it blinks in phase with all other blinking elements (same convention as the
-    // Draw base class).
-    if (moonEditBlink_) {
-        const unsigned int phase = Frame::frameCount() % (unsigned int)DEFAULT_BLINKING_PERIOD;
-        if (phase < (unsigned int)(DEFAULT_BLINKING_PERIOD / 2)) {
-            const int cx = x_ + 167;   // same center as the moon disk
-            const int cy = y_ + 205;
-            const int arm = (int)(112 * 0.7);   // X half-diagonal ~78 px, well inside the panel
-            const Color color = Color::red();
-            thickLineColor(r_, cx - arm, cy - arm, cx + arm, cy + arm, 4, color);
-            thickLineColor(r_, cx - arm, cy + arm, cx + arm, cy - arm, 4, color);
-        }
+    // Draw the active content view on top of the grid, if any. The frame is a
+    // pure canvas: all content pixels come from the view's draw().
+    if (view_) {
+        view_->draw(*this);
     }
 }
 
@@ -201,38 +174,22 @@ void FrameLeftLcd::drawLabels()
     }
   }
 
-void FrameLeftLcd::setVerbList(const LeftLcdData &d)
+void FrameLeftLcd::setView(std::shared_ptr<const LeftLcdView> v)
 {
-    verbListMode_ = d.lVerbList;
-    verbListPage_ = d.lVerbListPage;
-
-    // Copy only the lines of the active page.
-    verbListLines_.clear();
-    const int count = d.lVerbListCount[verbListPage_];
-    for (int i = 0; i < count && i < 20; ++i) {
-        verbListLines_.push_back(std::string(d.lVerbListLines[verbListPage_][i]));
-    }
-
-    // Copy the header of the active page (empty string = default header).
-    verbListHeader_ = std::string(d.lVerbListHeader[verbListPage_]);
+    view_ = std::move(v);
 }
 
-void FrameLeftLcd::drawVerbList()
+void FrameLeftLcd::canvasList(const std::vector<std::string> &lines, const std::string &header) const
 {
-    if (verbListMode_ != DRAW_ON) return;
-
     // Draw over the grid background, stacked from the top.
     // scale ~0.5 fits the ~32px Gorton bitmap into the 335px-wide panel.
     const float scale = 0.5f;
     const int lineHeight = (int)(32 * scale) + 6;   // glyph height + gap (tune later)
     const Color green = Color::live();
 
-    // Header line: use the data-provided header when set, otherwise fall back
-    // to the defaults (page 0 = verb list, page 1 = variable list, page 2 = program list).
+    // Header line: the caller resolves per-page defaults, so the canvas always
+    // receives a concrete header string.
     int y = y_ + 8;                                  // top margin (tune later)
-    const char *header = verbListHeader_.empty()
-        ? ((verbListPage_ == 0) ? "VERB LIST" : ((verbListPage_ == 1) ? "VARIABLE LIST" : "PROGRAM LIST"))
-        : verbListHeader_.c_str();
     verbListFont_->drawText(header, x_ + 10, y, green, scale);
     y += lineHeight;
 
@@ -243,12 +200,12 @@ void FrameLeftLcd::drawVerbList()
 
     // Up to 19 content lines fit below the separator; show a "..." marker if truncated.
     const int maxLines = 19;
-    const int total = (int)verbListLines_.size();
+    const int total = (int)lines.size();
     int n = total;
     if (n > maxLines) n = maxLines - 1;   // reserve one line for the "..." marker
 
     for (int i = 0; i < n; ++i) {
-        verbListFont_->drawText(verbListLines_[i], x_ + 10, y, green, scale);
+        verbListFont_->drawText(lines[i], x_ + 10, y, green, scale);
         y += lineHeight;
     }
 
@@ -257,31 +214,14 @@ void FrameLeftLcd::drawVerbList()
     }
 }
 
-void FrameLeftLcd::setMoon(DrawMode mode, int pct, float phase)
+void FrameLeftLcd::canvasMoon(float phase, int pct, bool editBlink) const
 {
-    moonMode_ = mode;
-    moonPct_ = pct;
-    moonPhase_ = phase;
-    if (mode == DRAW_ON) {
-        // Number right-aligns and blanks leading digits ("42" -> _ 4 2)
-        nMoon_->setValue(std::to_string(pct));
-    }
+    // Number right-aligns and blanks leading digits ("42" -> _ 4 2)
+    nMoon_->setValue(std::to_string(pct));
 
-    // Enable/disable the number widget itself. The Draw base class starts
-    // in DRAW_OFF, so without this draw() would always render blank digits.
-    nMoon_->setMode(mode);
-}
-
-void FrameLeftLcd::setMoonEditBlink(bool on)
-{
-    // The blink phase comes from the global render clock (Frame::frameCount),
-    // so there is no per-object counter to initialize here.
-    moonEditBlink_ = on;
-}
-
-void FrameLeftLcd::drawMoon()
-{
-    if (moonMode_ != DRAW_ON) return;
+    // Enable the number widget. The Draw base class starts in DRAW_OFF, so
+    // without this draw() would always render blank digits.
+    nMoon_->setMode(DRAW_ON);
 
     const int R = 112;              // moon disk radius (px)
     const int cx = x_ + 167;        // disk center, horizontally centered on the panel
@@ -302,9 +242,9 @@ void FrameLeftLcd::drawMoon()
         verbListFont_->drawText("MOON PHASE", tx, y_ + 14, Color::live(), tScale);
     }
 
-    const float phi = moonPhase_;   // [0,1): 0=new, 0.5=full
-    const bool waxing = (phi <= 0.5f);
-    const double c = cos(2.0 * M_PI * phi);
+    // phase is in [0,1): 0=new, 0.5=full
+    const bool waxing = (phase <= 0.5f);
+    const double c = cos(2.0 * M_PI * phase);
     const int rx = (int)lround(R * fabs(c));
 
     // Retro scanline texture: instead of solid fills, paint the disk row by
@@ -334,7 +274,7 @@ void FrameLeftLcd::drawMoon()
         if (rx > 0) {
             const int ex = (int)lround((double)rx * sqrt(t2));
             hlineColor(r_, cx - ex, cx + ex, yy,
-                       (phi < 0.25f || phi > 0.75f) ? dim : lit);
+                       (phase < 0.25f || phase > 0.75f) ? dim : lit);
         }
     }
 
@@ -353,5 +293,60 @@ void FrameLeftLcd::drawMoon()
     circleColor(r_, pcx + 6, pcy + 10, 5, lit);
     circleColor(r_, pcx + 6, pcy + 10, 4, lit);
     thickLineColor(r_, pcx + 8, pcy - 13, pcx - 8, pcy + 13, 2, lit);
+
+    // While the date is being corrected after a result was shown, blink an X over
+    // the disk center to indicate the values are not valid yet. The previous moon
+    // image remains visible underneath. The X uses the global render clock
+    // (Frame::frameCount) so it blinks in phase with all other blinking elements
+    // (same convention as the Draw base class).
+    if (editBlink) {
+        const unsigned int bphase = Frame::frameCount() % (unsigned int)DEFAULT_BLINKING_PERIOD;
+        if (bphase < (unsigned int)(DEFAULT_BLINKING_PERIOD / 2)) {
+            const int arm = (int)(112 * 0.7);   // X half-diagonal ~78 px, well inside the panel
+            const Color color = Color::red();
+            thickLineColor(r_, cx - arm, cy - arm, cx + arm, cy + arm, 4, color);
+            thickLineColor(r_, cx - arm, cy + arm, cx + arm, cy - arm, 4, color);
+        }
+    }
+}
+
+void FrameLeftLcd::canvasRows(const std::vector<std::string> &lines, int selected, const std::string &header) const
+{
+    // Draw over the grid background, stacked from the top — same layout as
+    // canvasList (list views), but each row is a pre-formatted value-list row
+    // and the selected row gets a cursor block on its left margin.
+    const float scale = 0.5f;
+    const int lineHeight = (int)(32 * scale) + 6;   // glyph height + gap
+    const Color green = Color::live();
+
+    int y = y_ + 8;                                  // top margin
+    verbListFont_->drawText(header, x_ + 10, y, green, scale);
+    y += lineHeight;
+
+    // Separator row: dim-green divider between the header and the rows.
+    const Color dividerPixel = Color::live();
+    hlineColor(r_, x_ + 10, x_ + w_ - 10, y + lineHeight - 6, dividerPixel);
+    y += lineHeight;
+
+    // Up to 19 rows fit below the separator; show a "..." marker if truncated.
+    const int maxLines = 19;
+    const int total = (int)lines.size();
+    int n = total;
+    if (n > maxLines) n = maxLines - 1;
+
+    for (int i = 0; i < n; ++i) {
+        // Selection cursor: a small filled block on the left margin of the row.
+        if (i == selected) {
+            const int curW = 6;
+            const int curH = lineHeight - 8;
+            boxColor(r_, x_ + 2, y + 4, x_ + 2 + curW, y + 4 + curH, green);
+        }
+        verbListFont_->drawText(lines[i], x_ + 10, y, green, scale);
+        y += lineHeight;
+    }
+
+    if (total > maxLines) {
+        verbListFont_->drawText("...", x_ + 10, y, green, scale);
+    }
 }
   

@@ -1,6 +1,7 @@
 #ifndef FRAMELEFTLCD_H
 #define FRAMELEFTLCD_H
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -14,6 +15,7 @@
 // HMI
 #include "AlarmLabel.h"
 #include "HmiData.h"
+#include "LeftLcdView.h"
 
 class FrameLeftLcd : public Frame
 {
@@ -56,47 +58,58 @@ public:
   void setShutdownReboot(DrawMode shMode, DrawMode rbMode);
 
   /**
-   * @brief Update the VERB 0 menu content from the left LCD data.
+   * @brief Set the active left-LCD content view (nullptr = none).
+   *        The frame is a pure canvas: it stores the immutable snapshot and
+   *        delegates rendering to the view itself.
    */
-  void setVerbList(const LeftLcdData &d);
+  void setView(std::shared_ptr<const LeftLcdView> v);
 
   /**
-   * @brief Update the MOONPHASE display.
-   *
-   * DRAW_ON shows a moon graphic at the given phase plus the percentage
-   * (0..100) with a "%" label below it; any other mode hides it.
-   * @param mode Draw mode (DRAW_ON shows, anything else hides).
-   * @param pct Illumination percentage, 0..100.
+   * @brief Canvas primitive: draw a list page (header + separator + up to
+   *        19 lines, "..." when truncated) over the grid background. Used by
+   *        list views via VerbListView::draw().
+   */
+  void canvasList(const std::vector<std::string> &lines, const std::string &header) const;
+
+  /**
+   * @brief Canvas primitive: draw the MOONPHASE result — "MOON PHASE" title,
+   *        moon disk at the given phase, percentage digits with a "%" glyph
+   *        below, and (when editBlink is on) a blinking X over the disk
+   *        center indicating the values are not valid yet. Used by moon
+   *        views via MoonPhaseView::draw().
    * @param phase Moon phase in [0,1): 0=new, 0.25=waxing quarter,
    *              0.5=full, 0.75=waning quarter.
+   * @param pct Illumination percentage, 0..100.
+   * @param editBlink true to overlay the blinking date-correction X.
    */
-  void setMoon(DrawMode mode, int pct, float phase);
+  void canvasMoon(float phase, int pct, bool editBlink) const;
 
   /**
-   * @brief Set the MOONPHASE date-correction blink state.
-   *
-   * While on, a blinking X is drawn over the disk center, on top of the
-   * moon graphic, indicating that the displayed values are not valid yet.
-   * The X is visible for half the default blinking period (20 frames).
-   * @param on true to show the blinking X, false to stop it.
+   * @brief Canvas primitive: draw a value-list screen — header + separator +
+   *        one pre-formatted row per entry, with a cursor block to the left of
+   *        the selected row. Shared by any view whose content is a list of
+   *        font-safe rows (e.g. TEMP MONITOR via TempView::draw() and VARIABLES
+   *        via VarView::draw()).
+   * @param lines Pre-formatted rows (font-safe glyphs only).
+   * @param selected Index into lines of the selected row (-1 = none).
+   * @param header Header line drawn above the separator (views set a default).
    */
-  void setMoonEditBlink(bool on);
+  void canvasRows(const std::vector<std::string> &lines, int selected, const std::string &header) const;
 
 
 private:
-  // VERB 0 menu rendering
+  // List canvas: font shared by list views and the MOONPHASE title
   Font *verbListFont_ = nullptr;
-  std::vector<std::string> verbListLines_;   // lines of the active page
-  DrawMode verbListMode_ = DRAW_OFF;
-  int verbListPage_ = 0;                     // active page index (0..2)
-  std::string verbListHeader_;               // header line of the active page (empty = default)
 
-  // MOONPHASE display: moon graphic + percentage below it
-  Number *nMoon_ = nullptr;                  // centered percentage digits (3 digits)
-  DrawMode moonMode_ = DRAW_OFF;
-  int moonPct_ = 0;
-  float moonPhase_ = 0.0f;                   // phase in [0,1), drives the graphic
-  bool moonEditBlink_ = false;               // true while the date is being corrected
+  /**
+   * @brief Active left-LCD content view (nullptr = none). Same render thread
+   *        as update(), so a plain member is safe.
+   */
+  std::shared_ptr<const LeftLcdView> view_;
+
+  // MOONPHASE canvas resource: centered percentage digits (3 digits). Shared
+  // by moon views via canvasMoon(); the frame keeps no moon state of its own.
+  Number *nMoon_ = nullptr;
 
   /**
    * @brief Draw the background lines (grid)
@@ -109,17 +122,6 @@ private:
    * 
    */
   void drawLabels();
-
-  /**
-   * @brief Internal: draw the VERB 0 menu lines over the grid background
-   */
-  void drawVerbList();
-
-  /**
-   * @brief Internal: draw the MOONPHASE moon-phase graphic, percentage
-   *        digits and "%" label
-   */
-  void drawMoon();
 };
 
 #endif /* FRAMELEFTLCD_H */

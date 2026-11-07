@@ -14,5 +14,5 @@ void ActionVerbList::operation()
   // Build all three pages once (lists are static at runtime):
   // page 0 = verb list, page 1 = variable list, page 2 = program list.
   // The user flips between them with +/-.
-  hmiData_.lSetVerbList(actions_.describe(), store_.describeVars(), programs_.describe());
+  hmiData_.showVerbList(actions_.describe(), store_.describeVars(), programs_.describe());
 }

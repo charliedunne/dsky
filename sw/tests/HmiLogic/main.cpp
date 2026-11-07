@@ -11,6 +11,7 @@
 #include "../common/test.h"
 #include "HmiLogic.h"
 #include "ActionVerbList.h" // pulls Action.h, ListOfActions.h, HmiData.h, Event.h
+#include "VerbListView.h"
 
 #include <chrono>
 #include <thread>
@@ -57,50 +58,53 @@ class MarkerAction : public Action {
 
 TEST(idle_verb_key_enters_verb_input) {
   HmiData data;
-  HmiLogic logic;
+  VariableStore store("unused");
+  HmiLogic logic(store);
   press(logic, data, E_KEY_VERB);
   const RightLcdData &r = data.getRightLcdData();
-  CHECK_EQ(r.lVerbMode, DRAW_ON);
+  CHECK_EQ(r.lVerbMode, DRAW_BLINK); // input-mode labels blink while typing
   CHECK_EQ(r.nVerb, UNASIGNED); // no digit yet
   CHECK_EQ(r.lNounMode, DRAW_OFF);
 }
 
 TEST(idle_nonverb_key_clears_verb_list) {
   HmiData data;
-  HmiLogic logic;
-  data.lSetVerbList({"V00 VERB LIST", "V01 TEST ONE"});
+  VariableStore store("unused");
+  HmiLogic logic(store);
+  data.showVerbList({"V00 VERB LIST", "V01 TEST ONE"});
   data.rSetnR1(7, DRAW_ON);
   press(logic, data, E_KEY_1);
-  const LeftLcdData &l = data.getLeftLcdData();
-  CHECK_EQ(l.lVerbList, DRAW_OFF);
-  CHECK_EQ(l.lVerbListCount, 0);
-  // Right LCD is untouched by the idle clear.
+  CHECK(data.getLeftView() == nullptr); // menu dismissed
+  // The idle clear also dismisses right-side residue (list-verb label/number).
   const RightLcdData &r = data.getRightLcdData();
-  CHECK_EQ(r.nR1, 7);
-  CHECK_EQ(r.nR1Mode, DRAW_ON);
+  CHECK_EQ(r.nR1, UNASIGNED);
+  CHECK_EQ(r.nR1Mode, DRAW_OFF);
 
   // Second part: menu already OFF - a stray key is a plain no-op.
   HmiData d2;
-  HmiLogic l2;
+  VariableStore store2("unused");
+  HmiLogic l2(store2);
   press(l2, d2, E_KEY_5);
   CHECK_EQ(d2.getRightLcdData().nVerb, UNASIGNED);
 }
 
 TEST(idle_verb_key_keeps_verb_list) {
   HmiData data;
-  HmiLogic logic;
-  data.lSetVerbList({"V00 VERB LIST"});
+  VariableStore store("unused");
+  HmiLogic logic(store);
+  data.showVerbList({"V00 VERB LIST"});
   press(logic, data, E_KEY_VERB);
-  const LeftLcdData &l = data.getLeftLcdData();
-  CHECK_EQ(l.lVerbList, DRAW_ON); // menu preserved
-  CHECK_EQ(l.lVerbListCount, 1);
+  const VerbListView *v = data.leftViewAs<VerbListView>();
+  CHECK(v != nullptr); // menu preserved
+  if (v) CHECK_EQ(v->pages[0].size(), 1u);
   // VERB took priority over the clear branch: we are in V_INPUT now.
-  CHECK_EQ(data.getRightLcdData().lVerbMode, DRAW_ON);
+  CHECK_EQ(data.getRightLcdData().lVerbMode, DRAW_BLINK);
 }
 
 TEST(verb_input_digit_accumulation_and_invalid_verb_errors) {
   HmiData data;
-  HmiLogic logic;
+  VariableStore store("unused");
+  HmiLogic logic(store);
   TestAction a1(1, -1, data, "ONE");
   logic.registerAction(a1);
 
@@ -113,12 +117,13 @@ TEST(verb_input_digit_accumulation_and_invalid_verb_errors) {
 
   // Verb 25 is unregistered: needNoun throws -> ERROR.
   press(logic, data, E_KEY_ENTR);
-  CHECK_EQ(data.getLeftLcdData().lOpErr, DRAW_BLINK);
+  CHECK_EQ(data.getLeftAlarms().lOpErr, DRAW_BLINK);
 }
 
 TEST(verb_input_clr_and_verb_key_reclear) {
   HmiData data;
-  HmiLogic logic;
+  VariableStore store("unused");
+  HmiLogic logic(store);
   TestAction a1(1, -1, data, "ONE");
   logic.registerAction(a1);
 
@@ -144,12 +149,13 @@ TEST(verb_input_clr_and_verb_key_reclear) {
 
 TEST(verb_input_stray_key_cancels_to_idle_left_untouched) {
   HmiData data;
-  HmiLogic logic;
+  VariableStore store("unused");
+  HmiLogic logic(store);
   TestAction a1(1, -1, data, "ONE");
   logic.registerAction(a1);
 
   data.lSetUplinkAct(DRAW_ON);
-  data.lSetVerbList({"V01 TEST ONE"});
+  data.showVerbList({"V01 TEST ONE"});
 
   press(logic, data, E_KEY_VERB);
   press(logic, data, E_KEY_5);
@@ -160,21 +166,20 @@ TEST(verb_input_stray_key_cancels_to_idle_left_untouched) {
   const RightLcdData &r = data.getRightLcdData();
   CHECK_EQ(r.nVerb, UNASIGNED);
   CHECK_EQ(r.nVerbMode, DRAW_OFF);
-  const LeftLcdData &l = data.getLeftLcdData();
+  const LeftAlarmFlags l = data.getLeftAlarms();
   CHECK_EQ(l.lUplinkAct, DRAW_ON);
-  CHECK_EQ(l.lVerbList, DRAW_ON);
-  CHECK_EQ(l.lVerbListCount, 1);
+  CHECK(data.leftViewAs<VerbListView>() != nullptr); // menu untouched
   CHECK_EQ(l.lOpErr, DRAW_OFF);
 
   // Observe we are in IDLE: a digit key clears the menu via idle().
   press(logic, data, E_KEY_1);
-  CHECK_EQ(data.getLeftLcdData().lVerbList, DRAW_OFF);
-  CHECK_EQ(data.getLeftLcdData().lVerbListCount, 0);
+  CHECK(data.getLeftView() == nullptr);
 }
 
 TEST(noun_input_flow_and_cancel) {
   HmiData data;
-  HmiLogic logic;
+  VariableStore store("unused");
+  HmiLogic logic(store);
   TestAction a37(3, 7, data, "N7");
   logic.registerAction(a37);
 
@@ -185,7 +190,7 @@ TEST(noun_input_flow_and_cancel) {
   // Verb 3 needs a noun -> N_INPUT.
   press(logic, data, E_KEY_ENTR);
   const RightLcdData &r = data.getRightLcdData();
-  CHECK_EQ(r.lNounMode, DRAW_ON);
+  CHECK_EQ(r.lNounMode, DRAW_BLINK); // input-mode labels blink while typing
   CHECK_EQ(r.nVerb, 3);
   CHECK_EQ(r.nVerbMode, DRAW_ON);
 
@@ -205,7 +210,8 @@ TEST(noun_input_flow_and_cancel) {
 
 TEST(noun_input_verb_key_quirk_and_recovery) {
   HmiData data;
-  HmiLogic logic;
+  VariableStore store("unused");
+  HmiLogic logic(store);
   TestAction a37(3, 7, data, "N7");
   TestAction a1(1, -1, data, "ONE");
   logic.registerAction(a37);
@@ -214,7 +220,7 @@ TEST(noun_input_verb_key_quirk_and_recovery) {
   press(logic, data, E_KEY_VERB);
   press(logic, data, E_KEY_3);
   press(logic, data, E_KEY_ENTR); // -> N_INPUT
-  CHECK_EQ(data.getRightLcdData().lNounMode, DRAW_ON);
+  CHECK_EQ(data.getRightLcdData().lNounMode, DRAW_BLINK); // input-mode labels blink while typing
 
   // KNOWN QUIRK: the E_KEY_VERB case in nounInput() is missing its break and
   // falls through to the NOUN/CLR case, which redundantly re-clears nNoun.
@@ -233,42 +239,44 @@ TEST(noun_input_verb_key_quirk_and_recovery) {
   CHECK_EQ(data.getRightLcdData().nVerbMode, DRAW_ON);
   press(logic, data, E_KEY_ENTR);
   settle(logic, data);
-  CHECK_EQ(data.getLeftLcdData().lOpErr, DRAW_OFF);
+  CHECK_EQ(data.getLeftAlarms().lOpErr, DRAW_OFF);
   CHECK_EQ(data.getRightLcdData().nVerb, UNASIGNED); // reaped -> right reset
 }
 
-TEST(noun_input_stray_key_cancels_to_idle_left_untouched) {
+TEST(noun_input_stray_key_cancels_to_idle_resets_both) {
   HmiData data;
-  HmiLogic logic;
+  VariableStore store("unused");
+  HmiLogic logic(store);
   TestAction a37(3, 7, data, "N7");
   logic.registerAction(a37);
 
   data.lSetUplinkAct(DRAW_ON);
-  data.lSetVerbList({"V03 N07 N7"});
+  data.showVerbList({"V03 N07 N7"});
 
   press(logic, data, E_KEY_VERB);
   press(logic, data, E_KEY_3);
   press(logic, data, E_KEY_ENTR); // -> N_INPUT
 
-  // Stray key: resetRightLcdData ONLY + IDLE (left LCD untouched).
+  // Stray key: full reset of BOTH LCDs + IDLE (the VERB 7 program list must
+  // not survive a cancel).
   press(logic, data, E_KEY_PRO);
   const RightLcdData &r = data.getRightLcdData();
   CHECK_EQ(r.nVerb, UNASIGNED);
   CHECK_EQ(r.nVerbMode, DRAW_OFF);
   CHECK_EQ(r.lNounMode, DRAW_OFF);
-  const LeftLcdData &l = data.getLeftLcdData();
-  CHECK_EQ(l.lUplinkAct, DRAW_ON);
-  CHECK_EQ(l.lVerbList, DRAW_ON);
-  CHECK_EQ(l.lVerbListCount, 1);
+  const LeftAlarmFlags l = data.getLeftAlarms();
+  CHECK_EQ(l.lUplinkAct, DRAW_OFF);
+  CHECK(data.getLeftView() == nullptr); // menu reset along with the flags
 
-  // Observe we are in IDLE: a digit key clears the menu via idle().
-  press(logic, data, E_KEY_9);
-  CHECK_EQ(data.getLeftLcdData().lVerbList, DRAW_OFF);
+  // Observe we are in IDLE: VERB starts a fresh input (label blinks).
+  press(logic, data, E_KEY_VERB);
+  CHECK_EQ(data.getRightLcdData().lVerbMode, DRAW_BLINK);
 }
 
 TEST(noun_input_enter_without_noun_errors) {
   HmiData data;
-  HmiLogic logic;
+  VariableStore store("unused");
+  HmiLogic logic(store);
   TestAction a37(3, 7, data, "N7");
   logic.registerAction(a37);
 
@@ -279,66 +287,68 @@ TEST(noun_input_enter_without_noun_errors) {
 
   // ENTER without a noun: lookup (3, -1) misses -> ExcInvalidCommand -> ERROR.
   press(logic, data, E_KEY_ENTR);
-  CHECK_EQ(data.getLeftLcdData().lOpErr, DRAW_BLINK);
+  CHECK_EQ(data.getLeftAlarms().lOpErr, DRAW_BLINK);
 
   // Any key clears the error: full reset back to IDLE.
   press(logic, data, E_KEY_9);
-  CHECK_EQ(data.getLeftLcdData().lOpErr, DRAW_OFF);
+  CHECK_EQ(data.getLeftAlarms().lOpErr, DRAW_OFF);
   CHECK_EQ(data.getRightLcdData().nVerb, UNASIGNED);
   CHECK_EQ(data.getRightLcdData().nVerbMode, DRAW_OFF);
 
   // Observe we are in IDLE: VERB starts a fresh input.
   press(logic, data, E_KEY_VERB);
-  CHECK_EQ(data.getRightLcdData().lVerbMode, DRAW_ON);
+  CHECK_EQ(data.getRightLcdData().lVerbMode, DRAW_BLINK);
 }
 
 TEST(error_any_key_returns_to_clean_idle) {
   // THE core regression (PR #2 fix #1): from ERROR any key must return to a
   // fully clean IDLE state.
   HmiData data;
-  HmiLogic logic;
+  VariableStore store("unused");
+  HmiLogic logic(store);
   TestAction a1(1, -1, data, "ONE");
   logic.registerAction(a1);
 
   data.lSetUplinkAct(DRAW_ON);
-  data.lSetVerbList({"V01 TEST ONE"});
+  data.showVerbList({"V01 TEST ONE"});
 
   // Trigger ERROR with an unregistered verb.
   press(logic, data, E_KEY_VERB);
   press(logic, data, E_KEY_9);
   CHECK_EQ(data.getRightLcdData().nVerb, 9);
   press(logic, data, E_KEY_ENTR); // needNoun(9) throws -> ERROR
-  const LeftLcdData &l0 = data.getLeftLcdData();
+  const LeftAlarmFlags l0 = data.getLeftAlarms();
   CHECK_EQ(l0.lOpErr, DRAW_BLINK);
   // The error path itself must not touch the rest of the left LCD.
   CHECK_EQ(l0.lUplinkAct, DRAW_ON);
-  CHECK_EQ(l0.lVerbList, DRAW_ON);
+  CHECK(data.leftViewAs<VerbListView>() != nullptr);
 
   // A "stray" key (any key) clears the error: full clean state.
   press(logic, data, E_KEY_PLUS);
-  const LeftLcdData &l = data.getLeftLcdData();
+  const LeftAlarmFlags l = data.getLeftAlarms();
   CHECK_EQ(l.lOpErr, DRAW_OFF);
   CHECK_EQ(l.lUplinkAct, DRAW_OFF);
-  CHECK_EQ(l.lVerbList, DRAW_OFF);
-  CHECK_EQ(l.lVerbListCount, 0);
+  CHECK(data.getLeftView() == nullptr);
   const RightLcdData &r = data.getRightLcdData();
   CHECK_EQ(r.nVerb, UNASIGNED);
   CHECK_EQ(r.nVerbMode, DRAW_OFF);
 
   // Observe we are in IDLE: VERB starts a fresh input again.
   press(logic, data, E_KEY_VERB);
-  CHECK_EQ(data.getRightLcdData().lVerbMode, DRAW_ON);
+  CHECK_EQ(data.getRightLcdData().lVerbMode, DRAW_BLINK);
 }
 
 TEST(verb0_end_to_end) {
   HmiData data;
-  HmiLogic logic;
+  VariableStore store("unused");
+  HmiLogic logic(store);
   TestAction a1(1, -1, data, "TEST ONE");
   TestAction a37(3, 7, data, "TEST N7");
   logic.registerAction(a1);
   logic.registerAction(a37);
-  // Mirror the app wiring: register VERB LIST last.
-  ActionVerbList a_VerbList(data, logic.getActions());
+  // Mirror the app wiring: register VERB LIST last (empty var/program pages).
+  ListOfPrograms programs;
+  ActionVerbList a_VerbList(data, logic.getActions(), store, programs);
   logic.registerAction(a_VerbList);
 
   press(logic, data, E_KEY_VERB);
@@ -350,34 +360,37 @@ TEST(verb0_end_to_end) {
   press(logic, data, E_KEY_ENTR);
   settle(logic, data);
 
-  const LeftLcdData &l = data.getLeftLcdData();
-  CHECK_EQ(l.lVerbList, DRAW_ON);
-  CHECK_EQ(l.lVerbListCount, 3);
-  // describe() sorts by (verb, noun).
-  CHECK(std::string(l.lVerbListLines[0]) == "V00 VERB LIST");
-  CHECK(std::string(l.lVerbListLines[1]) == "V01 TEST ONE");
-  CHECK(std::string(l.lVerbListLines[2]) == "V03 N07 TEST N7");
+  const VerbListView *v = data.leftViewAs<VerbListView>();
+  CHECK(v != nullptr);
+  if (v) {
+    CHECK_EQ(v->pages[0].size(), 3u);
+    // describe() sorts by (verb, noun).
+    CHECK(v->pages[0][0] == "V00 VERB LIST");
+    CHECK(v->pages[0][1] == "V01 TEST ONE");
+    CHECK(v->pages[0][2] == "V03 N07 TEST N7");
+  }
 
-  // The reap reset the right LCD.
+  // List verbs (VERB 0) keep the right-side VERB label/number lit after reap.
   const RightLcdData &r = data.getRightLcdData();
-  CHECK_EQ(r.nVerb, UNASIGNED);
-  CHECK_EQ(r.nVerbMode, DRAW_OFF);
+  CHECK_EQ(r.nVerb, 0);
+  CHECK_EQ(r.nVerbMode, DRAW_ON);
 
   // A stray key in IDLE with the menu ON clears it (idle()).
   press(logic, data, E_KEY_5);
-  CHECK_EQ(data.getLeftLcdData().lVerbList, DRAW_OFF);
-  CHECK_EQ(data.getLeftLcdData().lVerbListCount, 0);
+  CHECK(data.getLeftView() == nullptr);
 }
 
 TEST(new_nonzero_command_dismisses_menu) {
   // Regression #3: a new non-VERB 0 command dismisses the VERB 0 menu.
   HmiData data;
-  HmiLogic logic;
+  VariableStore store("unused");
+  HmiLogic logic(store);
   TestAction a1(1, -1, data, "TEST ONE");
   TestAction a37(3, 7, data, "TEST N7");
   logic.registerAction(a1);
   logic.registerAction(a37);
-  ActionVerbList a_VerbList(data, logic.getActions());
+  ListOfPrograms programs;
+  ActionVerbList a_VerbList(data, logic.getActions(), store, programs);
   logic.registerAction(a_VerbList);
 
   // First: full VERB 0 cycle so the menu is ON in IDLE.
@@ -385,15 +398,14 @@ TEST(new_nonzero_command_dismisses_menu) {
   press(logic, data, E_KEY_0);
   press(logic, data, E_KEY_ENTR);
   settle(logic, data);
-  CHECK_EQ(data.getLeftLcdData().lVerbList, DRAW_ON);
+  CHECK(data.leftViewAs<VerbListView>() != nullptr);
 
-  // Now run verb 1 (no noun): clearVerbList() happens SYNCHRONOUSLY inside
+  // Now run verb 1 (no noun): clearLeftView() happens SYNCHRONOUSLY inside
   // the ENTER frame's run(), so assert immediately.
   press(logic, data, E_KEY_VERB);
   press(logic, data, E_KEY_1);
   press(logic, data, E_KEY_ENTR);
-  CHECK_EQ(data.getLeftLcdData().lVerbList, DRAW_OFF);
-  CHECK_EQ(data.getLeftLcdData().lVerbListCount, 0);
+  CHECK(data.getLeftView() == nullptr);
 
   settle(logic, data);
   CHECK_EQ(data.getRightLcdData().nVerb, UNASIGNED); // reaped -> right reset
@@ -402,12 +414,14 @@ TEST(new_nonzero_command_dismisses_menu) {
 TEST(verb0_refresh_keeps_menu) {
   // Regression #4: re-running VERB 0 refreshes the menu without clearing it.
   HmiData data;
-  HmiLogic logic;
+  VariableStore store("unused");
+  HmiLogic logic(store);
   TestAction a1(1, -1, data, "TEST ONE");
   TestAction a37(3, 7, data, "TEST N7");
   logic.registerAction(a1);
   logic.registerAction(a37);
-  ActionVerbList a_VerbList(data, logic.getActions());
+  ListOfPrograms programs;
+  ActionVerbList a_VerbList(data, logic.getActions(), store, programs);
   logic.registerAction(a_VerbList);
 
   // First VERB 0 run.
@@ -415,9 +429,9 @@ TEST(verb0_refresh_keeps_menu) {
   press(logic, data, E_KEY_0);
   press(logic, data, E_KEY_ENTR);
   settle(logic, data);
-  CHECK_EQ(data.getLeftLcdData().lVerbList, DRAW_ON);
+  CHECK(data.leftViewAs<VerbListView>() != nullptr);
 
-  // Second VERB 0 run: verb==0 -> NO clearVerbList; operation() rebuilds the
+  // Second VERB 0 run: verb==0 -> NO clearLeftView; operation() rebuilds the
   // menu. (After the first reap the action is FRESH - stop() resets finished_
   // - so the second run really restarts it.)
   press(logic, data, E_KEY_VERB);
@@ -425,17 +439,20 @@ TEST(verb0_refresh_keeps_menu) {
   press(logic, data, E_KEY_ENTR);
   settle(logic, data);
 
-  const LeftLcdData &l = data.getLeftLcdData();
-  CHECK_EQ(l.lVerbList, DRAW_ON);
-  CHECK_EQ(l.lVerbListCount, 3);
-  CHECK(std::string(l.lVerbListLines[0]) == "V00 VERB LIST");
-  CHECK(std::string(l.lVerbListLines[1]) == "V01 TEST ONE");
-  CHECK(std::string(l.lVerbListLines[2]) == "V03 N07 TEST N7");
+  const VerbListView *v = data.leftViewAs<VerbListView>();
+  CHECK(v != nullptr);
+  if (v) {
+    CHECK_EQ(v->pages[0].size(), 3u);
+    CHECK(v->pages[0][0] == "V00 VERB LIST");
+    CHECK(v->pages[0][1] == "V01 TEST ONE");
+    CHECK(v->pages[0][2] == "V03 N07 TEST N7");
+  }
 }
 
 TEST(rset_in_run_stops_periodic_action) {
   HmiData data;
-  HmiLogic logic;
+  VariableStore store("unused");
+  HmiLogic logic(store);
   MarkerAction marker(data); // verb 2, noun -1, periodic 50 ms
   logic.registerAction(marker);
 
@@ -454,7 +471,7 @@ TEST(rset_in_run_stops_periodic_action) {
   const RightLcdData &r = data.getRightLcdData();
   CHECK_EQ(r.nR1, UNASIGNED);
   CHECK_EQ(r.nR1Mode, DRAW_OFF);
-  CHECK_EQ(data.getLeftLcdData().lUplinkAct, DRAW_OFF);
+  CHECK_EQ(data.getLeftAlarms().lUplinkAct, DRAW_OFF);
   CHECK_EQ(r.lVerbMode, DRAW_OFF);
 
   // No more ticks: the periodic action really stopped.

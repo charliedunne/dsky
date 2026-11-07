@@ -10,10 +10,11 @@
  * @brief VERB 8: read and display DSKY variables.
  *
  * Verb-only periodic action (no typed noun required). Keeps the left LCD
- * populated with the list of all known variables (asterisk marks the selected
- * one) and shows the selected variable's NOUN and current value on the right
- * LCD. +/- cycles the selection, so the user can browse every variable without
- * re-entering the command; ENTER or RSET ends the action.
+ * populated with a row per known variable showing its NOUN, label and current
+ * value (a cursor block marks the selected row) and shows the selected
+ * variable's NOUN and current value on the right LCD. +/- cycles the
+ * selection, so the user can browse every variable without re-entering the
+ * command; ENTER or RSET ends the action.
  */
 class ReadVar : public Action {
 

@@ -12,7 +12,7 @@
  *
  * Verb-only action (noun -1, no typed noun required). The list persists on the
  * left LCD until the user presses any key, at which point the idle() path
- * clears it via clearVerbList().
+ * clears it via clearLeftView().
  */
 class ListBgProg : public Action {
 

@@ -36,24 +36,52 @@ std::string displayName(const std::string &name)
 }
 
 /**
- * @brief Build the left-screen device list lines.
+ * @brief Format a temperature using only glyphs the Gorton font can draw.
  *
- * Each line has the form "<position> <NAME>". The selected line's name is
- * wrapped in asterisks, e.g. "2 *LIVING*"; unselected lines are plain, e.g.
- * "1 KITCHEN". Positions are 1-based and follow the sensor order returned by
- * the database, so ENTER (which maps position - 1 to a list index) always
- * matches the displayed number even if device IDs have gaps.
+ * The Gorton bitmap has no '.', '+' or '-' character, so the decimal point is
+ * rendered as '*' (e.g. 23.5 -> "23*5") and any unsupported sign is dropped.
+ * Indoor sensors are effectively always non-negative; the right LCD shows the
+ * signed value for the selected sensor. The unit "C" is appended.
  */
-std::vector<std::string> buildListLines(const std::vector<DbReading> &readings, int selected)
+std::string formatTemp(double tempC)
+{
+  char buf[16];
+  snprintf(buf, sizeof(buf), "%.1f", tempC);
+
+  std::string out;
+  for (char c : std::string(buf)) {
+    if (c == '.') {
+      out.push_back('*');   // '*' as the decimal point
+    } else if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || c == ' ') {
+      out.push_back(c);
+    }
+    // any other char (e.g. '-') is dropped: not present in the Gorton font
+  }
+  out.push_back('C');
+  return out;
+}
+
+/**
+ * @brief Build the left-screen temperature rows, one per sensor.
+ *
+ * Each row has the form "<position> <NAME> <TEMP>C" where TEMP uses '*' as the
+ * decimal point (the Gorton font has no '.'). A sensor that has never delivered
+ * a valid reading shows only "<position> <NAME>" (no value). Positions are
+ * 1-based and follow the database order, matching the NOUN entry on the right.
+ */
+std::vector<std::string> buildTempLines(const std::vector<DbReading> &readings)
 {
   const size_t n = std::min(readings.size(), static_cast<size_t>(TEMP_MONITOR_NOUN_MAX + 1));
   std::vector<std::string> lines;
   lines.reserve(n);
-  char line[28];
+  char line[32];
   for (size_t i = 0; i < n; ++i) {
-    const bool sel = static_cast<int>(i) == selected;
     const std::string name = displayName(readings[i].name);
-    snprintf(line, sizeof(line), "%d %s%s%s", static_cast<int>(i + 1), sel ? "*" : "", name.c_str(), sel ? "*" : "");
+    if (readings[i].valid) {
+      snprintf(line, sizeof(line), "%d %s %s", static_cast<int>(i + 1), name.c_str(), formatTemp(readings[i].tempC).c_str());
+    } else {
+      snprintf(line, sizeof(line), "%d %s", static_cast<int>(i + 1), name.c_str());
+    }
     lines.emplace_back(line);
   }
   return lines;
@@ -196,10 +224,9 @@ void TempMonitor::updateScreens()
   const std::vector<DbReading> readings = db_.snapshot();
   const int count = std::min(TEMP_MONITOR_NOUN_MAX + 1, static_cast<int>(readings.size()));
 
-  // Left screen: device list with the selected line marked.
+  // Left screen: live per-sensor temperature list with the selected row marked.
   hmiData_.resetLeftLcdData();
-  hmiData_.lSetVerbListHeader(0, "DEVICES");
-  hmiData_.lSetVerbList(buildListLines(readings, sel), {});
+  hmiData_.showTemp(buildTempLines(readings), sel, "TEMPERATURES");
 
   // Right screen: three display states.
   //  - Normal (a sensor is selected): NOUN field shows the selected position,

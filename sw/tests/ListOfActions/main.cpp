@@ -2,6 +2,7 @@
 #include "Action.h"
 #include "ListOfActions.h"
 #include "ActionVerbList.h"
+#include "VerbListView.h"
 #include "ExcInvalidCommand.h"
 
 #include <chrono>
@@ -106,7 +107,9 @@ TEST(verb_list_action) {
   list.registerAction(a);
   list.registerAction(b);
 
-  ActionVerbList vl(data, list);
+  VariableStore store("unused");
+  ListOfPrograms programs;
+  ActionVerbList vl(data, list, store, programs);
   CHECK_EQ(vl.getVerb(), 0);
   CHECK_EQ(vl.getNoun(), -1);
   CHECK_EQ(vl.getLabel(), "VERB LIST");
@@ -116,11 +119,13 @@ TEST(verb_list_action) {
   CHECK(waitFinished(vl));
   CHECK(vl.finished());
 
-  const LeftLcdData &l = data.getLeftLcdData();
-  CHECK_EQ(l.lVerbList, DRAW_ON);
-  CHECK_EQ(l.lVerbListCount, 2);
-  CHECK_EQ(std::string(l.lVerbListLines[0]), "V01 CLOCK");
-  CHECK_EQ(std::string(l.lVerbListLines[1]), "V02 N00 KEYPAD OFF");
+  const VerbListView *v = data.leftViewAs<VerbListView>();
+  CHECK(v != nullptr);
+  if (v) {
+    CHECK_EQ(v->pages[0].size(), 2u);
+    CHECK(v->pages[0][0] == "V01 CLOCK");
+    CHECK(v->pages[0][1] == "V02 N00 KEYPAD OFF");
+  }
 
   // Reap the joinable worker thread before it goes out of scope.
   vl.stop();

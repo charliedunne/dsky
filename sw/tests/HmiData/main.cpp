@@ -1,6 +1,9 @@
 #include "../common/test.h"
 #include "HmiData.h"
+#include "VerbListView.h"
+#include <array>
 #include <cstring>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -30,14 +33,13 @@ TEST(initial_state) {
   CHECK_EQ(r.lR2Mode, DRAW_OFF);
   CHECK_EQ(r.lR3Mode, DRAW_OFF);
 
-  const LeftLcdData &l = d.getLeftLcdData();
+  const LeftAlarmFlags l = d.getLeftAlarms();
   CHECK_EQ(l.lUplinkAct, DRAW_OFF);
   CHECK_EQ(l.lTemp, DRAW_OFF);
   CHECK_EQ(l.lKeyErr, DRAW_OFF);
   CHECK_EQ(l.lOpErr, DRAW_OFF);
-  CHECK_EQ(l.lVerbList, DRAW_OFF);
-  CHECK_EQ(l.lVerbListCount, 0);
-  // NOTE: lVerbListLines is never zero-initialized; do not read it here.
+  // No active content view at boot.
+  CHECK(d.getLeftView() == nullptr);
 }
 
 TEST(right_lcd_setters) {
@@ -80,7 +82,7 @@ TEST(left_lcd_alarm_setters) {
   d.lSetTemp(DRAW_BLINK);
   d.lSetKeyErr(DRAW_ERROR);
   d.lSetOpErr(DRAW_OFF);
-  const LeftLcdData &l = d.getLeftLcdData();
+  const LeftAlarmFlags l = d.getLeftAlarms();
   CHECK_EQ(l.lUplinkAct, DRAW_ON);
   CHECK_EQ(l.lTemp, DRAW_BLINK);
   CHECK_EQ(l.lKeyErr, DRAW_ERROR);
@@ -126,84 +128,114 @@ TEST(reset_right_lcd_data) {
   CHECK_EQ(r.lR3Mode, DRAW_OFF);
 }
 
-TEST(l_set_verb_list_basic) {
+TEST(show_verb_list_basic) {
   HmiData d;
-  std::vector<std::string> lines = {"V00 LIST", "V21 TIME"};
-  d.lSetVerbList(lines);
-  const LeftLcdData &l = d.getLeftLcdData();
-  CHECK_EQ(l.lVerbList, DRAW_ON);
-  CHECK_EQ(l.lVerbListCount, 2);
-  CHECK(strcmp(l.lVerbListLines[0], "V00 LIST") == 0);
-  CHECK(strcmp(l.lVerbListLines[1], "V21 TIME") == 0);
+  d.showVerbList({"V00 LIST", "V21 TIME"});
+  const VerbListView *v = d.leftViewAs<VerbListView>();
+  CHECK(v != nullptr);
+  CHECK_EQ(v->page, 0);
+  CHECK_EQ(v->pages[0].size(), 2u);
+  CHECK(v->pages[0][0] == "V00 LIST");
+  CHECK(v->pages[0][1] == "V21 TIME");
 }
 
-TEST(l_set_verb_list_caps) {
+TEST(show_verb_list_caps) {
   // More than 20 lines: only the first 20 are stored.
   HmiData d;
   std::vector<std::string> lines;
   for (int i = 0; i < 25; ++i) {
     lines.push_back("line-" + std::to_string(i));
   }
-  d.lSetVerbList(lines);
-  const LeftLcdData &l = d.getLeftLcdData();
-  CHECK_EQ(l.lVerbListCount, 20);
-  CHECK(strcmp(l.lVerbListLines[0], "line-0") == 0);
-  CHECK(strcmp(l.lVerbListLines[19], "line-19") == 0);
+  d.showVerbList(lines);
+  const VerbListView *v = d.leftViewAs<VerbListView>();
+  CHECK(v != nullptr);
+  CHECK_EQ(v->pages[0].size(), 20u);
+  CHECK(v->pages[0][0] == "line-0");
+  CHECK(v->pages[0][19] == "line-19");
 
-  // A 40-char line is truncated to exactly 27 chars + NUL.
+  // A 40-char line is truncated to exactly 27 chars.
   HmiData d2;
   const std::string longLine(40, 'A');
-  d2.lSetVerbList({longLine});
-  const LeftLcdData &l2 = d2.getLeftLcdData();
-  CHECK_EQ(l2.lVerbListCount, 1);
-  CHECK_EQ(std::strlen(l2.lVerbListLines[0]), 27u);
-  CHECK(l2.lVerbListLines[0][27] == '\0');
-  CHECK(strcmp(l2.lVerbListLines[0], std::string(27, 'A').c_str()) == 0);
+  d2.showVerbList({longLine});
+  const VerbListView *v2 = d2.leftViewAs<VerbListView>();
+  CHECK(v2 != nullptr);
+  CHECK_EQ(v2->pages[0].size(), 1u);
+  CHECK_EQ(v2->pages[0][0].size(), 27u);
+  CHECK(v2->pages[0][0] == std::string(27, 'A'));
 }
 
-TEST(l_set_verb_list_empty) {
-  // Current behavior: even an empty list turns the menu ON with count 0.
+TEST(show_verb_list_empty) {
+  // Current behavior: even an empty list publishes a view (header-only page).
   HmiData d;
-  d.lSetVerbList({});
-  const LeftLcdData &l = d.getLeftLcdData();
-  CHECK_EQ(l.lVerbListCount, 0);
-  CHECK_EQ(l.lVerbList, DRAW_ON);
+  d.showVerbList({});
+  const VerbListView *v = d.leftViewAs<VerbListView>();
+  CHECK(v != nullptr);
+  CHECK_EQ(v->pages[0].size(), 0u);
 }
 
-TEST(clear_verb_list_keeps_alarm_flags) {
+TEST(show_verb_list_pages_and_headers) {
+  HmiData d;
+  std::array<std::string, 3> headers = {"KILL RUNNING PROGRAMS", "", ""};
+  d.showVerbList({"P0"}, {"P1A", "P1B"}, {}, headers);
+  const VerbListView *v = d.leftViewAs<VerbListView>();
+  CHECK(v != nullptr);
+  CHECK_EQ(v->pages[0].size(), 1u);
+  CHECK_EQ(v->pages[1].size(), 2u);
+  CHECK_EQ(v->pages[2].size(), 0u);
+  CHECK(v->headers[0] == "KILL RUNNING PROGRAMS");
+  CHECK(v->headers[1].empty());
+
+  // A long header is truncated to exactly 27 chars.
+  HmiData d2;
+  std::array<std::string, 3> longHeaders = {std::string(40, 'H'), "", ""};
+  d2.showVerbList({"A"}, {}, {}, longHeaders);
+  const VerbListView *v2 = d2.leftViewAs<VerbListView>();
+  CHECK(v2 != nullptr);
+  CHECK_EQ(v2->headers[0].size(), 27u);
+}
+
+TEST(show_left_view_replaces_previous) {
+  HmiData d;
+  d.showVerbList({"OLD"});
+  d.showVerbList({"NEW"});
+  const VerbListView *v = d.leftViewAs<VerbListView>();
+  CHECK(v != nullptr);
+  CHECK_EQ(v->pages[0].size(), 1u);
+  CHECK(v->pages[0][0] == "NEW");
+}
+
+TEST(clear_left_view_keeps_alarm_flags) {
   HmiData d;
   d.lSetUplinkAct(DRAW_ON);
   d.lSetTemp(DRAW_BLINK);
   d.lSetKeyErr(DRAW_ERROR);
   d.lSetOpErr(DRAW_ON);
-  d.lSetVerbList({"A", "B"});
+  d.showVerbList({"A", "B"});
 
-  d.clearVerbList();
-  const LeftLcdData &l = d.getLeftLcdData();
-  CHECK_EQ(l.lVerbList, DRAW_OFF);
-  CHECK_EQ(l.lVerbListCount, 0);
+  d.clearLeftView();
+  const LeftAlarmFlags l = d.getLeftAlarms();
+  CHECK(d.getLeftView() == nullptr);
   CHECK_EQ(l.lUplinkAct, DRAW_ON);
   CHECK_EQ(l.lTemp, DRAW_BLINK);
   CHECK_EQ(l.lKeyErr, DRAW_ERROR);
   CHECK_EQ(l.lOpErr, DRAW_ON);
 }
 
-TEST(reset_left_lcd_data_clears_verb_list) {
+TEST(reset_left_lcd_data_clears_view) {
   HmiData d;
   d.lSetUplinkAct(DRAW_ON);
   d.lSetTemp(DRAW_BLINK);
   d.lSetKeyErr(DRAW_ERROR);
   d.lSetOpErr(DRAW_ON);
-  d.lSetVerbList({"A", "B"});
+  d.showVerbList({"A", "B"});
 
   d.resetLeftLcdData();
-  const LeftLcdData &l = d.getLeftLcdData();
+  const LeftAlarmFlags l = d.getLeftAlarms();
   CHECK_EQ(l.lUplinkAct, DRAW_OFF);
   CHECK_EQ(l.lTemp, DRAW_OFF);
   CHECK_EQ(l.lKeyErr, DRAW_OFF);
   CHECK_EQ(l.lOpErr, DRAW_OFF);
-  CHECK_EQ(l.lVerbList, DRAW_OFF);
-  CHECK_EQ(l.lVerbListCount, 0);
+  CHECK(d.getLeftView() == nullptr);
 }
 
 TEST(set_get_roundtrip) {
@@ -251,23 +283,19 @@ TEST(set_get_roundtrip) {
   CHECK_EQ(g.lR2Mode, DRAW_ON);
   CHECK_EQ(g.lR3Mode, DRAW_BLINK);
 
-  LeftLcdData l;
+  LeftAlarmFlags l;
   l.lUplinkAct = DRAW_ON;
   l.lTemp = DRAW_BLINK;
   l.lKeyErr = DRAW_ERROR;
   l.lOpErr = DRAW_OFF;
-  l.lVerbList = DRAW_ON;
-  std::strcpy(l.lVerbListLines[0], "RT LINE");
-  l.lVerbListCount = 1;
-  d.setLeftLcdData(l);
-  const LeftLcdData &gl = d.getLeftLcdData();
+  l.lShutdown = DRAW_OFF;
+  l.lReboot = DRAW_OFF;
+  d.setLeftAlarms(l);
+  const LeftAlarmFlags gl = d.getLeftAlarms();
   CHECK_EQ(gl.lUplinkAct, DRAW_ON);
   CHECK_EQ(gl.lTemp, DRAW_BLINK);
   CHECK_EQ(gl.lKeyErr, DRAW_ERROR);
   CHECK_EQ(gl.lOpErr, DRAW_OFF);
-  CHECK_EQ(gl.lVerbList, DRAW_ON);
-  CHECK(strcmp(gl.lVerbListLines[0], "RT LINE") == 0);
-  CHECK_EQ(gl.lVerbListCount, 1);
 }
 
 TEST(r1_string_setter) {
