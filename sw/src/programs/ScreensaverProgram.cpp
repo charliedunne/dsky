@@ -298,9 +298,9 @@ void ScreensaverProgram::stop()
 void ScreensaverProgram::operation()
 {
     /* The expiry check and the blanking must be atomic with respect to
-     * noteInteraction(): holding screenMutex_ across both guarantees that a
-     * keypress landing in between refreshes lastInteraction_ first, so a stale
-     * decision can never blank a screen that was just woken. */
+     * notifyActivity(): holding screenMutex_ across both guarantees that an
+     * activity notification landing in between refreshes lastInteraction_
+     * first, so a stale decision can never blank a screen that was just woken. */
     std::lock_guard<std::mutex> lock(screenMutex_);
 
     auto idle = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - lastInteraction_).count();
@@ -309,12 +309,13 @@ void ScreensaverProgram::operation()
     }
 }
 
-void ScreensaverProgram::noteInteraction()
+void ScreensaverProgram::notifyActivity()
 {
     /* Wake and refresh the idle timestamp under one lock so the tick thread
      * cannot blank in between (see operation()). Waking happens regardless of
      * run state: this is also the retry path for a restore that failed at
-     * stop() time. */
+     * stop() time. May be called from any thread (main on keypad input, or a
+     * background program worker on its own events). */
     std::lock_guard<std::mutex> lock(screenMutex_);
 
     if (!screenOn_) {

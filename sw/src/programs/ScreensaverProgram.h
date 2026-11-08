@@ -177,7 +177,7 @@ class ScreensaverProgram : public BgProgram {
      * @brief Timestamp of the last keypad interaction, guarded by screenMutex_.
      *
      * Sharing screenMutex_ with the screen state makes "check idle expiry and
-     * blank" (operation) and "wake and refresh the timestamp" (noteInteraction)
+     * blank" (operation) and "wake and refresh the timestamp" (notifyActivity)
      * atomic with respect to each other, so a keypress can never be clobbered
      * by a stale blank decision from the tick thread.
      */
@@ -227,10 +227,15 @@ class ScreensaverProgram : public BgProgram {
     void operation() override;
 
     /**
-     * @brief Notify that the user touched the keypad: wakes the screen if it
-     *        is currently off and, while running, resets the idle timer.
+     * @brief Notify that activity occurred (keypad input or a program event).
+     *
+     * Wakes the screen if it is currently off and, while running, restarts
+     * the idle countdown. Called by main on keypad events and by background
+     * programs on events they consider screen-worthy (e.g. a door state
+     * change). Note: a periodic source firing more often than the idle
+     * timeout will keep the screen on — wire this in deliberately.
      */
-    void noteInteraction();
+    void notifyActivity();
 
     /**
      * @brief Set the idle time before the screen is turned off [seconds].
@@ -274,7 +279,7 @@ class ScreensaverProgram : public BgProgram {
     /**
      * @brief Unlocked implementation of setScreen(); the caller must hold
      *        screenMutex_. Splitting it out lets operation() and
-     *        noteInteraction() perform their state check and the resulting
+     *        notifyActivity() perform their state check and the resulting
      *        transition atomically under a single lock.
      *
      * @param[in] on true to turn the screen on, false to turn it off

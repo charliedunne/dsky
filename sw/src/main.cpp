@@ -154,7 +154,9 @@ int main( int argc, char * argv[], char *envp[] ) {
   DummyProgram p_Dummy(data);
   DbMonitorProgram p_DbMonitor(data, store, dbClient);
   MoonPhaseProgram p_MoonPhase(data);
-  UdpDoorProgram p_UdpDoor(data);
+  /* Door state changes are screen-worthy events: the program wakes the
+   * screensaver so an alarm is never raised into a blanked display. */
+  UdpDoorProgram p_UdpDoor(data, p_Screensaver);
 
   /* Actions registration */
   logic.registerAction(a_Clock);
@@ -227,7 +229,7 @@ int main( int argc, char * argv[], char *envp[] ) {
 
     // Any keypad activity resets the screensaver idle timer and wakes the screen.
     if (!events.empty()) {
-      p_Screensaver.noteInteraction();
+      p_Screensaver.notifyActivity();
     }
 
     // Re-check after a blocking call so Ctrl+C stops us at the next point

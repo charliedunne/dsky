@@ -17,9 +17,10 @@
 // Logging
 #include "Logger.h"
 
-UdpDoorProgram::UdpDoorProgram(HmiData &data) :
+UdpDoorProgram::UdpDoorProgram(HmiData &data, ScreensaverProgram &screensaver) :
     BgProgram(UDPDOOR_PROGRAM, data, "UDPDOOR", UDPDOOR_PERIOD_MS),
-    sock_(-1)
+    sock_(-1),
+    screensaver_(screensaver)
 {
 }
 
@@ -109,9 +110,17 @@ void UdpDoorProgram::operation()
   const std::string token(begin, end);
 
   if (token == "1" || token == "on" || token == "pos" || token == "true") {
+    /* Only actual state changes wake the display: repeated packets in the
+     * same state must not keep resetting the screensaver idle timer. */
+    if (hmiData_.getLeftAlarms().lDoor != DRAW_ON) {
+      screensaver_.notifyActivity();
+    }
     hmiData_.lSetDoor(DRAW_ON);
     LogInfo << "UdpDoorProgram: positive signal received, DOOR alarm ON" << std::endl;
   } else if (token == "0" || token == "off" || token == "neg" || token == "false") {
+    if (hmiData_.getLeftAlarms().lDoor != DRAW_OFF) {
+      screensaver_.notifyActivity();
+    }
     hmiData_.lSetDoor(DRAW_OFF);
     LogInfo << "UdpDoorProgram: negative signal received, DOOR alarm OFF" << std::endl;
   } else {
