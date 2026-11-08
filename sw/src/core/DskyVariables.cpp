@@ -1,7 +1,7 @@
 #include "DskyVariables.h"
 
 // Default constants for the screensaver variables
-#include "ScreenSaver.h"
+#include "ScreensaverProgram.h"
 
 // Default constant for the DBMONITOR period variable
 #include "DbMonitorProgram.h"
@@ -10,9 +10,6 @@ DskyVariables::DskyVariables(VariableStore &store)
 {
     // NOUN 2: keypad light on/off. Apply callback attached by the caller.
     store.registerVar(NOUN_KEYPAD_LIGHT, "keypadLight", "KEYPAD LIGHT", VAR_BOOL, 0);
-
-    // NOUN 3: screensaver enabled/disabled. Apply callback attached by the caller.
-    store.registerVar(NOUN_SCREENSAVER, "screensaver", "SCREENSAVER", VAR_BOOL, SCREENSAVER_DEFAULT);
 
     // NOUN 4: screensaver idle timer in seconds. Apply callback attached by the caller.
     store.registerVar(NOUN_SCREENSAVER_TIMER, "screensaverTimer", "SCREENSAVER TIMER", VAR_INT, SCREENSAVER_TIMER);
@@ -31,4 +28,9 @@ DskyVariables::DskyVariables(VariableStore &store)
     // Defaults to 1 (on): the door monitor is a passive external-signal catcher
     // and should be live right after deployment without keypad interaction.
     store.registerVar(NOUN_UDPDOOR_AUTOSTART, "udpdoorAutostart", "UDPDOOR AUTOSTART", VAR_BOOL, 1);
+
+    // NOUN 9: ScreensaverProgram auto-start at boot. Boot-only, same semantics as NOUN 6.
+    // Defaults to 1 (on): the screensaver should be live right after deployment
+    // without keypad interaction (previous out-of-box behavior).
+    store.registerVar(NOUN_SCREENSAVER_AUTOSTART, "screensaverAutostart", "SCREENSAVER AUTOSTART", VAR_BOOL, SCREENSAVER_AUTOSTART_DEFAULT);
 }

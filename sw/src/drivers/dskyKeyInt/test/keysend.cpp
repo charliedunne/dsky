@@ -12,8 +12,8 @@
  *
  * Examples (keyIds from Event.h):
  *   keysend ffffffff                          wake screensaver (E_NO_EVENT)
- *   keysend -d 400 7fffffff fffffbff bfffffff f7ffffff fffffffdf
- *       VERB 3 NOUN 0 ENTER — disable screensaver
+ *   keysend -d 400 7fffffff ffff7fff bfffffff ffffefff ffffffdf
+ *       VERB 8 NOUN 9 ENTER — read SCREENSAVER AUTOSTART variable
  *
  * Messages are spaced by -d milliseconds (default 400, minimum 250)
  * because dsky processes at most one event per frame; anything else is
