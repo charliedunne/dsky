@@ -10,7 +10,6 @@
 // Actions
 #include "Action.h"
 #include "ActionClock.h"
-#include "ScreenSaver.h"
 #include "ActionVerbList.h"
 #include "SystemReboot.h"
 #include "SystemShutdown.h"
@@ -25,6 +24,7 @@
 #include "DbMonitorProgram.h"
 #include "MoonPhaseProgram.h"
 #include "UdpDoorProgram.h"
+#include "ScreensaverProgram.h"
 
 // Database client (live temp sensor data for VERB 10)
 #include "DbClient.h"
@@ -94,9 +94,6 @@ int main( int argc, char * argv[], char *envp[] ) {
   // Instanciation of the HMI
   Hmi hmi = Hmi(800, 480);
 
-  // Instance of the screensaver (constructed early so apply callbacks can use it)
-  ScreenSaver screenSaver;
-
   // Instance of the Keypad
   Keypad keypad;
 
@@ -109,6 +106,10 @@ int main( int argc, char * argv[], char *envp[] ) {
   // Register all DSKY variables (names, labels, types, defaults) in one place.
   DskyVariables dskyVars(store);
 
+  // Instance of the screensaver (constructed early so apply callbacks can use it;
+  // needs the HMI data and the variable store as constructor arguments)
+  ScreensaverProgram p_Screensaver(data, store);
+
   // NOUN 2: keypad light. Apply re-sends the state to dskyKeyInt via the message queue.
   store.setApply(DskyVariables::NOUN_KEYPAD_LIGHT, [](int value) {
     MsgQueue msgQueue(CMD_MSG_QUEUE_FILE, CMD_MSG_QUEUE_ID, MSG_QUEUE_OUT);
@@ -119,14 +120,9 @@ int main( int argc, char * argv[], char *envp[] ) {
     msgQueue.send(cmd);
   });
 
-  // NOUN 3: screensaver. Apply enables/disables the saver directly.
-  store.setApply(DskyVariables::NOUN_SCREENSAVER, [&screenSaver](int value) {
-    screenSaver.setEnabled(value != 0);
-  });
-
   // NOUN 4: screensaver idle timer [seconds]. Apply updates the running timer.
-  store.setApply(DskyVariables::NOUN_SCREENSAVER_TIMER, [&screenSaver](int value) {
-    screenSaver.setTimer(value);
+  store.setApply(DskyVariables::NOUN_SCREENSAVER_TIMER, [&p_Screensaver](int value) {
+    p_Screensaver.setTimer(value);
   });
 
   // Restore persisted values, then re-apply them to hardware.
@@ -173,6 +169,7 @@ int main( int argc, char * argv[], char *envp[] ) {
   logic.registerProgram(p_DbMonitor);
   logic.registerProgram(p_MoonPhase);
   logic.registerProgram(p_UdpDoor);
+  logic.registerProgram(p_Screensaver);
 
   /* Boot-time auto-start of background programs, controlled by DSKY variables.
    * All are boot-only: the values are read once here and changing them later
@@ -192,6 +189,11 @@ int main( int argc, char * argv[], char *envp[] ) {
   int udpdoorAutostart = 1;
   if (store.get(DskyVariables::NOUN_UDPDOOR_AUTOSTART, udpdoorAutostart) && udpdoorAutostart != 0) {
     p_UdpDoor.start();
+  }
+  /* Local fallback matches the registered variable default (1 = autostart on) */
+  int screensaverAutostart = SCREENSAVER_AUTOSTART_DEFAULT;
+  if (store.get(DskyVariables::NOUN_SCREENSAVER_AUTOSTART, screensaverAutostart) && screensaverAutostart != 0) {
+    p_Screensaver.start();
   }
 
   /* VERB 7: stop a running background program selected via the noun field
@@ -225,7 +227,7 @@ int main( int argc, char * argv[], char *envp[] ) {
 
     // Any keypad activity resets the screensaver idle timer and wakes the screen.
     if (!events.empty()) {
-      screenSaver.noteInteraction();
+      p_Screensaver.noteInteraction();
     }
 
     // Re-check after a blocking call so Ctrl+C stops us at the next point
@@ -247,7 +249,7 @@ int main( int argc, char * argv[], char *envp[] ) {
     // Skip rendering while the display is blanked. Presenting with the CRTC
     // disabled leaks Mesa sync_file fence fds (never closed), which exhausts
     // the process fd limit and breaks the screensaver's own sysfs writes.
-    if (screenSaver.isScreenOn()) {
+    if (p_Screensaver.isScreenOn()) {
       hmi.render();
     }
 

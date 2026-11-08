@@ -1,7 +1,10 @@
-#include "ScreenSaver.h"
+#include "ScreensaverProgram.h"
 
 // Logging
 #include "Logger.h"
+
+// Noun selector for the idle timeout variable (VERB 8/9)
+#include "DskyVariables.h"
 
 // DRM (libdrm)
 #include <xf86drm.h>
@@ -198,44 +201,43 @@ int findMasterFd(int fallbackFd)
 
 } // namespace
 
-ScreenSaver::ScreenSaver() : running_(true), enabled_(SCREENSAVER_DEFAULT != 0), screenOn_(true), restoreBrightness_(SCREENSAVER_BACKLIGHT_FALLBACK), drmFd_(-1), masterFd_(-1), crtcConfig_(nullptr), crtcConnectorId_(0), crtcBlanked_(false), capturedBufferId_(0), lastFailLog_(), lastInteraction_(std::chrono::steady_clock::now())
+ScreensaverProgram::ScreensaverProgram(HmiData &data, VariableStore &store) :
+    BgProgram(SCREENSAVER_PROGRAM, data, "SCREENSAVER", SCREENSAVER_TICK_PERIOD_MS),
+    store_(store), screenOn_(true), restoreBrightness_(SCREENSAVER_BACKLIGHT_FALLBACK), drmFd_(-1), masterFd_(-1), crtcConfig_(nullptr), crtcConnectorId_(0), crtcBlanked_(false), capturedBufferId_(0), lastFailLog_(), lastInteraction_(std::chrono::steady_clock::now())
 {
     backlightPath_ = findBacklightPath();
     if (backlightPath_.empty()) {
-        LogError << "ScreenSaver: no backlight device found in " << SCREENSAVER_BACKLIGHT_DIR << std::endl;
+        LogError << "ScreensaverProgram: no backlight device found in " << SCREENSAVER_BACKLIGHT_DIR << std::endl;
     } else {
-        LogInfo << "ScreenSaver: using backlight " << backlightPath_ << std::endl;
+        LogInfo << "ScreensaverProgram: using backlight " << backlightPath_ << std::endl;
     }
 
     // Capture the active CRTC configuration so we can blank and restore it.
     drmFd_ = ::open(SCREENSAVER_DRM_CARD, O_RDWR | O_CLOEXEC);
     if (drmFd_ < 0) {
-        LogWarning << "ScreenSaver: cannot open " << SCREENSAVER_DRM_CARD << " (" << std::strerror(errno) << "), falling back to backlight-only" << std::endl;
+        LogWarning << "ScreensaverProgram: cannot open " << SCREENSAVER_DRM_CARD << " (" << std::strerror(errno) << "), falling back to backlight-only" << std::endl;
         drmFd_ = -1;
     } else {
         crtcConfig_ = findActiveCrtc(drmFd_, crtcConnectorId_);
         if (crtcConfig_ == nullptr) {
-            LogWarning << "ScreenSaver: no active CRTC found on " << SCREENSAVER_DRM_CARD << ", falling back to backlight-only" << std::endl;
+            LogWarning << "ScreensaverProgram: no active CRTC found on " << SCREENSAVER_DRM_CARD << ", falling back to backlight-only" << std::endl;
             ::close(drmFd_);
             drmFd_ = -1;
         } else {
             masterFd_ = findMasterFd(drmFd_);
             if (masterFd_ != drmFd_) {
-                LogInfo << "ScreenSaver: DRM mastership held by fd " << masterFd_ << ", using it for CRTC control" << std::endl;
+                LogInfo << "ScreensaverProgram: DRM mastership held by fd " << masterFd_ << ", using it for CRTC control" << std::endl;
             }
-            LogInfo << "ScreenSaver: using CRTC " << crtcConfig_->crtc_id << " (connector " << crtcConnectorId_ << ") for blanking" << std::endl;
+            LogInfo << "ScreensaverProgram: using CRTC " << crtcConfig_->crtc_id << " (connector " << crtcConnectorId_ << ") for blanking" << std::endl;
         }
     }
-
-    thread_ = std::thread(&ScreenSaver::run, this);
 }
 
-ScreenSaver::~ScreenSaver()
+ScreensaverProgram::~ScreensaverProgram()
 {
-    running_ = false;
-    if (thread_.joinable()) {
-        thread_.join();
-    }
+    /* stop() joins the worker thread (no-op if not running) and wakes the
+     * screen if it is currently blanked. */
+    stop();
 
     // Best-effort restore so the user is never stranded in the dark.
     {
@@ -258,78 +260,96 @@ ScreenSaver::~ScreenSaver()
     }
 }
 
-void ScreenSaver::noteInteraction()
+void ScreensaverProgram::start()
 {
-    // Refresh the idle timestamp.
+    /* Read the idle timeout (seconds) from the persistent variable system and
+     * apply it to this run. The read happens on the HMI thread; the worker
+     * thread only ever sees the cached timerSeconds_ member, so no store
+     * access is needed from the worker. */
+    int seconds = SCREENSAVER_TIMER;
+    if (!store_.get(DskyVariables::NOUN_SCREENSAVER_TIMER, seconds) || seconds < 1) {
+        seconds = SCREENSAVER_TIMER;
+    }
+    timerSeconds_.store(seconds);
+
+    /* Restart the idle clock so a freshly started screensaver cannot blank
+     * the screen immediately. */
     {
-        std::lock_guard<std::mutex> lock(idleMutex_);
+        std::lock_guard<std::mutex> lock(screenMutex_);
         lastInteraction_ = std::chrono::steady_clock::now();
     }
 
-    // Wake the screen if it is currently off.
+    LogInfo << "ScreensaverProgram: starting, idle timer " << seconds << "s" << std::endl;
+    BgProgram::start();
+}
+
+void ScreensaverProgram::stop()
+{
+    BgProgram::stop();
+
+    /* Never strand the user in the dark: if the screen is currently blanked,
+     * wake it now that the screensaver no longer manages the display. This is
+     * also the retry path for a restore that failed on a previous stop(). */
     setScreen(true);
+
+    LogInfo << "ScreensaverProgram: stopped" << std::endl;
 }
 
-void ScreenSaver::setEnabled(bool enabled)
+void ScreensaverProgram::operation()
 {
-    bool wasEnabled = enabled_.exchange(enabled != 0);
-    if (wasEnabled == (enabled != 0)) {
-        return;
+    /* The expiry check and the blanking must be atomic with respect to
+     * noteInteraction(): holding screenMutex_ across both guarantees that a
+     * keypress landing in between refreshes lastInteraction_ first, so a stale
+     * decision can never blank a screen that was just woken. */
+    std::lock_guard<std::mutex> lock(screenMutex_);
+
+    auto idle = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - lastInteraction_).count();
+    if (idle >= timerSeconds_.load()) {
+        setScreenLocked(false);
+    }
+}
+
+void ScreensaverProgram::noteInteraction()
+{
+    /* Wake and refresh the idle timestamp under one lock so the tick thread
+     * cannot blank in between (see operation()). Waking happens regardless of
+     * run state: this is also the retry path for a restore that failed at
+     * stop() time. */
+    std::lock_guard<std::mutex> lock(screenMutex_);
+
+    if (!screenOn_) {
+        setScreenLocked(true);
     }
 
-    LogInfo << "ScreenSaver: " << (enabled ? "enabled" : "disabled") << std::endl;
-
-    // Never strand the user in the dark when disabling.
-    if (!enabled) {
-        setScreen(true);
+    if (isRunning()) {
+        lastInteraction_ = std::chrono::steady_clock::now();
     }
 }
 
-bool ScreenSaver::isEnabled() const
-{
-    return enabled_;
-}
-
-void ScreenSaver::setTimer(int seconds)
+void ScreensaverProgram::setTimer(int seconds)
 {
     // Clamp to a sane minimum so a zero/negative value cannot blank the
     // screen immediately.
     int clamped = (seconds < 1) ? 1 : seconds;
     timerSeconds_.store(clamped);
-    LogInfo << "ScreenSaver: idle timer set to " << clamped << "s" << std::endl;
+    LogInfo << "ScreensaverProgram: idle timer set to " << clamped << "s" << std::endl;
 }
 
-bool ScreenSaver::isScreenOn() const
+bool ScreensaverProgram::isScreenOn() const
 {
     std::lock_guard<std::mutex> lock(screenMutex_);
     return screenOn_;
 }
 
-void ScreenSaver::run()
-{
-    while (running_) {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        if (!running_ || !enabled_) {
-            continue;
-        }
-
-        // Snapshot the last interaction under the mutex.
-        std::chrono::steady_clock::time_point last;
-        {
-            std::lock_guard<std::mutex> lock(idleMutex_);
-            last = lastInteraction_;
-        }
-
-        auto idle = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - last).count();
-        if (idle >= timerSeconds_.load()) {
-            setScreen(false);
-        }
-    }
-}
-
-void ScreenSaver::setScreen(bool on)
+void ScreensaverProgram::setScreen(bool on)
 {
     std::lock_guard<std::mutex> lock(screenMutex_);
+    setScreenLocked(on);
+}
+
+void ScreensaverProgram::setScreenLocked(bool on)
+{
+    // Caller holds screenMutex_.
 
     // No change needed.
     if (screenOn_ == on) {
@@ -384,7 +404,7 @@ void ScreenSaver::setScreen(bool on)
         }
 
         screenOn_ = false;
-        LogInfo << "ScreenSaver: screen off (will restore brightness " << restoreBrightness_ << ")" << std::endl;
+        LogInfo << "ScreensaverProgram: screen off (will restore brightness " << restoreBrightness_ << ")" << std::endl;
     } else {
         // Bring the backlight up first so the screen is never left dark even
         // if the CRTC restore below cannot be completed this pass.
@@ -407,11 +427,11 @@ void ScreenSaver::setScreen(bool on)
         }
 
         screenOn_ = true;
-        LogInfo << "ScreenSaver: screen on (brightness " << restoreBrightness_ << ")" << std::endl;
+        LogInfo << "ScreensaverProgram: screen on (brightness " << restoreBrightness_ << ")" << std::endl;
     }
 }
 
-bool ScreenSaver::ensureCrtcConfig()
+bool ScreensaverProgram::ensureCrtcConfig()
 {
     // Caller holds screenMutex_.
     if (crtcConfig_ != nullptr) {
@@ -436,14 +456,14 @@ bool ScreenSaver::ensureCrtcConfig()
 
     masterFd_ = findMasterFd(drmFd_);
     if (masterFd_ != drmFd_) {
-        LogInfo << "ScreenSaver: DRM mastership held by fd " << masterFd_ << ", using it for CRTC control" << std::endl;
+        LogInfo << "ScreensaverProgram: DRM mastership held by fd " << masterFd_ << ", using it for CRTC control" << std::endl;
     }
 
-    LogInfo << "ScreenSaver: discovered CRTC " << crtcConfig_->crtc_id << " (connector " << crtcConnectorId_ << ") for blanking" << std::endl;
+    LogInfo << "ScreensaverProgram: discovered CRTC " << crtcConfig_->crtc_id << " (connector " << crtcConnectorId_ << ") for blanking" << std::endl;
     return true;
 }
 
-void ScreenSaver::logFailure(const std::string &what)
+void ScreensaverProgram::logFailure(const std::string &what)
 {
     // Caller holds screenMutex_.
     const auto now = std::chrono::steady_clock::now();
@@ -451,6 +471,6 @@ void ScreenSaver::logFailure(const std::string &what)
         return;
     }
 
-    LogError << "ScreenSaver: " << what << std::endl;
+    LogError << "ScreensaverProgram: " << what << std::endl;
     lastFailLog_ = now;
 }

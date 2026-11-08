@@ -43,7 +43,6 @@ target_sources(dsky PRIVATE
   src/actions/ActionVerbList.cpp
   src/actions/SystemReboot.cpp
   src/actions/SystemShutdown.cpp
-  src/actions/ScreenSaver.cpp
   src/actions/ReadVar.cpp
   src/actions/WriteVar.cpp
   src/actions/TempMonitor.cpp
@@ -56,6 +55,7 @@ target_sources(dsky PRIVATE
   src/programs/DbMonitorProgram.cpp
   src/programs/MoonPhaseProgram.cpp
   src/programs/UdpDoorProgram.cpp
+  src/programs/ScreensaverProgram.cpp
   src/programs/ListOfPrograms.cpp
   src/db/DbClient.cpp
   src/drivers/dskyKeyInt/MsgQueue.cpp

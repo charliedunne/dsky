@@ -19,9 +19,6 @@ public:
     /** NOUN 2: keypad light on/off (bool). */
     static constexpr int NOUN_KEYPAD_LIGHT = 2;
 
-    /** NOUN 3: screensaver enabled/disabled (bool). */
-    static constexpr int NOUN_SCREENSAVER = 3;
-
     /** NOUN 4: screensaver idle timer in seconds (int). */
     static constexpr int NOUN_SCREENSAVER_TIMER = 4;
 
@@ -36,6 +33,9 @@ public:
 
     /** NOUN 8: UdpDoorProgram auto-start at boot (bool). Boot-only, no apply callback. */
     static constexpr int NOUN_UDPDOOR_AUTOSTART = 8;
+
+    /** NOUN 9: ScreensaverProgram auto-start at boot (bool). Boot-only, no apply callback. */
+    static constexpr int NOUN_SCREENSAVER_AUTOSTART = 9;
 
     /**
      * @brief Register all DSKY variables into the store.

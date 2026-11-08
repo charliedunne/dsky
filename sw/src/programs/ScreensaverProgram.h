@@ -1,5 +1,5 @@
-#ifndef _SCREENSAVER_H_
-#define _SCREENSAVER_H_
+#ifndef _SCREENSAVERPROGRAM_H_
+#define _SCREENSAVERPROGRAM_H_
 
 // STL
 #include <atomic>
@@ -7,19 +7,39 @@
 #include <cstdint>
 #include <mutex>
 #include <string>
-#include <thread>
+
+// Core
+#include "BgProgram.h"
+#include "VariableStore.h"
 
 /**
- * @brief Default screensaver state at startup (1 = enabled, 0 = disabled).
+ * @brief Program ID of the screensaver background program (selected on the keypad).
  */
-#define SCREENSAVER_DEFAULT 1
+#define SCREENSAVER_PROGRAM 5
+
+/**
+ * @brief Default auto-start state at boot (1 = start, 0 = do not start).
+ *
+ * This is only the compile-time default. The effective value is stored in the
+ * persistent variable system (NOUN DskyVariables::NOUN_SCREENSAVER_AUTOSTART)
+ * and read once by main at boot.
+ */
+#define SCREENSAVER_AUTOSTART_DEFAULT 1
+
+/**
+ * @brief Worker loop tick period [milliseconds].
+ *
+ * The screensaver checks the idle state about once per second; the actual
+ * idle timeout is defined separately by SCREENSAVER_TIMER / NOUN 4.
+ */
+#define SCREENSAVER_TICK_PERIOD_MS 1000
 
 /**
  * @brief Default idle time before the screen is turned off [seconds].
  *
  * This is only the compile-time default. The effective value is stored in the
- * ScreenSaver timerSeconds_ member and can be changed at runtime through the
- * persistent variable system (VERB 8/9, NOUN DskyVariables::NOUN_SCREENSAVER_TIMER).
+ * ScreensaverProgram timerSeconds_ member and can be changed at runtime through
+ * the persistent variable system (VERB 8/9, NOUN DskyVariables::NOUN_SCREENSAVER_TIMER).
  */
 #define SCREENSAVER_TIMER 30
 
@@ -52,39 +72,36 @@
 struct _drmModeCrtc;
 
 /**
- * @brief Turns the display off after a period of keypad inactivity.
+ * @brief Background program that turns the display off after a period of keypad inactivity.
  *
- * A background thread ticks about once per second and turns the screen off
- * by stopping CRTC scanout through libdrm (a true blank) and dropping the
- * panel backlight to 0 via sysfs; waking restores the saved CRTC
+ * While running, the worker thread ticks about once per second and turns the
+ * screen off by stopping CRTC scanout through libdrm (a true blank) and
+ * dropping the panel backlight to 0 via sysfs; waking restores the saved CRTC
  * configuration and the brightness level captured before sleep. Any keypad
  * interaction resets the idle timer and immediately wakes the screen. If no
  * DRM device or active CRTC is available, only the backlight is controlled.
+ *
+ * The program can be started at boot (NOUN DskyVariables::NOUN_SCREENSAVER_AUTOSTART)
+ * or manually from the keypad (PRO + SCREENSAVER_PROGRAM). Stopping it wakes
+ * the screen immediately if it is currently blanked, so the user is never
+ * stranded in the dark.
  */
-class ScreenSaver {
+class ScreensaverProgram : public BgProgram {
 
     private:
 
     /**
-     * @brief Background thread object
+     * @brief Reference to the persistent variable store, used by start() to
+     *        read the current idle timeout (NOUN 4).
      */
-    std::thread thread_;
-
-    /**
-     * @brief Flag to determine if the thread must continue its execution
-     */
-    std::atomic<bool> running_;
-
-    /**
-     * @brief Screensaver enable state (toggled by VERB 3 actions)
-     */
-    std::atomic<bool> enabled_;
+    VariableStore &store_;
 
     /**
      * @brief Idle time before the screen is turned off [seconds]. Defaults to
      *        SCREENSAVER_TIMER; updated at runtime through the persistent
-     *        variable system via setTimer(). Atomic because it is written by
-     *        the main thread and read by the tick thread.
+     *        variable system via setTimer() and re-read from the store on
+     *        every start(). Atomic because it is written by the main thread
+     *        and read by the tick thread.
      */
     std::atomic<int> timerSeconds_{SCREENSAVER_TIMER};
 
@@ -157,58 +174,63 @@ class ScreenSaver {
     std::chrono::steady_clock::time_point lastFailLog_;
 
     /**
-     * @brief Guards screenOn_, backlightPath_, restoreBrightness_, drmFd_,
-     *        masterFd_, crtcConfig_, crtcConnectorId_, crtcBlanked_,
-     *        capturedBufferId_ and lastFailLog_ so
-     *        the main thread and the tick thread never issue redundant or
-     *        racing sysfs or DRM operations. Mutable because the const
-     *        getter isScreenOn() also reads the guarded state.
-     */
-    mutable std::mutex screenMutex_;
-
-    /**
-     * @brief Timestamp of the last keypad interaction, guarded by idleMutex_
+     * @brief Timestamp of the last keypad interaction, guarded by screenMutex_.
+     *
+     * Sharing screenMutex_ with the screen state makes "check idle expiry and
+     * blank" (operation) and "wake and refresh the timestamp" (noteInteraction)
+     * atomic with respect to each other, so a keypress can never be clobbered
+     * by a stale blank decision from the tick thread.
      */
     std::chrono::steady_clock::time_point lastInteraction_;
 
     /**
-     * @brief Guards lastInteraction_ (no atomic time_point in C++17)
+     * @brief Guards screenOn_, backlightPath_, restoreBrightness_, drmFd_,
+     *        masterFd_, crtcConfig_, crtcConnectorId_, crtcBlanked_,
+     *        capturedBufferId_, lastFailLog_ and lastInteraction_ so the main
+     *        thread and the tick thread never issue redundant or racing sysfs
+     *        or DRM operations. Mutable because the const getter isScreenOn()
+     *        also reads the guarded state.
      */
-    std::mutex idleMutex_;
+    mutable std::mutex screenMutex_;
 
     public:
 
     /**
-     * @brief Constructor. Starts the background monitoring thread.
+     * @brief Constructor. Discovers the backlight and DRM/CRTC hardware but
+     *        does not start the worker thread; call start() to run.
      */
-    ScreenSaver();
+    ScreensaverProgram(HmiData &data, VariableStore &store);
 
     /**
-     * @brief Destructor. Stops and joins the background thread.
+     * @brief Destructor. Stops the program (waking the screen if blanked)
+     *        and releases the DRM resources.
      */
-    ~ScreenSaver();
+    virtual ~ScreensaverProgram();
 
     /**
-     * @brief Notify that the user touched the keypad: resets the idle timer
-     *        and wakes the screen if it is currently off.
+     * @brief Start the screensaver: read the idle timeout from the variable
+     *        store, reset the idle clock, and spawn the worker thread.
+     */
+    void start() override;
+
+    /**
+     * @brief Stop the screensaver and join the worker thread. If the screen
+     *        is currently blanked it is woken immediately so the user is
+     *        never stranded in the dark.
+     */
+    void stop() override;
+
+    /**
+     * @brief Worker tick: turns the screen off when the idle time has
+     *        exceeded the configured timeout.
+     */
+    void operation() override;
+
+    /**
+     * @brief Notify that the user touched the keypad: wakes the screen if it
+     *        is currently off and, while running, resets the idle timer.
      */
     void noteInteraction();
-
-    /**
-     * @brief Enable or disable the screensaver. Disabling while the screen is
-     *        off wakes the screen immediately so the user is never stranded
-     *        in the dark.
-     *
-     * @param[in] enabled true to enable, false to disable
-     */
-    void setEnabled(bool enabled);
-
-    /**
-     * @brief Query whether the screensaver is currently enabled.
-     *
-     * @return true if enabled, false otherwise
-     */
-    bool isEnabled() const;
 
     /**
      * @brief Set the idle time before the screen is turned off [seconds].
@@ -235,12 +257,6 @@ class ScreenSaver {
     private:
 
     /**
-     * @brief Background thread body: ticks about once per second and turns
-     *        the screen off after SCREENSAVER_TIMER seconds of inactivity.
-     */
-    void run();
-
-    /**
      * @brief Turn the physical display on or off.
      *
      * Turning off captures the current brightness (or falls back to a safe
@@ -254,6 +270,16 @@ class ScreenSaver {
      * @param[in] on true to turn the screen on, false to turn it off
      */
     void setScreen(bool on);
+
+    /**
+     * @brief Unlocked implementation of setScreen(); the caller must hold
+     *        screenMutex_. Splitting it out lets operation() and
+     *        noteInteraction() perform their state check and the resulting
+     *        transition atomically under a single lock.
+     *
+     * @param[in] on true to turn the screen on, false to turn it off
+     */
+    void setScreenLocked(bool on);
 
     /**
      * @brief Lazily discover the active CRTC configuration on first use.
@@ -280,4 +306,4 @@ class ScreenSaver {
 
 };
 
-#endif /* _SCREENSAVER_H_ */
+#endif /* _SCREENSAVERPROGRAM_H_ */
