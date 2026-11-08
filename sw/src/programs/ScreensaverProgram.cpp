@@ -301,11 +301,24 @@ void ScreensaverProgram::operation()
      * notifyActivity(): holding screenMutex_ across both guarantees that an
      * activity notification landing in between refreshes lastInteraction_
      * first, so a stale decision can never blank a screen that was just woken. */
-    std::lock_guard<std::mutex> lock(screenMutex_);
+    bool transitioned = false;
+    std::function<void(bool)> callback;
+    {
+        std::lock_guard<std::mutex> lock(screenMutex_);
 
-    auto idle = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - lastInteraction_).count();
-    if (idle >= timerSeconds_.load()) {
-        setScreenLocked(false);
+        auto idle = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - lastInteraction_).count();
+        if (idle >= timerSeconds_.load()) {
+            transitioned = setScreenLocked(false);
+        }
+
+        callback = stateCallback_;
+    }
+
+    // Fire the callback outside the lock so an IPC call in it cannot stall the
+    // tick thread, and from a copy taken under the lock so a concurrent
+    // setStateCallback() cannot race with the invocation.
+    if (transitioned && callback) {
+        callback(false);
     }
 }
 
@@ -316,14 +329,25 @@ void ScreensaverProgram::notifyActivity()
      * run state: this is also the retry path for a restore that failed at
      * stop() time. May be called from any thread (main on keypad input, or a
      * background program worker on its own events). */
-    std::lock_guard<std::mutex> lock(screenMutex_);
+    bool transitioned = false;
+    std::function<void(bool)> callback;
+    {
+        std::lock_guard<std::mutex> lock(screenMutex_);
 
-    if (!screenOn_) {
-        setScreenLocked(true);
+        if (!screenOn_) {
+            transitioned = setScreenLocked(true);
+        }
+
+        if (isRunning()) {
+            lastInteraction_ = std::chrono::steady_clock::now();
+        }
+
+        callback = stateCallback_;
     }
 
-    if (isRunning()) {
-        lastInteraction_ = std::chrono::steady_clock::now();
+    // Fire the callback outside the lock (see operation()).
+    if (transitioned && callback) {
+        callback(true);
     }
 }
 
@@ -342,24 +366,40 @@ bool ScreensaverProgram::isScreenOn() const
     return screenOn_;
 }
 
-void ScreensaverProgram::setScreen(bool on)
+void ScreensaverProgram::setStateCallback(std::function<void(bool)> cb)
 {
     std::lock_guard<std::mutex> lock(screenMutex_);
-    setScreenLocked(on);
+    stateCallback_ = std::move(cb);
 }
 
-void ScreensaverProgram::setScreenLocked(bool on)
+void ScreensaverProgram::setScreen(bool on)
+{
+    bool transitioned = false;
+    std::function<void(bool)> callback;
+    {
+        std::lock_guard<std::mutex> lock(screenMutex_);
+        transitioned = setScreenLocked(on);
+        callback = stateCallback_;
+    }
+
+    // Fire the callback outside the lock (see operation()).
+    if (transitioned && callback) {
+        callback(on);
+    }
+}
+
+bool ScreensaverProgram::setScreenLocked(bool on)
 {
     // Caller holds screenMutex_.
 
     // No change needed.
     if (screenOn_ == on) {
-        return;
+        return false;
     }
 
     if (backlightPath_.empty()) {
         logFailure("no backlight device found");
-        return;
+        return false;
     }
 
     if (!on) {
@@ -401,7 +441,7 @@ void ScreensaverProgram::setScreenLocked(bool on)
                                &crtcConfig_->mode);
                 crtcBlanked_ = false;
             }
-            return; // do not update the cached state, retry next tick
+            return false; // do not update the cached state, retry next tick
         }
 
         screenOn_ = false;
@@ -411,7 +451,7 @@ void ScreensaverProgram::setScreenLocked(bool on)
         // if the CRTC restore below cannot be completed this pass.
         if (!writeBacklight(backlightPath_, restoreBrightness_)) {
             logFailure("failed to turn screen on (" + backlightPath_ + ": " + std::strerror(errno) + ")");
-            return; // do not update the cached state, retry next tick
+            return false; // do not update the cached state, retry next tick
         }
 
         // Restore the CRTC with the buffer we captured at blank time. SDL
@@ -422,7 +462,7 @@ void ScreensaverProgram::setScreenLocked(bool on)
                                crtcConfig_->x, crtcConfig_->y, &crtcConnectorId_, 1,
                                &crtcConfig_->mode) != 0) {
                 logFailure("failed to restore CRTC " + std::to_string(crtcConfig_->crtc_id) + " (" + std::strerror(errno) + ")");
-                return; // keep the screen off and blanked, retried on the next keypress
+                return false; // keep the screen off and blanked, retried on the next keypress
             }
             crtcBlanked_ = false;
         }
@@ -430,6 +470,8 @@ void ScreensaverProgram::setScreenLocked(bool on)
         screenOn_ = true;
         LogInfo << "ScreensaverProgram: screen on (brightness " << restoreBrightness_ << ")" << std::endl;
     }
+
+    return true;
 }
 
 bool ScreensaverProgram::ensureCrtcConfig()

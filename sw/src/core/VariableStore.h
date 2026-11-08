@@ -3,7 +3,9 @@
 
 #include <functional>
 #include <map>
+#include <mutex>
 #include <string>
+#include <utility>
 #include <vector>
 
 /**
@@ -40,6 +42,17 @@ private:
 
     std::map<int, Var> vars_; ///< Registered variables, keyed by NOUN
     std::string filePath_;    ///< Persistence file path
+
+    /**
+     * @brief Guards vars_ and filePath_.
+     *
+     * The store is accessed from the main thread (keypad actions) as well as
+     * from background program worker threads (e.g. the screensaver state
+     * callback), so every public method takes this lock. Apply callbacks are
+     * always invoked with the lock released: they may perform IPC or re-enter
+     * the store, and the mutex is not recursive.
+     */
+    mutable std::mutex mutex_;
 
 public:
     /**
@@ -134,6 +147,15 @@ public:
      * @brief Re-apply all current values to hardware (used at startup).
      */
     void applyAll();
+
+private:
+    /**
+     * @brief Unlocked implementation of save(); the caller must hold mutex_.
+     *        Splitting it out lets set() persist its change without nesting
+     *        lock acquisition on the non-recursive mutex.
+     * @return true on success, false if the file could not be written or renamed
+     */
+    bool saveLocked();
 };
 
 #endif /* _VARIABLESTORE_H_ */

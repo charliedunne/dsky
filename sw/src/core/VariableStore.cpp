@@ -17,6 +17,8 @@ VariableStore::~VariableStore() {}
 
 void VariableStore::registerVar(int noun, const std::string &name, const std::string &label, VarType_e type, int defaultValue, ApplyFn apply)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
+
     Var var;
     var.noun = noun;
     var.name = name;
@@ -32,6 +34,8 @@ void VariableStore::registerVar(int noun, const std::string &name, const std::st
 
 bool VariableStore::setApply(int noun, ApplyFn apply)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
+
     auto it = vars_.find(noun);
     if (it == vars_.end())
         return false;
@@ -42,6 +46,8 @@ bool VariableStore::setApply(int noun, ApplyFn apply)
 
 std::vector<std::string> VariableStore::describeVars() const
 {
+    std::lock_guard<std::mutex> lock(mutex_);
+
     std::vector<std::string> lines;
     for (const auto &kv : vars_)
     {
@@ -54,6 +60,8 @@ std::vector<std::string> VariableStore::describeVars() const
 
 std::vector<VariableStore::VarInfo> VariableStore::varList() const
 {
+    std::lock_guard<std::mutex> lock(mutex_);
+
     std::vector<VarInfo> out;
     out.reserve(vars_.size());
     for (const auto &kv : vars_)
@@ -68,6 +76,8 @@ std::vector<VariableStore::VarInfo> VariableStore::varList() const
 
 bool VariableStore::get(int noun, int &value) const
 {
+    std::lock_guard<std::mutex> lock(mutex_);
+
     auto it = vars_.find(noun);
     if (it == vars_.end())
         return false;
@@ -78,38 +88,52 @@ bool VariableStore::get(int noun, int &value) const
 
 bool VariableStore::set(int noun, int value)
 {
-    auto it = vars_.find(noun);
-    if (it == vars_.end())
+    ApplyFn apply;
+    std::string name;
+
     {
-        LogWarning << "VariableStore: unknown NOUN " << noun << std::endl;
-        return false;
+        std::lock_guard<std::mutex> lock(mutex_);
+
+        auto it = vars_.find(noun);
+        if (it == vars_.end())
+        {
+            LogWarning << "VariableStore: unknown NOUN " << noun << std::endl;
+            return false;
+        }
+
+        Var &var = it->second;
+
+        // Bool variables accept strictly 0 or 1
+        if (var.type == VAR_BOOL && value != 0 && value != 1)
+        {
+            LogWarning << "VariableStore: invalid bool value " << value << " for " << var.name << std::endl;
+            return false;
+        }
+
+        var.value = value;
+        name = var.name;
+        apply = var.apply;
     }
 
-    Var &var = it->second;
-
-    // Bool variables accept strictly 0 or 1
-    if (var.type == VAR_BOOL && value != 0 && value != 1)
-    {
-        LogWarning << "VariableStore: invalid bool value " << value << " for " << var.name << std::endl;
-        return false;
-    }
-
-    var.value = value;
-
+    // Persistence and the hardware side effect run with the lock released:
+    // save() takes the lock itself, and apply callbacks may perform IPC or
+    // re-enter the store from other threads.
     // A persistence failure must be visible: the in-memory value and hardware
     // side effect still take effect, but the change will NOT survive a reboot.
     if (!save())
-        LogError << "VariableStore: persistence failed for " << var.name << ", value will not survive reboot" << std::endl;
+        LogError << "VariableStore: persistence failed for " << name << ", value will not survive reboot" << std::endl;
 
-    if (var.apply)
-        var.apply(value);
+    if (apply)
+        apply(value);
 
-    LogDebug << "VariableStore: " << var.name << " = " << value << std::endl;
+    LogDebug << "VariableStore: " << name << " = " << value << std::endl;
     return true;
 }
 
 bool VariableStore::isBool(int noun) const
 {
+    std::lock_guard<std::mutex> lock(mutex_);
+
     auto it = vars_.find(noun);
     if (it == vars_.end())
         return false;
@@ -119,15 +143,32 @@ bool VariableStore::isBool(int noun) const
 
 void VariableStore::applyAll()
 {
-    for (const auto &kv : vars_)
+    // Snapshot the callbacks and values under the lock, then invoke them with
+    // the lock released: apply callbacks perform IPC and must not run while
+    // holding the (non-recursive) store mutex.
+    std::vector<std::pair<ApplyFn, int>> pending;
     {
-        if (kv.second.apply)
-            kv.second.apply(kv.second.value);
+        std::lock_guard<std::mutex> lock(mutex_);
+        for (const auto &kv : vars_)
+        {
+            if (kv.second.apply)
+                pending.emplace_back(kv.second.apply, kv.second.value);
+        }
     }
+
+    for (auto &entry : pending)
+        entry.first(entry.second);
 }
 
 bool VariableStore::save()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return saveLocked();
+}
+
+bool VariableStore::saveLocked()
+{
+    // Caller holds mutex_.
     std::string tmp = filePath_ + ".tmp";
     std::ofstream out(tmp);
     if (!out.is_open())
@@ -166,6 +207,8 @@ bool VariableStore::save()
 
 void VariableStore::load()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
+
     std::ifstream in(filePath_);
     if (!in.is_open())
     {

@@ -62,6 +62,32 @@ void handler(int s) {
   running = 0;
 }
 
+namespace {
+
+/**
+ * @brief Send a keypad light on/off command to dskyKeyInt via the message queue.
+ *
+ * Safe to call from any thread: each invocation opens its own queue handle,
+ * and IPC failures are caught and logged instead of propagating, so a broken
+ * or missing queue cannot take down a background worker thread.
+ *
+ * @param[in] enable true to turn the keypad light on, false to turn it off
+ */
+void sendKeyLight(bool enable) {
+  try {
+    MsgQueue msgQueue(CMD_MSG_QUEUE_FILE, CMD_MSG_QUEUE_ID, MSG_QUEUE_OUT);
+    CommMsg_t cmd;
+    cmd.mType = 1;
+    cmd.cmd.keylight.enable = enable;
+    cmd.cmd.keylight.brightness = enable ? 255 : 0;
+    msgQueue.send(cmd);
+  } catch (const std::exception &e) {
+    LogError << "sendKeyLight: failed to send keypad light command (" << e.what() << ")" << std::endl;
+  }
+}
+
+} // namespace
+
 int main( int argc, char * argv[], char *envp[] ) {
 
   // Line-buffer stdout at the C level (FILE*). The logger writes through a
@@ -110,14 +136,20 @@ int main( int argc, char * argv[], char *envp[] ) {
   // needs the HMI data and the variable store as constructor arguments)
   ScreensaverProgram p_Screensaver(data, store);
 
+  /* Mirror the screensaver screen state onto the keypad light: when the
+   * screensaver blanks the display and the user has the keypad light enabled,
+   * the light goes off until the screen wakes again (keypress or any other
+   * notifyActivity() source). A disabled keypad light is left untouched. */
+  p_Screensaver.setStateCallback([&store](bool on) {
+    int enabled = 0;
+    if (store.get(DskyVariables::NOUN_KEYPAD_LIGHT, enabled) && enabled != 0) {
+      sendKeyLight(on);
+    }
+  });
+
   // NOUN 2: keypad light. Apply re-sends the state to dskyKeyInt via the message queue.
   store.setApply(DskyVariables::NOUN_KEYPAD_LIGHT, [](int value) {
-    MsgQueue msgQueue(CMD_MSG_QUEUE_FILE, CMD_MSG_QUEUE_ID, MSG_QUEUE_OUT);
-    CommMsg_t cmd;
-    cmd.mType = 1;
-    cmd.cmd.keylight.enable = (value != 0);
-    cmd.cmd.keylight.brightness = (value != 0) ? 255 : 0;
-    msgQueue.send(cmd);
+    sendKeyLight(value != 0);
   });
 
   // NOUN 4: screensaver idle timer [seconds]. Apply updates the running timer.
