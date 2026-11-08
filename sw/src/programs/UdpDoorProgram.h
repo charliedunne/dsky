@@ -2,6 +2,7 @@
 #define _UDPDOORPROGRAM_H_
 
 #include "BgProgram.h"
+#include "ScreensaverProgram.h"
 
 /** Program ID for the UDP door monitor (PRO key selection) */
 #define UDPDOOR_PROGRAM 4
@@ -33,6 +34,14 @@ class UdpDoorProgram : public BgProgram {
   int sock_;
 
   /**
+   * @brief Screensaver used to wake the display on door state changes.
+   *
+   * Door alarms are screen-worthy events: a state change notifies the
+   * screensaver so the alarm is never raised into a blanked display.
+   */
+  ScreensaverProgram &screensaver_;
+
+  /**
    * @brief Create and bind the UDP socket for the door port.
    *
    * @return true on success, false if the socket cannot be created or bound
@@ -43,7 +52,13 @@ class UdpDoorProgram : public BgProgram {
   void closeSocket();
 
   public:
-  UdpDoorProgram(HmiData &data);
+  /**
+   * @brief Construct the door monitor.
+   *
+   * @param[in] data       shared HMI data (DOOR alarm state)
+   * @param[in] screensaver screensaver to wake on door state changes
+   */
+  UdpDoorProgram(HmiData &data, ScreensaverProgram &screensaver);
 
   virtual ~UdpDoorProgram();
 
