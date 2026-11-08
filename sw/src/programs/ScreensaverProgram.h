@@ -5,6 +5,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstdint>
+#include <functional>
 #include <mutex>
 #include <string>
 
@@ -193,6 +194,19 @@ class ScreensaverProgram : public BgProgram {
      */
     mutable std::mutex screenMutex_;
 
+    /**
+     * @brief Optional callback invoked on every real screen power transition.
+     *
+     * Called with true when the screen turns on and false when it turns off,
+     * only after a transition actually succeeded (a failed blank or wake is
+     * not reported). Invoked from whatever thread performed the transition
+     * (tick thread on idle blanking, main thread on keypresses, or a
+     * background program worker on notifyActivity()) and always with
+     * screenMutex_ released. Guarded by screenMutex_; copied under the lock
+     * before invocation so it can be replaced safely at runtime.
+     */
+    std::function<void(bool)> stateCallback_;
+
     public:
 
     /**
@@ -249,6 +263,19 @@ class ScreensaverProgram : public BgProgram {
     void setTimer(int seconds);
 
     /**
+     * @brief Register a callback invoked on every real screen power transition.
+     *
+     * The callback receives true when the screen turns on and false when it
+     * turns off. It is only called for transitions that actually succeeded,
+     * from whatever thread performed them, and always with screenMutex_
+     * released — so it may safely perform IPC or block briefly without
+     * stalling blanking or waking. Pass an empty callback to detach.
+     *
+     * @param[in] cb callback invoked as cb(screenOn), may be empty
+     */
+    void setStateCallback(std::function<void(bool)> cb);
+
+    /**
      * @brief Query whether the physical screen is currently on.
      *
      * The main loop uses this to skip rendering while the display is blanked:
@@ -283,8 +310,11 @@ class ScreensaverProgram : public BgProgram {
      *        transition atomically under a single lock.
      *
      * @param[in] on true to turn the screen on, false to turn it off
+     * @return true if the screen state actually changed (so callers can fire
+     *         the state callback), false if nothing happened or the operation
+     *         failed and will be retried later
      */
-    void setScreenLocked(bool on);
+    bool setScreenLocked(bool on);
 
     /**
      * @brief Lazily discover the active CRTC configuration on first use.
